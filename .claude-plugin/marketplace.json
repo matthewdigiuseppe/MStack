@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mstack",
+  "description": "MStack — a Claude Code plugin for academic research. Opinionated role-based slash commands that walk a paper from idea to archive. Inspired by gstack.",
+  "owner": {
+    "name": "Matt DiGiuseppe",
+    "email": "mdigiuseppe@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "mstack",
+      "source": "./",
+      "description": "A Claude Code plugin for academic research — 34 role-based slash commands across the full paper lifecycle (ideate, map, design, build, analyze, write, submit, reflect).",
+      "version": "0.1.0",
+      "category": "productivity",
+      "homepage": "https://github.com/matthewdigiuseppe/MStack"
+    }
+  ]
+}
