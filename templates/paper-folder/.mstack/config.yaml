@@ -1,0 +1,38 @@
+## MStack per-paper config.
+## Edit at the start of a project; revisit after major decisions.
+
+paper:
+  title: ""
+  short_name: ""           # for filenames; e.g. "tariffs-aid"
+  format: "latex"          # "latex" | "quarto"
+  status: "ideating"       # ideating | mapping | designing | building | analyzing | writing | submitted | r-and-r | accepted | archived
+
+authors:
+  - name: "Matt DiGiuseppe"
+    role: "lead"
+  # - name: "Coauthor Name"
+  #   role: "coauthor"
+
+target_journals:
+  # Tier in priority order. /journal-fit will populate this.
+  # - name: "International Organization"
+  #   tier: 1
+  #   why: ""
+
+design:
+  type: ""                 # survey | experiment | quasi-experiment | observational
+  prereg: false            # set true once /preregister is filed
+  prereg_url: ""
+
+stats:
+  language: "R"            # default; r-coding-skills conventions apply
+  primary_spec: ""         # one line describing THE specification
+
+decisions:
+  # Append a one-liner every time you make a non-obvious call.
+  # - "2026-05-09: dropped 2008-2010 from sample due to crisis confound."
+
+voice:
+  # Override defaults for this paper if needed.
+  writing_style: "digiuseppe-writing-style"
+  reviewer_style: "journal-reviewer-style"

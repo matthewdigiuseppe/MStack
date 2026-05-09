@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# MStack setup — installs the plugin into Claude Code's skills directory and
+# wires up the bin/ scripts on PATH.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLAUDE_SKILLS="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
+TARGET="$CLAUDE_SKILLS/mstack"
+
+echo "MStack setup"
+echo "  source: $HERE"
+echo "  target: $TARGET"
+
+mkdir -p "$CLAUDE_SKILLS"
+
+# If we're not already at the target, link or copy.
+if [[ "$HERE" != "$TARGET" ]]; then
+  if [[ -e "$TARGET" && ! -L "$TARGET" ]]; then
+    echo "  $TARGET exists and is not a symlink; refusing to overwrite."
+    echo "  Move it aside or run from inside $TARGET."
+    exit 1
+  fi
+  ln -sfn "$HERE" "$TARGET"
+  echo "  linked $HERE -> $TARGET"
+fi
+
+# Make bin scripts executable.
+chmod +x "$HERE"/bin/* 2>/dev/null || true
+chmod +x "$HERE"/setup
+
+# Suggest PATH addition.
+case ":$PATH:" in
+  *":$HERE/bin:"*) ;;
+  *)
+    echo ""
+    echo "Add MStack's bin/ to your PATH:"
+    echo "  echo 'export PATH=\"$HERE/bin:\$PATH\"' >> ~/.zshrc"
+    ;;
+esac
+
+echo ""
+echo "Done. Restart Claude Code to pick up the new skills."
+echo "Then run:  mstack-init my-paper"

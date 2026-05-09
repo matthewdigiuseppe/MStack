@@ -1,0 +1,4 @@
+{"_comment": "One JSON object per line. Append paper-specific conventions Claude should remember. Examples below — delete and replace."}
+{"kind": "variable_name", "fact": "Treatment indicator is T1_assigned, not treat."}
+{"kind": "convention", "fact": "Use country-year as the unit of analysis throughout."}
+{"kind": "preference", "fact": "Tables go to output/tables/ as .tex; figures go to output/figures/ as both .pdf and .png."}

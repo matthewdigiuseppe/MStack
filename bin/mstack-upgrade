@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# mstack-upgrade — pull latest MStack from GitHub and re-run setup.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MSTACK_ROOT="$(cd "$HERE/.." && pwd)"
+
+if [[ ! -d "$MSTACK_ROOT/.git" ]]; then
+  echo "MStack root at $MSTACK_ROOT is not a git checkout; cannot upgrade." >&2
+  exit 1
+fi
+
+echo "Pulling latest MStack..."
+git -C "$MSTACK_ROOT" pull --ff-only
+
+echo "Re-running setup..."
+"$MSTACK_ROOT/setup"
+
+echo "Upgrade done."

@@ -1,0 +1,34 @@
+% MStack paper template.
+% /draft-section writes into sections/<name>.tex; this file just \input{}s them.
+
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\doublespacing
+
+\title{TITLE}
+\author{Matt DiGiuseppe}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\input{sections/intro}
+\input{sections/theory}
+\input{sections/data}
+\input{sections/methods}
+\input{sections/results}
+\input{sections/discussion}
+
+\bibliographystyle{apsr}
+\bibliography{refs}
+
+\end{document}

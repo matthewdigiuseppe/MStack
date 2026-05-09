@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# mstack-init <paper-name> [--quarto]
+# Scaffolds a new paper folder from MStack's templates/paper-folder/ tree.
+set -euo pipefail
+
+usage() {
+  cat <<EOF
+Usage: mstack-init <paper-name> [--quarto]
+
+Creates a new MStack paper folder under the current working directory.
+  --quarto    Use a Quarto (.qmd) main file instead of LaTeX.
+
+Examples:
+  mstack-init tariffs-aid
+  mstack-init survey-experiment-2026 --quarto
+EOF
+}
+
+if [[ $# -lt 1 || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+NAME="$1"
+shift
+USE_QUARTO=0
+for arg in "$@"; do
+  case "$arg" in
+    --quarto) USE_QUARTO=1 ;;
+    *) echo "Unknown arg: $arg" >&2; usage; exit 1 ;;
+  esac
+done
+
+# Resolve MStack root (the script lives in bin/, so .. is root).
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MSTACK_ROOT="$(cd "$HERE/.." && pwd)"
+TEMPLATE="$MSTACK_ROOT/templates/paper-folder"
+
+if [[ ! -d "$TEMPLATE" ]]; then
+  echo "Template not found at $TEMPLATE" >&2
+  exit 1
+fi
+
+DEST="$(pwd)/$NAME"
+if [[ -e "$DEST" ]]; then
+  echo "Refusing to overwrite existing $DEST" >&2
+  exit 1
+fi
+
+# Copy template (preserve hidden files).
+cp -R "$TEMPLATE" "$DEST"
+
+# Stamp the short_name into config.yaml.
+CFG="$DEST/.mstack/config.yaml"
+if [[ -f "$CFG" ]]; then
+  # macOS sed needs '' after -i; use a temp file for portability.
+  tmp="$(mktemp)"
+  awk -v n="$NAME" '
+    /^  short_name: ""/ { print "  short_name: \"" n "\""; next }
+    { print }
+  ' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+fi
+
+# Quarto swap.
+if [[ "$USE_QUARTO" == "1" ]]; then
+  if [[ -f "$DEST/paper/main.tex" ]]; then
+    rm "$DEST/paper/main.tex"
+    cat > "$DEST/paper/main.qmd" <<'QMD'
+---
+title: "TITLE"
+author: "Matt DiGiuseppe"
+format:
+  pdf:
+    documentclass: article
+    geometry: margin=1in
+    fontsize: 12pt
+bibliography: refs.bib
+---
+
+{{< include sections/abstract.tex >}}
+
+{{< include sections/intro.tex >}}
+{{< include sections/theory.tex >}}
+{{< include sections/data.tex >}}
+{{< include sections/methods.tex >}}
+{{< include sections/results.tex >}}
+{{< include sections/discussion.tex >}}
+QMD
+    # Update config.yaml format field.
+    if [[ -f "$CFG" ]]; then
+      tmp="$(mktemp)"
+      awk '
+        /^  format: "latex"/ { print "  format: \"quarto\""; next }
+        { print }
+      ' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+    fi
+  fi
+fi
+
+echo "Scaffolded $DEST"
+echo ""
+echo "Next:"
+echo "  cd $NAME"
+echo "  edit .mstack/config.yaml (set title, target journals, coauthors)"
+echo "  start with /research-question or /idea-shotgun in Claude Code"
