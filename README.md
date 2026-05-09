@@ -9,8 +9,8 @@ Originally built for political science / international political economy work, b
 ## Install
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/<you>/MStack.git ~/.claude/skills/mstack \
-  && cd ~/.claude/skills/mstack && ./setup
+git clone --single-branch --depth 1 https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack \
+  && cd ~/.claude/plugins/mstack && ./setup
 ```
 
 Then run `mstack-init my-paper` in any directory to scaffold a new paper folder.
@@ -80,7 +80,7 @@ my-paper/
 
 - **Stats stack.** R (ggplot, fixest, modelsummary). Stata/Python users: fork.
 - **Manuscript format.** LaTeX. Quarto users: `mstack-init --quarto`. Word: out of scope.
-- **Voice.** [digiuseppe-writing-style](https://github.com/<you>/digiuseppe-writing-style) is the default in `/draft-section`. Override per-paper in `.mstack/config.yaml`.
+- **Voice.** `digiuseppe-writing-style` is the default in `/draft-section`. Override per-paper in `.mstack/config.yaml`.
 
 ## License
 

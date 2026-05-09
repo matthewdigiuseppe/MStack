@@ -4,7 +4,7 @@
 
 Writing a paper is a long sequence of stage-specific decisions, each with its own forcing questions, failure modes, and quality bar. A "help me with my paper" prompt collapses all of those stages into one, which means Claude does whatever stage *it* thinks you're in — usually the writing stage, since that's the most token-saturated in its training. You get prose when you needed identification critique. You get a robustness check when you needed an alternative research design.
 
-[gstack](https://github.com/garrytan/gstack) noticed the same pattern in product engineering: a single AI is a worse collaborator than a small team of role-defined ones. Its fix was a sprint-shaped set of slash commands — CEO review, eng review, QA, ship — each speaking in a defined voice with defined questions. MStack is the same fix for academic research.
+[gstack](https://github.com/garrytan/gstack) by Garry Tan noticed the same pattern in product engineering: a single AI is a worse collaborator than a small team of role-defined ones. Its fix was a sprint-shaped set of slash commands — CEO review, eng review, QA, ship — each speaking in a defined voice with defined questions. MStack is the same fix for academic research.
 
 ## The wager
 
