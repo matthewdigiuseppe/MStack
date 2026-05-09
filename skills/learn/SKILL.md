@@ -1,14 +1,12 @@
 ---
 name: learn
-description: Per-paper conventions Claude should remember — variable names, target journal, coauthor preferences. Writes to .mstack/learnings.jsonl.
+description: Append a per-paper convention or fact to .mstack/learnings.jsonl. Use to teach Claude variable names, design choices, framing, target-journal preferences. One JSON object per line — append-only.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
-  - Bash
-  - Grep
-  - Glob
+  - Bash(date *)
 ---
 
 # /mstack:learn
@@ -16,36 +14,46 @@ allowed-tools:
 **Stage:** power
 **Voice:** memory
 
-## What this skill does
+## When to invoke
 
-Per-paper conventions Claude should remember — variable names, target journal, coauthor preferences. Writes to .mstack/learnings.jsonl.
+Whenever you find yourself telling Claude the same paper-specific fact twice. The convention belongs in the paper's memory, not in your head.
 
-## Forcing questions / body
+## Argument
 
-Store one fact per line as JSON. Read at the start of every session in this paper folder.
+`$ARGUMENTS` — the fact to remember. Free-form text; this skill will normalize it.
 
-## How it interacts with the paper folder
+## Procedure
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+1. **Classify the fact** into one of:
+   - `variable_name` — naming convention for a key variable.
+   - `convention` — analytical / coding convention specific to this paper.
+   - `decision` — a design or framing decision (with rationale).
+   - `preference` — output / formatting / style preference.
+   - `reference` — pointer to an external resource specific to this paper.
+   - `other` — free-form.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+2. **Normalize.** Strip whitespace; trim trailing punctuation; capitalize the sentence.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+3. **Append a JSON line** to `.mstack/learnings.jsonl`:
 
-## Output
+   ```json
+   {"date":"YYYY-MM-DD","kind":"<class>","fact":"<normalized fact>"}
+   ```
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+4. **Echo back** what was written so the user can confirm.
 
-## TODO (Phase 2/3 build-out)
+5. **Hint at scope.** If the fact looks like it generalizes across papers (a methodological habit, a tooling preference, a writing rule), tell the user to consider also writing it to global memory at `~/.claude/projects/.../memory/` rather than only here.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## Outputs
+
+- `.mstack/learnings.jsonl` — one new line.
+- Summary: the new line + scope hint if applicable.
+
+## Anti-patterns to refuse
+
+- **Storing transient state.** "Currently working on table 3" is conversation context, not memory. Don't write it.
+- **Storing what's already in code.** If the convention is encoded in a script, the script is the memory.
+
+## When to call other skills
+
+- If the fact crosses papers, suggest writing to global memory rather than just here.

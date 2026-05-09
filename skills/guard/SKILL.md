@@ -1,14 +1,11 @@
 ---
 name: guard
-description: `/careful` + `/freeze` combined. Lifted from gstack.
+description: /careful + /freeze combined in one toggle. Maximum-safety mode. Lifted from gstack's /guard.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:guard
@@ -16,36 +13,22 @@ allowed-tools:
 **Stage:** power
 **Voice:** safety
 
-## What this skill does
+## Argument
 
-`/careful` + `/freeze` combined. Lifted from gstack.
+`$ARGUMENTS` — directory to freeze writes to (forwarded to `/freeze`).
 
-## Forcing questions / body
+## Procedure
 
-Combines warn-on-destructive with directory lock.
+1. Run the equivalent of `/careful` (toggle `careful: true` in `.mstack/safety.yaml`).
+2. Run the equivalent of `/freeze` with the supplied path (or paper-folder root if none).
+3. Print the combined state.
 
-## How it interacts with the paper folder
+## Outputs
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+- `.mstack/safety.yaml` with both `careful: true` and `freeze.path` set.
+- Summary: both flags + the freeze target.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+## When to call other skills
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
-
-## Output
-
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
-
-## TODO (Phase 2/3 build-out)
-
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- `/unfreeze` to remove just the freeze (careful stays on).
+- `/careful off` to remove just careful (freeze stays on).

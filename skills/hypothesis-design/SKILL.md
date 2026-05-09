@@ -1,14 +1,10 @@
 ---
 name: hypothesis-design
-description: Operationalizes hypotheses, runs a falsifiability check, pre-commits to direction. Use before any data analysis.
+description: Operationalizes hypotheses, runs a falsifiability check, pre-commits to direction. Use after /theory-build and before any data analysis. Writes to .mstack/hypotheses.md.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
-  - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:hypothesis-design
@@ -16,36 +12,46 @@ allowed-tools:
 **Stage:** map
 **Voice:** methodologist
 
-## What this skill does
+## When to invoke
 
-Operationalizes hypotheses, runs a falsifiability check, pre-commits to direction. Use before any data analysis.
+After `/theory-build`. Before fielding or analyzing. Before `/preregister` (the prereg quotes these hypotheses).
 
-## Forcing questions / body
+## Procedure
 
-What is the testable prediction? In what units? With what sign? What pattern would falsify it? Are you pre-committing or fishing?
+1. **Load.** `.mstack/theory.md`, `.mstack/lit-map.md`.
 
-## How it interacts with the paper folder
+2. **For each hypothesis (H1, H2, …), specify all six fields:**
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+   | Field | Example |
+   |---|---|
+   | **Statement** | "Higher exposure to import competition increases vote share for protectionist parties." |
+   | **Direction** | Positive (β > 0). |
+   | **Effect-size sign + magnitude expectation** | "We expect a 1-SD increase in exposure to raise vote share by 1–3 percentage points." |
+   | **Operationalization of X** | "Exposure = ADH-style instrument constructed as in Autor et al. 2013, country-region-year level." |
+   | **Operationalization of Y** | "Vote share = percent of constituency vote for parties classified as protectionist by CMP." |
+   | **Falsification pattern** | "A null result (β CI overlapping zero) at the country-region-year level falsifies H1. A negative coefficient (β < 0) falsifies the mechanism direction." |
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+3. **Falsifiability check.** For each hypothesis:
+   - Could a result actually falsify it, or is the prediction "X has *some* relationship with Y"? Reject vague directions.
+   - Is the falsification pattern observable with the planned data? If the data can't produce the falsifying pattern, the hypothesis is unfalsifiable in this design.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Primary vs. secondary.** Mark exactly one hypothesis as **primary**. The primary is what the paper's headline rests on. Secondaries explore mechanism, heterogeneity, or scope but don't carry the headline.
 
-## Output
+5. **Heterogeneity / moderation.** If moderation is theorized, specify it as its own hypothesis (e.g., "H2: The effect of X on Y is larger in subset S because Z"). Heterogeneity tests not pre-specified here are exploratory in the prereg.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+6. **Save** to `.mstack/hypotheses.md`. The prereg pulls from this file.
 
-## TODO (Phase 2/3 build-out)
+## Outputs
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- `.mstack/hypotheses.md` — H1, H2, … with all six fields plus primary/secondary marker.
+- Summary block: primary hypothesis sentence + falsification pattern.
+
+## Anti-patterns to refuse
+
+- **One-sided ambiguity.** "We expect X to be related to Y" is not a hypothesis.
+- **Hypotheses bigger than the data.** If your data can't observe the falsifying pattern, the hypothesis can't be tested here. Either get different data or rewrite the hypothesis.
+- **Five primaries.** Exactly one. The rest are secondaries.
+
+## When to call other skills
+
+- After: `/identification-review`, then `/preregister`.

@@ -1,14 +1,11 @@
 ---
 name: careful
-description: Warn before destructive commands. Lifted from gstack's /careful. Toggle on when working with manuscript files near a deadline.
+description: Toggle a "warn before destructive commands" mode for this project. When enabled, Claude must summarize and ask before running rm, mv, git reset, force-push, or overwriting files in paper/, output/, submission/. Lifted from gstack's /careful.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:careful
@@ -16,36 +13,36 @@ allowed-tools:
 **Stage:** power
 **Voice:** safety
 
-## What this skill does
+## When to invoke
 
-Warn before destructive commands. Lifted from gstack's /careful. Toggle on when working with manuscript files near a deadline.
+Near a deadline. After a major edit you don't want clobbered. Before letting Claude work autonomously on a paper that's about to be submitted.
 
-## Forcing questions / body
+## Procedure
 
-Before any rm, mv, git reset, or overwrite of paper/, output/, or submission/: stop, summarize, and ask.
+1. **Read or create `.mstack/safety.yaml`** in the current paper folder. If missing, create with default `careful: false`.
 
-## How it interacts with the paper folder
+2. **Toggle.** Flip `careful` to `true` (or `false` if `$ARGUMENTS` is `off`).
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Behavior change while `careful: true`:**
+   - Before any of these actions, Claude **must** summarize the action and ask the user to confirm:
+     - `rm`, `rm -rf`.
+     - `mv` of files in `paper/`, `output/`, `submission/`, `prereg/`.
+     - Overwriting any non-empty file under `paper/`, `output/`, `submission/`, `prereg/`.
+     - `git reset --hard`, `git checkout --`, `git clean -f`, force push.
+     - Any `Write`/`Edit` that would clobber a file ≥ 100 lines.
+   - Read-only operations and edits to `.mstack/`, `code/`, and `data/` (non-raw) proceed normally.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+4. **Print the current state** to the user: `careful` mode is now `<on|off>`.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+## Outputs
 
-## Output
+- `.mstack/safety.yaml` updated.
+- Summary block: current state.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+## Anti-patterns to refuse
 
-## TODO (Phase 2/3 build-out)
+- **Bypassing while careful is on.** If the user asks to bypass for one command, do it for that command only and re-engage. Don't silently disable.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## When to call other skills
+
+- Pair with `/freeze` for stricter lockdown — that becomes `/guard`.

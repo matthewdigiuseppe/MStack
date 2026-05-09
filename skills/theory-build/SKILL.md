@@ -1,14 +1,11 @@
 ---
 name: theory-build
-description: Builds the formal mechanism, draws a DAG, specifies scope conditions. Use after lit-map, before hypothesis-design.
+description: Builds the formal mechanism, sketches a DAG, specifies scope conditions. Use after /lit-map identifies the conversation and before /hypothesis-design operationalizes. Writes to .mstack/theory.md and feeds paper/sections/theory.tex.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:theory-build
@@ -16,36 +13,54 @@ allowed-tools:
 **Stage:** map
 **Voice:** theorist
 
-## What this skill does
+## When to invoke
 
-Builds the formal mechanism, draws a DAG, specifies scope conditions. Use after lit-map, before hypothesis-design.
+After `/lit-map` so you know the conversation. Before `/hypothesis-design` so the hypotheses are derived from a stated mechanism, not retrofitted to results.
 
-## Forcing questions / body
+## Procedure
 
-What is the mechanism in one sentence? What is the DAG? What are the scope conditions? What would the theory predict in cases not in your data?
+1. **Load.** `.mstack/research-question.md` and `.mstack/lit-map.md`.
 
-## How it interacts with the paper folder
+2. **State the mechanism in one sentence.** "X causes Y because Z." If the user can't, ask until they can. The sentence is the spine of the paper.
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Draw the DAG (in prose / ASCII).** Nodes:
+   - The treatment / IV.
+   - The outcome.
+   - Mediators (M1, M2, …).
+   - Pre-treatment confounders (W1, W2, …).
+   - Post-treatment colliders (C1, …) — flag these explicitly; controlling on a collider is a common error.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+   Edges with sign and a one-line justification per edge.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+   Save the DAG to `.mstack/theory.md` as ASCII; the user can rebuild it as a figure later.
 
-## Output
+4. **Scope conditions.** Three to five sentences:
+   - **Population scope** — for whom should this hold?
+   - **Time scope** — what era?
+   - **Institutional scope** — what kind of state, regime, market?
+   - **Boundary** — where would you expect the mechanism to break?
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+5. **Implications.** What does this theory predict for cases / observations not in the data? At least two predictions outside the proposed sample. These are the "off-the-line" predictions that distinguish a real theory from a story tuned to the data.
 
-## TODO (Phase 2/3 build-out)
+6. **Compatibility check** with `/lit-map`:
+   - Which Foundation paper(s) does the mechanism build on?
+   - Which Frontier paper(s) does it dispute?
+   - Where does the theory stand on the contested edge of the conversation?
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+7. **Save** the full theory to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence + scope conditions; full drafting later via `/draft-section theory`.
+
+## Outputs
+
+- `.mstack/theory.md` — mechanism, DAG, scope, predictions, lit-positioning.
+- (Optional) stubbed `paper/sections/theory.tex`.
+- Summary block: mechanism sentence + the one off-the-line prediction most likely to falsify.
+
+## Anti-patterns to refuse
+
+- **Mechanism by association.** "X is correlated with Y, and theoretically Y matters for Z" is not a mechanism.
+- **DAGs without arrows.** If you can't sign the edges, you don't have a directed model.
+- **Universal scope.** "This holds everywhere, always" predicts nothing.
+
+## When to call other skills
+
+- After: `/hypothesis-design` to operationalize, then `/identification-review` to stress-test the implied design.

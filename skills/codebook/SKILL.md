@@ -1,6 +1,6 @@
 ---
 name: codebook
-description: Auto-generates a codebook from cleaned data and flags inconsistencies. Use after data-clean produces a stable analytic dataset.
+description: Auto-generates a codebook from the cleaned analytic dataset and flags suspicious distributions. Writes data/codebook.md. Use after /data-clean produces a stable analytic dataset.
 user-invocable: true
 allowed-tools:
   - Read
@@ -8,7 +8,6 @@ allowed-tools:
   - Edit
   - Bash
   - Grep
-  - Glob
 ---
 
 # /mstack:codebook
@@ -16,36 +15,52 @@ allowed-tools:
 **Stage:** build
 **Voice:** data-engineer
 
-## What this skill does
+## When to invoke
 
-Auto-generates a codebook from cleaned data and flags inconsistencies. Use after data-clean produces a stable analytic dataset.
+After `/data-clean` writes `data/clean/analytic.rds` and the script runs without errors. Re-run when the analytic dataset changes.
 
-## Forcing questions / body
+## Procedure
 
-For each variable: name, label, type, range, missingness, source. Flag suspicious distributions, mass points, near-duplicates, and unit-of-analysis ambiguities.
+1. **Load.** `data/clean/analytic.rds`. Read `code/01-clean.R` to know what the variables are supposed to mean.
 
-## How it interacts with the paper folder
+2. **Generate the codebook** via R. Write a one-off script `code/00-codebook.R` (idempotent — safe to re-run):
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+   For each variable:
+   - **Name.**
+   - **Label** (from `01-clean.R` comments or attr; if missing, flag).
+   - **Type** (numeric, factor, logical, date, character).
+   - **Range** (min/max for numeric, levels for factor).
+   - **Mean / SD / Median / IQR** (numeric).
+   - **Modal value + frequency** (factor / categorical).
+   - **Missingness** (count + share).
+   - **Source** (from `data/raw/PROVENANCE.md`).
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+3. **Flag suspicious patterns** for the user:
+   - Variables with > 30% missingness — flag for either documented imputation or exclusion.
+   - Numeric variables with mass at the extreme (e.g., all values at the cap of a winsorized scale).
+   - Apparent duplicates: pairs of variables with > 0.99 correlation.
+   - Near-constant variables (< 5% variation).
+   - Date variables with implausible values (future dates, pre-data-source dates).
+   - Unit-of-analysis ambiguities (rows that should be unique by `id` but aren't).
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Write `data/codebook.md`** with:
+   - Header: dataset name, N, K, unit of analysis, generation date, source script.
+   - Per-variable table.
+   - Flag block at the bottom listing every suspicious pattern with a recommended action.
 
-## Output
+5. **If flags exist:** print them to the user with a recommendation. Do **not** silently accept them.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+## Outputs
 
-## TODO (Phase 2/3 build-out)
+- `code/00-codebook.R` — idempotent generation script.
+- `data/codebook.md` — the codebook.
+- Summary block: variable count, missingness extremes, suspicious-pattern flag count + verdict.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## Anti-patterns to refuse
+
+- **Codebook without flags.** Even clean datasets have something worth surfacing.
+- **Manually maintained codebook.** It rots. Generate from the data.
+
+## When to call other skills
+
+- After: `/analyze`. If flags are unaddressed, suggest fixing `01-clean.R` first.

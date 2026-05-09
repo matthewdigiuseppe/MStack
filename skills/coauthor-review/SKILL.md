@@ -1,13 +1,11 @@
 ---
 name: coauthor-review
-description: Simulated coauthor critique. Configurable persona — skeptical methodologist, big-picture theorist, junior reader. Use on a complete draft.
+description: Simulated coauthor critique on a complete draft. Configurable persona — skeptical methodologist, big-picture theorist, or junior reader. Writes to .mstack/referee-cache/coauthor-<persona>-<date>.md.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
-  - Edit
-  - Bash
-  - Grep
+  - Bash(date *)
   - Glob
 ---
 
@@ -16,36 +14,57 @@ allowed-tools:
 **Stage:** write
 **Voice:** coauthor
 
-## What this skill does
+## When to invoke
 
-Simulated coauthor critique. Configurable persona — skeptical methodologist, big-picture theorist, junior reader. Use on a complete draft.
+You have a complete draft, ideally one round before `/referee-mock`. The coauthor catches structural and clarity issues that a referee would gloss past or that you'd internalize too deeply to see.
 
-## Forcing questions / body
+## Argument
 
-Choose a persona. Read end to end. Mark the three places the paper most needs work. Give one structural suggestion and three line-edits.
+`$ARGUMENTS` (optional) — coauthor persona. One of:
 
-## How it interacts with the paper folder
+- `skeptical-methodologist` (default) — challenges design and inference, line by line.
+- `big-picture-theorist` — challenges the framing, contribution, and engagement with theory.
+- `junior-reader` — reads as a graduate student new to the area; flags every "wait, what?".
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+If unrecognized, default to `skeptical-methodologist`.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+## Procedure
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+1. **Load.** `paper/main.tex` and every `paper/sections/*.tex`. Read prior `/coauthor-review` outputs in `.mstack/referee-cache/` so you can reference what changed since.
 
-## Output
+2. **Read end-to-end.** Resist the urge to summarize. The first read is for impressions, not corrections.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+3. **Three structural notes** (always):
+   - **The biggest hole.** One paragraph: where the argument is weakest. Quote the specific section.
+   - **The biggest distraction.** One paragraph: what to cut. Often a section the user is proudest of.
+   - **The biggest opportunity.** One paragraph: a missing argument, framing, or analysis that would land the paper better. Specific.
 
-## TODO (Phase 2/3 build-out)
+4. **One structural suggestion.** A concrete reordering, restructuring, or refocusing. Don't propose ten changes; propose one that changes the most.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+5. **Three to five line edits.** Quote the line, give the alternative, explain in five words why.
+
+6. **Persona-specific bias:**
+
+   | Persona | Where to press |
+   |---|---|
+   | `skeptical-methodologist` | Identification, sample, SE, robustness, overclaiming in `results` and `discussion`. |
+   | `big-picture-theorist` | Theory section's mechanism, scope conditions, engagement with canonical work, contribution clarity. |
+   | `junior-reader` | Where the reader gets lost. Jargon. Unexplained acronyms. Buried claims. Roadmap clarity. |
+
+7. **Save** to `.mstack/referee-cache/coauthor-<persona>-<YYYY-MM-DD>.md`.
+
+## Outputs
+
+- `.mstack/referee-cache/coauthor-<persona>-<date>.md`.
+- Summary block: hole + distraction + opportunity + the one structural suggestion.
+
+## Anti-patterns to refuse
+
+- **Compliments.** A coauthor who tells you the draft is great is not coauthoring.
+- **Marginalia masquerading as a review.** Twenty line edits and zero structural notes is a copy-edit, not a review.
+- **Speaking outside the persona.** A `junior-reader` doesn't propose new identification strategies; a `theorist` doesn't fix typos.
+
+## When to call other skills
+
+- Before: `/draft-section` for any obviously-broken section.
+- After: revise, then run `/referee-mock` (different persona) for a final pre-submission read.

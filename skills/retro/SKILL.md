@@ -1,14 +1,12 @@
 ---
 name: retro
-description: Paper retrospective — what took longest, what surprised you, what to do differently. Run after acceptance or rejection.
+description: Paper retrospective — what took longest, what surprised you, what to do differently next time. Run after acceptance or rejection. Writes to .mstack/retro.md. Optionally promotes lessons to global memory via /learn.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
   - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:retro
@@ -16,36 +14,43 @@ allowed-tools:
 **Stage:** reflect
 **Voice:** coach
 
-## What this skill does
+## When to invoke
 
-Paper retrospective — what took longest, what surprised you, what to do differently. Run after acceptance or rejection.
+After acceptance, after rejection, after a major R&R. Memory is freshest now; in a month it's gone.
 
-## Forcing questions / body
+## Procedure
 
-Where did time actually go? What was the biggest unforced error? What is one thing to systematize for the next paper? Write to .mstack/retro.md.
+1. **Load.** `.mstack/config.yaml` (status, target journals), the chronological set of `.mstack/*.md` files, git log of the project if available, decision letters in `submission/`.
 
-## How it interacts with the paper folder
+2. **Reconstruct the timeline.**
+   - First commit / `mstack-init` date.
+   - Major milestones (lit-map, prereg, first analysis, first draft, submission, R1, R2, accept).
+   - Approximate days between milestones.
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Five questions** — answer each in one paragraph. Push for specifics; vague retros are worth nothing.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+   1. **Where did time actually go?** Not where you expected — where it actually went. Compare estimated vs. actual on the longest stage.
+   2. **What was the biggest unforced error?** Something you did that cost time / quality and that you knew, at the time, you shouldn't be doing.
+   3. **What surprised you?** A finding, a referee comment, a methodological issue, a writing block — something that wasn't on your map at the start.
+   4. **What worked?** A practice / habit / decision worth keeping. The retro is also for capturing wins.
+   5. **What's the one systematizable lesson?** A rule for next time. Concrete enough to operationalize as a skill, a checklist, or a global-memory entry.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Save** to `.mstack/retro.md`.
 
-## Output
+5. **Promote.** If question 5 produced a lesson worth carrying across papers, suggest the user run `/learn` to write it to their global memory (not just `.mstack/learnings.jsonl`, which is paper-local).
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+## Outputs
 
-## TODO (Phase 2/3 build-out)
+- `.mstack/retro.md`.
+- Summary block: timeline summary + the one systematizable lesson + suggested follow-up.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## Anti-patterns to refuse
+
+- **Generic lessons.** "Communicate more with coauthors" is not a lesson; "set a 30-min check-in every Friday with C" is.
+- **Skipping the timeline.** Without the timeline, the retro is vibes.
+- **Skipping the wins.** A retro that only catalogs failures hides what to keep.
+
+## When to call other skills
+
+- After (optional): `/learn` to promote the lesson to global memory.
+- If the lesson is "I should run /X earlier next time," update the workflow note in `docs/skills.md` so the next paper inherits it.

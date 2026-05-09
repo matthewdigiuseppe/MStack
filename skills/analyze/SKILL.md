@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Runs main models and produces regression tables. Use after codebook is stable.
+description: Runs the primary specification(s) and produces regression tables. Writes to code/02-analyze.R and code/04-tables.R, output to output/tables/. Defers to r-coding-skills for R conventions and to the preregistration for the primary spec.
 user-invocable: true
 allowed-tools:
   - Read
@@ -14,38 +14,69 @@ allowed-tools:
 # /mstack:analyze
 
 **Stage:** analyze
-**Voice:** analyst
+**Voice:** analyst (anchored to `r-coding-skills`)
 
-## What this skill does
+## When to invoke
 
-Runs main models and produces regression tables. Use after codebook is stable.
+After `/data-clean` produces a stable analytic dataset and `/codebook` has flagged any data issues. If the project is preregistered, the primary spec is in `prereg/osf-prereg.md` — this skill executes it.
 
-## Forcing questions / body
+## Procedure
 
-What is the primary specification? What is the rationale for fixed effects, clustering, controls? Which table is THE table? Save tables to output/tables/.
+1. **Load context.**
+   - `.mstack/config.yaml` for primary spec (the one-line description).
+   - `prereg/osf-prereg.md` if it exists — the primary analysis section is the contract.
+   - `.mstack/identification-review-*.md` for the identifying assumption.
+   - `.mstack/learnings.jsonl` for variable names and conventions.
+   - `data/clean/analytic.rds` and `data/codebook.md`.
 
-## How it interacts with the paper folder
+2. **Confirm the spec** with the user before writing code:
+   - Outcome variable, treatment / IV, controls.
+   - Fixed effects (which dimensions, why).
+   - SE clustering (which level, justified by the dependence structure).
+   - Sample restrictions (must match prereg if preregistered).
+   - Software / package (default: `fixest::feols` for OLS / FE; `marginaleffects` for AMEs; `modelsummary` for tables).
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Invoke r-coding-skills** for style conventions.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+4. **Write `code/02-analyze.R`.**
+   - Header: purpose, inputs, outputs, run order, link to prereg if applicable.
+   - Load the cleaned dataset; do not re-clean.
+   - Fit the primary model **first** and store it as `m_primary`.
+   - Fit any pre-specified secondary models, named `m_<descriptor>`.
+   - Save model objects to `output/models/` as `.rds` for reuse by `03-figures.R` and `04-tables.R`.
+   - Print a one-line summary of each model to a log file at `output/analyze-log.md`.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+5. **Write `code/04-tables.R`** to render `output/tables/`:
+   - **Table 1** — descriptive statistics for the analytic sample.
+   - **Table 2** — the primary specification (the table the paper is built around).
+   - **Table 3+** — pre-specified secondaries.
+   - Use `modelsummary::modelsummary()` with `output = "latex"`. Save `.tex` files; the manuscript `\input`s them.
+   - Standard errors clustered as specified. Stars only if the journal demands them; default is coefficient + 95% CI.
 
-## Output
+6. **Run** `Rscript code/02-analyze.R && Rscript code/04-tables.R`. Capture errors. Do not declare done with errors.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+7. **Sanity check** the tables:
+   - N matches the analytic dataset (or matches a documented exclusion).
+   - The headline coefficient sign matches H1 (or, if it doesn't, flag this loudly — the user needs to know before drafting `results`).
+   - Standard errors clustered as specified.
 
-## TODO (Phase 2/3 build-out)
+8. **Hand-off.** Suggest `/results-audit` next. Do **not** run `/robustness` until the primary table is locked.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## Outputs
+
+- `code/02-analyze.R`, `code/04-tables.R`.
+- `output/models/m_primary.rds`, `output/models/m_<secondary>.rds`.
+- `output/tables/table-1-descriptives.tex`, `output/tables/table-2-primary.tex`, etc.
+- `output/analyze-log.md` — one-line summary per model.
+
+## Anti-patterns to refuse
+
+- **Running specs not in the prereg without flagging them.** If preregistered, exploratory specs go in a separate file (`code/02b-exploratory.R`) and are labeled exploratory in the paper.
+- **Hand-rolled regression tables.** Use `modelsummary` so reproducibility is one command away.
+- **P-value chasing.** If the primary spec doesn't give the headline, the paper's headline changes — do not retro-spec until it does.
+- **Mixed clustering across tables.** SE structure should be consistent or the paper must justify the difference.
+
+## When to call other skills
+
+- Before: `/data-clean`, `/codebook`, `/identification-review`, `/preregister`.
+- After: `/results-audit` (mandatory before drafting), then `/robustness`, then `/viz`, then `/draft-section results`.

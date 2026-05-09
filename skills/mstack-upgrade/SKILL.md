@@ -1,14 +1,9 @@
 ---
 name: mstack-upgrade
-description: Self-update MStack to the latest version from GitHub.
+description: Pulls the latest MStack from GitHub and re-runs setup. Wraps the bin/mstack-upgrade shell script.
 user-invocable: true
 allowed-tools:
-  - Read
-  - Write
-  - Edit
   - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:mstack-upgrade
@@ -16,36 +11,16 @@ allowed-tools:
 **Stage:** power
 **Voice:** maintenance
 
-## What this skill does
+## Procedure
 
-Self-update MStack to the latest version from GitHub.
+1. Run `mstack-upgrade` (the shell script at `bin/mstack-upgrade` in the MStack checkout) via Bash.
+2. Capture stdout/stderr.
+3. Summarize what changed: skills added, skills removed, version delta.
 
-## Forcing questions / body
+## Outputs
 
-Pull the repo, re-run setup, report what changed.
+- Summary block: previous version → new version, list of new/changed skills, instruction to restart Claude Code if changes affect skill loading.
 
-## How it interacts with the paper folder
+## Anti-patterns to refuse
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
-
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
-
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
-
-## Output
-
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
-
-## TODO (Phase 2/3 build-out)
-
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- **Upgrading mid-paper without warning.** If a paper folder is in active use, surface the changeset *before* the upgrade so the user can opt in.

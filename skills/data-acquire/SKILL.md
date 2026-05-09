@@ -1,13 +1,13 @@
 ---
 name: data-acquire
-description: Pulls and documents raw data sources with a provenance log. Use at the start of any empirical project.
+description: Pulls and documents raw data sources with a provenance log. Writes to data/raw/ and produces data/raw/PROVENANCE.md. Use at the start of any empirical project. /data-clean refuses to run without this.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
   - Bash
-  - Grep
+  - WebFetch
   - Glob
 ---
 
@@ -16,36 +16,63 @@ allowed-tools:
 **Stage:** build
 **Voice:** data-engineer
 
-## What this skill does
+## When to invoke
 
-Pulls and documents raw data sources with a provenance log. Use at the start of any empirical project.
+Start of empirical work. Before `/data-clean`.
 
-## Forcing questions / body
+## Procedure
 
-Where did each variable come from? Who is the original source? What is the version / vintage? What is the license? Is it stored in data/raw/ untouched?
+1. **List the sources** the project needs. For each:
+   - Name + URL or DOI of the canonical source.
+   - Vintage / version (e.g., V-Dem v14, WDI 2024).
+   - License (open / restricted / proprietary).
+   - Format (CSV, Stata, SPSS, API, scrape).
+   - Granularity (country-year, individual, dyad-year).
 
-## How it interacts with the paper folder
+2. **Acquire each source** to `data/raw/<source-shortname>/`:
+   - For public data: download via `curl` / `wget` / API, save with the version in the filename.
+   - For DOI'd data: download from the archive (Dataverse, OSF), keep the DOI.
+   - For scraped data: write a fetch script in `code/00-fetch-<source>.R` and save the output, plus the date of fetch.
+   - For restricted data: do **not** put it in the repo. Save a stub README in `data/raw/<source>/README.md` describing how to acquire it.
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Hash each file** for integrity verification: `shasum -a 256 data/raw/<source>/* > data/raw/<source>/SHA256SUMS`.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+4. **Write `data/raw/PROVENANCE.md`** with one entry per source:
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+   ```
+   ### <source-shortname>
+   - URL / DOI: <link>
+   - Version / vintage: <version + date>
+   - Acquired: <YYYY-MM-DD by <user>>
+   - License: <license>
+   - Format: <format>
+   - Granularity: <unit-of-analysis>
+   - Files: <list of files in data/raw/<source>/>
+   - SHA256 manifest: data/raw/<source>/SHA256SUMS
+   - Restrictions: <none | description>
+   - Notes: <e.g., "imputed by source for missing 2023 values">
+   ```
 
-## Output
+5. **Sanity check.** For each source:
+   - Open the file; confirm row count and column count match what the source documents.
+   - Note any column-name aliases the source uses (`country` vs. `cname` vs. `country_text_id`).
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+6. **Update `.mstack/config.yaml`** decisions log: `<date>: acquired raw data from [list of sources]`.
 
-## TODO (Phase 2/3 build-out)
+## Outputs
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- `data/raw/<source>/...` — raw data, untouched after this skill runs.
+- `data/raw/<source>/SHA256SUMS` — integrity manifest.
+- `data/raw/PROVENANCE.md` — log indexed by source.
+- `code/00-fetch-<source>.R` — fetch scripts for any non-static source.
+- Summary block: count of sources acquired, restrictions to flag, suggested next step (`/data-clean`).
+
+## Anti-patterns to refuse
+
+- **Editing files in `data/raw/` after this skill.** Raw is read-only. Any fix is a recode in `code/01-clean.R`.
+- **Undocumented sources.** Every file in `data/raw/` has a `PROVENANCE.md` entry.
+- **Bundling restricted data.** Stub + acquire-script only.
+
+## When to call other skills
+
+- After: `/data-clean`.

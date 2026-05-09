@@ -1,14 +1,10 @@
 ---
 name: design-research
-description: Picks design type (survey, experiment, quasi-experimental, observational) and justifies trade-offs. Use after identification-review.
+description: Picks the design type (survey, experiment, quasi-experiment, observational) and justifies the trade-offs against alternatives. Use after /identification-review and before /preregister.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
-  - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:design-research
@@ -16,36 +12,49 @@ allowed-tools:
 **Stage:** design
 **Voice:** design-critic
 
-## What this skill does
+## When to invoke
 
-Picks design type (survey, experiment, quasi-experimental, observational) and justifies trade-offs. Use after identification-review.
+After `/identification-review` produces at least a `Conditional pass`. The question is no longer "can this be identified?" but "which design identifies it best given the constraints?"
 
-## Forcing questions / body
+## Procedure
 
-Why this design and not the others? What does this design buy you? What does it cost? What is the closest alternative and why is it worse?
+1. **Load.** `.mstack/hypotheses.md`, `.mstack/identification-review-*.md`, `.mstack/theory.md`.
 
-## How it interacts with the paper folder
+2. **Enumerate the design options.** For the user's question, what designs could in principle answer it? Typically 2–4 of:
+   - Survey experiment / vignette / conjoint.
+   - Field experiment.
+   - Lab-in-the-field.
+   - RDD / IV / DiD on observational panel data.
+   - Pure cross-section observational.
+   - Comparative case / process-tracing (qualitative).
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Score each design on five dimensions** (qualitatively, 1 line per dim):
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+   | Dim | What to ask |
+   |---|---|
+   | **Identification** | How cleanly does this design separate the effect from confounds? |
+   | **External validity** | How representative is the population the design generalizes to? |
+   | **Construct validity** | Does the operationalization measure what theory predicts? |
+   | **Statistical power** | Is the achievable N at this design enough to detect the expected effect? (Defer to `/power-analysis`.) |
+   | **Cost** | Time, money, IRB, fieldwork. |
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Recommend one.** State why this design dominates the others on the dimensions that matter most given the question. Be explicit about what the chosen design *gives up* — don't pretend it's a free win.
 
-## Output
+5. **Identify the closest substitute.** If the chosen design fails (e.g., no IRB, no funding, scoop), what's plan B? Save plan B to the file so the project doesn't restart from zero.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+6. **Save** to `.mstack/design-research.md`. Update `.mstack/config.yaml`'s `design.type` field.
 
-## TODO (Phase 2/3 build-out)
+## Outputs
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- `.mstack/design-research.md` — option set, scores, choice, plan B.
+- `.mstack/config.yaml` — `design.type` set.
+- Summary block: chosen design + the one dimension it underperforms on.
+
+## Anti-patterns to refuse
+
+- **Default to lab/survey because it's easy.** If observational with a credible IV or RDD is dominant on identification + external validity, prefer it.
+- **No plan B.** Designs fail. Have a fallback.
+
+## When to call other skills
+
+- After: `/power-analysis`, `/preregister`. If survey-based, `/survey-build`.

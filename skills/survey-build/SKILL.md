@@ -1,6 +1,6 @@
 ---
 name: survey-build
-description: Scaffolds a Qualtrics survey with bot-defense baked in. Wraps the agent-disclosure skill. Use when designing any new survey instrument.
+description: Scaffolds a Qualtrics survey instrument with bot/agent defenses baked in. Wraps the agent-disclosure skill for layered defenses against AI-completed responses. Use whenever designing a new survey instrument.
 user-invocable: true
 allowed-tools:
   - Read
@@ -16,36 +16,62 @@ allowed-tools:
 **Stage:** design
 **Voice:** survey-designer
 
-## What this skill does
+## When to invoke
 
-Scaffolds a Qualtrics survey with bot-defense baked in. Wraps the agent-disclosure skill. Use when designing any new survey instrument.
+You're designing a new survey instrument — a survey experiment, a panel, or a benchmark study comparing humans and AI agents. Run **before** programming the Qualtrics flow, not after.
 
-## Forcing questions / body
+## Procedure
 
-Use the agent-disclosure skill to layer in attention checks, behavioral probes, and exclusion rules. Build a probe manifest alongside the instrument.
+1. **Establish the science target.**
+   - Read `.mstack/config.yaml` for paper context.
+   - Ask (or read prior context for) the four design questions:
+     - Population and sample frame.
+     - Treatment(s) — what is randomized, when, by whom.
+     - Outcome(s) — primary, secondary, manipulation checks.
+     - Inference unit — individual, dyad, time-series.
+   - Record the answers in `.mstack/survey-design.md`.
 
-## How it interacts with the paper folder
+2. **Invoke the agent-disclosure skill.**
+   - Use the **agent-disclosure** skill to layer in:
+     - Attention checks calibrated to expected human reading time.
+     - Behavioral probes (timing distributions, paste-detection, mouse-tracking opt-ins).
+     - Instructional manipulation checks.
+     - Open-ended response quality checks.
+     - Exclusion rules with thresholds.
+   - This is non-optional. Every MStack survey ships with a probe manifest.
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Draft the instrument.** Produce, in `.mstack/survey-design.md`:
+   - **Block plan** with conditional logic.
+   - **Question table** — for each question: ID, type, wording, response options, required y/n, randomization rules, branching.
+   - **Embedded data fields** — treatment assignment, condition labels, timing variables, IP-region (if collected).
+   - **Probe manifest** (from agent-disclosure): each probe with its trigger condition, scoring rule, and exclusion threshold.
+   - **Webhooks/quotas** — if balancing on demographics, document quota logic.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+4. **Hand off to Qualtrics.**
+   - If the user has a Qualtrics MCP connected, offer to programmatically create the survey, blocks, and questions.
+   - Otherwise produce a copy-paste-ready spec the user can build manually.
+   - Either way, save the spec to `.mstack/survey-design.md` so the design is reproducible.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+5. **Pre-flight checklist** — refuse to mark "ready to field" until:
+   - [ ] Probe manifest is present and every probe has a threshold.
+   - [ ] Attention checks placed at expected fail rates ≤ 10% for engaged humans.
+   - [ ] Open-ended questions have a defined quality-check protocol.
+   - [ ] Treatment randomization is documented and reproducible.
+   - [ ] Preregistration (`/preregister`) has been run or explicitly waived.
+   - [ ] Power analysis (`/power-analysis`) supports the proposed N.
 
-## Output
+## Outputs
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+- `.mstack/survey-design.md` — full instrument spec + probe manifest.
+- (Optional, if Qualtrics MCP available) the actual survey + library blocks created in Qualtrics.
 
-## TODO (Phase 2/3 build-out)
+## Anti-patterns to refuse
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- **No bot defenses.** If a user wants to skip agent-disclosure, refuse and explain why — agent contamination is now the default failure mode of online survey research.
+- **Single attention check.** One check is not a defense; it's theater.
+- **Ad-hoc exclusions.** Every exclusion rule must be pre-specified with a threshold.
+
+## When to call other skills
+
+- Before fielding: `/preregister`, `/power-analysis`.
+- After fielding: `/data-acquire` (provenance log), then `/data-clean` (with the survey design as ground truth).

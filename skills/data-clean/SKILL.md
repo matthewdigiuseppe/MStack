@@ -1,6 +1,6 @@
 ---
 name: data-clean
-description: Reproducible cleaning pipeline. Wraps r-coding-skills. Use to go from data/raw/ to data/clean/.
+description: Reproducible cleaning pipeline. Reads from data/raw/, writes to data/clean/. Wraps the r-coding-skills skill for R conventions. Every drop, recode, and merge is logged with row-count checks.
 user-invocable: true
 allowed-tools:
   - Read
@@ -14,38 +14,64 @@ allowed-tools:
 # /mstack:data-clean
 
 **Stage:** build
-**Voice:** data-engineer
+**Voice:** data-engineer (anchored to `r-coding-skills`)
 
-## What this skill does
+## When to invoke
 
-Reproducible cleaning pipeline. Wraps r-coding-skills. Use to go from data/raw/ to data/clean/.
+After `/data-acquire` has populated `data/raw/` and the provenance log. Run before any analysis. Re-run when the analytic dataset changes.
 
-## Forcing questions / body
+## Procedure
 
-Use r-coding-skills conventions. One step per script. Save intermediate artifacts. Document every drop / recode / merge with a comment and a row-count check.
+1. **Read the provenance log** at `data/raw/PROVENANCE.md` (or whatever `/data-acquire` wrote). If missing, stop and tell the user to run `/data-acquire` first — undocumented raw data is not cleanable.
 
-## How it interacts with the paper folder
+2. **Invoke the r-coding-skills skill** for R conventions: tidyverse style, `here::here()` paths, named pipes, snake_case, no `setwd()`, package versioning notes.
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+3. **Plan the pipeline.** Before writing code, list (in chat) the cleaning steps:
+   - Reads (which raw files).
+   - Joins (key, type, expected row count).
+   - Recodes (variable, mapping).
+   - Drops (rule, expected row count, justification).
+   - Derived variables (formula).
+   - Final analytic unit (e.g., country-year, individual-wave).
+   - Output file(s).
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+   Get user confirmation on the plan before writing code. If `.mstack/learnings.jsonl` already specifies conventions (variable names, exclusions), apply them automatically and note which.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Write `code/01-clean.R`.** Conventions:
+   - Header comment block: purpose, inputs, outputs, run order.
+   - `library()` calls grouped at top.
+   - Each step in its own block, preceded by a one-line comment.
+   - **Every drop and join logged with `nrow()` before/after** and a stop-if-unexpected check (e.g., `stopifnot(nrow(df) == expected)`).
+   - Save final dataset(s) to `data/clean/` as `.rds` (preferred) plus a `.csv` mirror for portability.
+   - Save a session-info dump to `data/clean/session-info.txt` for replication.
 
-## Output
+5. **Run the script** with `Rscript code/01-clean.R`. Capture stdout/stderr. If it errors, fix and re-run; do not declare done with errors outstanding.
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+6. **Sanity checks** on the cleaned dataset:
+   - Row counts match the plan.
+   - No fully-missing columns.
+   - Key variables in expected ranges.
+   - Unit of analysis is unique (`stopifnot(!anyDuplicated(df[, key_cols]))`).
+   - Print a `summary()` and a head/tail snapshot to a log file at `data/clean/clean-log.md`.
 
-## TODO (Phase 2/3 build-out)
+7. **Suggest the next step:** `/codebook` to auto-document the cleaned dataset.
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+## Outputs
+
+- `code/01-clean.R` — the pipeline (canonical location; do not write to other paths).
+- `data/clean/analytic.rds` (and `.csv` mirror) — the cleaned dataset.
+- `data/clean/session-info.txt` — `sessionInfo()` dump for replication.
+- `data/clean/clean-log.md` — row counts at each step, sanity-check output.
+
+## Anti-patterns to refuse
+
+- **Editing `data/raw/`.** Raw is read-only forever. If a fix to raw is needed, document it as a recode in the cleaning script, not as an edit to the file.
+- **Silent drops.** Every drop is logged with a row-count check.
+- **Hardcoded absolute paths.** Use `here::here()`.
+- **Mixed-purpose scripts.** `01-clean.R` cleans. Modeling goes in `02-analyze.R`. Don't mix.
+- **Done with warnings.** R warnings are signal. Address each or suppress with a justification comment.
+
+## When to call other skills
+
+- Before: `/data-acquire` (must produce `data/raw/PROVENANCE.md` first).
+- After: `/codebook` to auto-document; then `/analyze` to model.

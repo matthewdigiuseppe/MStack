@@ -1,14 +1,11 @@
 ---
 name: freeze
-description: Lock edits to one directory. Lifted from gstack's /freeze. Use to keep Claude out of submission/ during R&R, or out of data/raw/ ever.
+description: Lock edits to one directory. Refuses all writes outside that directory until /unfreeze. Useful during R&R to keep Claude out of submission/ or always to keep Claude out of data/raw/. Lifted from gstack's /freeze.
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Edit
-  - Bash
-  - Grep
-  - Glob
 ---
 
 # /mstack:freeze
@@ -16,36 +13,36 @@ allowed-tools:
 **Stage:** power
 **Voice:** safety
 
-## What this skill does
+## Argument
 
-Lock edits to one directory. Lifted from gstack's /freeze. Use to keep Claude out of submission/ during R&R, or out of data/raw/ ever.
+`$ARGUMENTS` — the directory to allow writes within. All writes outside this directory will be refused until `/unfreeze` is called.
 
-## Forcing questions / body
+If no argument is given, default to the current paper-folder root (everything writeable as today).
 
-Refuse all writes outside the frozen directory until /unfreeze is called.
+## Procedure
 
-## How it interacts with the paper folder
+1. **Read or create `.mstack/safety.yaml`.**
 
-This skill assumes the standard MStack paper layout (`mstack-init` scaffolds it):
+2. **Set the lock.**
+   - `freeze.path: <relative-or-absolute-path>`.
+   - `freeze.set_at: <YYYY-MM-DD HH:MM>`.
 
-```
-.mstack/         # config + learnings + caches
-paper/           # manuscript + sections/
-data/{raw,clean} # raw is read-only; clean is generated
-code/            # numbered R scripts
-output/          # tables + figures
-submission/      # cover letter + R&R
-prereg/          # preregistration docs
-```
+3. **Behavior change while `freeze.path` is set:**
+   - Before any `Write`, `Edit`, or `Bash` that mutates files outside `freeze.path`, refuse and tell the user to run `/unfreeze` first.
+   - Reads, greps, finds, and `Bash` commands that don't mutate outside the path are fine.
 
-Read `.mstack/config.yaml` for paper-level context (title, target journals, coauthors). Read `.mstack/learnings.jsonl` for paper-specific conventions.
+4. **Print the lock state** to the user with the absolute path of the lock target.
 
-## Output
+## Outputs
 
-<!-- Stub. Fill in: where outputs go, what files this skill writes, what it never touches. -->
+- `.mstack/safety.yaml` updated.
+- Summary: lock target.
 
-## TODO (Phase 2/3 build-out)
+## Anti-patterns to refuse
 
-- [ ] Flesh out the prompt — turn the forcing questions above into a concrete script.
-- [ ] Define exact output paths and filenames.
-- [ ] Add examples of good and bad outputs.
+- **Quietly working around the lock.** If a step requires a write outside, surface it and ask.
+
+## When to call other skills
+
+- Pair with `/careful` to make `/guard`.
+- Use `/unfreeze` to clear.
