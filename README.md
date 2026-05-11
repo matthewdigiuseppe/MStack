@@ -8,12 +8,33 @@ Originally built for political science / international political economy work, b
 
 ## Install
 
+MStack ships as a single-plugin Claude Code marketplace. The slash-command install path works identically across the **CLI**, the **desktop app** (Mac/Windows), the **web app** at claude.ai/code, and the **IDE extensions** (VS Code, JetBrains).
+
+### Recommended: install as a plugin (all interfaces)
+
+In any Claude Code session, run:
+
+```text
+/plugin marketplace add matthewdigiuseppe/MStack
+/plugin install mstack@mstack
+```
+
+That registers MStack's marketplace and installs the plugin. The 34 slash commands (`/research-question`, `/draft-section`, …) become available immediately. You can also browse and manage MStack from `/plugin` (Discover / Installed / Marketplaces tabs).
+
+To scaffold a new paper folder from a Claude Code session, ask Claude to run the bundled `mstack-init` script — its path is `${CLAUDE_PLUGIN_ROOT}/bin/mstack-init <paper-name>` once the plugin is installed.
+
+### Optional: manual install (CLI / desktop, puts `mstack-init` on shell PATH)
+
+If you'd rather run `mstack-init` directly from your terminal without going through Claude Code, clone and run `./setup`:
+
 ```bash
 git clone --single-branch --depth 1 https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack \
   && cd ~/.claude/plugins/mstack && ./setup
 ```
 
-Then run `mstack-init my-paper` in any directory to scaffold a new paper folder.
+`./setup` symlinks the plugin into `~/.claude/skills/mstack` and prints a one-line export to add `bin/` to your `PATH`. Then `mstack-init my-paper` works from any directory.
+
+This path is for local shells only — on Claude Code on the web there is no persistent shell to add to, so use the plugin install above instead.
 
 ## Workflow
 
