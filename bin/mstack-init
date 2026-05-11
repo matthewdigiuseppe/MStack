@@ -68,7 +68,7 @@ if [[ "$USE_QUARTO" == "1" ]]; then
     cat > "$DEST/paper/main.qmd" <<'QMD'
 ---
 title: "TITLE"
-author: "Matt DiGiuseppe"
+author: "AUTHOR"
 format:
   pdf:
     documentclass: article

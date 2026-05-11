@@ -49,7 +49,7 @@ Each skill is invokable as `/<name>` once the plugin is installed. Stages match 
 
 | Skill | Voice | Use when |
 |---|---|---|
-| `/draft-section <name>` | writer | Drafting any section. Wraps `digiuseppe-writing-style`. |
+| `/draft-section <name>` | writer | Drafting any section. Anchors to the writing-style skill named in `.mstack/config.yaml` (`voice.writing_style`); falls back to a generic academic voice if unset. |
 | `/abstract-shotgun` | writer | After complete draft. 4–6 abstract variants with positioning differences. |
 | `/title-shotgun` | writer | Late-stage. Title options ranked on hook × precision. |
 | `/coauthor-review` | coauthor | On a complete draft. Configurable persona. |

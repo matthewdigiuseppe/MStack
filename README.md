@@ -8,12 +8,40 @@ Originally built for political science / international political economy work, b
 
 ## Install
 
-```bash
-git clone --single-branch --depth 1 https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack \
-  && cd ~/.claude/plugins/mstack && ./setup
+MStack works in every flavor of Claude Code: the **terminal CLI**, the **Mac and Windows desktop apps**, **Claude Code on the web** (claude.ai/code), and the **VS Code and JetBrains extensions**. The steps below are the same in all of them.
+
+### Step 1 — Add MStack to Claude Code
+
+Open Claude Code and type these two lines, one at a time, into the chat box:
+
+```
+/plugin marketplace add matthewdigiuseppe/MStack
+/plugin install mstack@mstack
 ```
 
-Then run `mstack-init my-paper` in any directory to scaffold a new paper folder.
+The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 34 MStack commands — `/research-question`, `/draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
+
+### Step 2 — Start a new paper
+
+In Claude Code, just ask in plain English:
+
+> Please run `mstack-init tariffs-aid` to set up a new MStack paper folder here.
+
+(Replace `tariffs-aid` with a short name for your paper.) Claude will create the folder with everything in the right place. Then open the file `.mstack/config.yaml` inside it and fill in your name, the paper title, and your target journals.
+
+You're done. From here you'd typically start with `/research-question` or `/idea-shotgun`.
+
+### Power-user alternative (optional, terminal users only)
+
+If you live in a Mac or Linux terminal and would rather run `mstack-init` directly from the command line instead of asking Claude, you can clone MStack manually:
+
+```bash
+git clone https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack
+cd ~/.claude/plugins/mstack
+./setup
+```
+
+`./setup` registers MStack with Claude Code and prints one line for you to paste into your shell config so that typing `mstack-init my-paper` in any folder will work. Skip this whole section if you already installed via `/plugin install` above — it does the same job.
 
 ## Workflow
 
@@ -80,7 +108,7 @@ my-paper/
 
 - **Stats stack.** R (ggplot, fixest, modelsummary). Stata/Python users: fork.
 - **Manuscript format.** LaTeX. Quarto users: `mstack-init --quarto`. Word: out of scope.
-- **Voice.** `digiuseppe-writing-style` is the default in `/draft-section`. Override per-paper in `.mstack/config.yaml`.
+- **Voice.** `/draft-section` and `/abstract-shotgun` anchor tone to whatever skill name you put in `voice.writing_style` in `.mstack/config.yaml`. MStack does not ship a personal style — install or author your own writing-style skill and point the config at it. If left empty, a generic academic voice is used.
 
 ## License
 

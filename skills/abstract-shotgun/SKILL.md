@@ -11,7 +11,7 @@ allowed-tools:
 # /mstack:abstract-shotgun
 
 **Stage:** write
-**Voice:** writer (anchored to `digiuseppe-writing-style`)
+**Voice:** writer (anchored to the skill named in `.mstack/config.yaml` → `voice.writing_style`)
 
 ## When to invoke
 
@@ -21,7 +21,7 @@ The full draft exists. The abstract is the single hardest paragraph in the paper
 
 1. **Load.** `paper/sections/intro.tex`, `paper/sections/discussion.tex`, `paper/sections/results.tex`, `.mstack/config.yaml` (target journals).
 
-2. **Use digiuseppe-writing-style** for voice across all variants.
+2. **Apply the configured writing voice** across all variants. Read `voice.writing_style` from `.mstack/config.yaml`; if set, invoke that skill. If unset, default to a clean, generic academic voice (short sentences, active verbs, no hedge-stuffing).
 
 3. **Generate 4–6 variants**, each varying along one of:
 
