@@ -80,7 +80,7 @@ my-paper/
 
 - **Stats stack.** R (ggplot, fixest, modelsummary). Stata/Python users: fork.
 - **Manuscript format.** LaTeX. Quarto users: `mstack-init --quarto`. Word: out of scope.
-- **Voice.** `digiuseppe-writing-style` is the default in `/draft-section`. Override per-paper in `.mstack/config.yaml`.
+- **Voice.** `/draft-section` and `/abstract-shotgun` anchor tone to whatever skill name you put in `voice.writing_style` in `.mstack/config.yaml`. MStack does not ship a personal style — install or author your own writing-style skill and point the config at it. If left empty, a generic academic voice is used.
 
 ## License
 

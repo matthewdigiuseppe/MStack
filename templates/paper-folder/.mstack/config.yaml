@@ -8,7 +8,7 @@ paper:
   status: "ideating"       # ideating | mapping | designing | building | analyzing | writing | submitted | r-and-r | accepted | archived
 
 authors:
-  - name: "Matt DiGiuseppe"
+  - name: ""               # your name
     role: "lead"
   # - name: "Coauthor Name"
   #   role: "coauthor"
@@ -33,6 +33,8 @@ decisions:
   # - "2026-05-09: dropped 2008-2010 from sample due to crisis confound."
 
 voice:
-  # Override defaults for this paper if needed.
-  writing_style: "digiuseppe-writing-style"
+  # Name of a Claude Code skill that defines your prose voice (tone, rhythm,
+  # vocabulary). MStack does not ship one — install or author your own and put
+  # its skill name here. Leave empty to use a generic academic voice.
+  writing_style: ""
   reviewer_style: "journal-reviewer-style"

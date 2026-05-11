@@ -1,6 +1,6 @@
 ---
 name: draft-section
-description: Drafts a paper section (intro, theory, data, methods, results, discussion, abstract) in voice. Wraps the digiuseppe-writing-style skill. Section name passed as argument. Writes to paper/sections/<name>.tex. Never fabricates citations.
+description: Drafts a paper section (intro, theory, data, methods, results, discussion, abstract) in voice. Anchors tone to the writing-style skill named in `.mstack/config.yaml` (`voice.writing_style`); falls back to a generic academic voice if unset. Section name passed as argument. Writes to paper/sections/<name>.tex. Never fabricates citations.
 user-invocable: true
 allowed-tools:
   - Read
@@ -14,7 +14,7 @@ allowed-tools:
 # /mstack:draft-section
 
 **Stage:** write
-**Voice:** writer (anchored to `digiuseppe-writing-style`)
+**Voice:** writer (anchored to the skill named in `.mstack/config.yaml` → `voice.writing_style`)
 
 ## When to invoke
 
@@ -36,8 +36,9 @@ If not supplied or unrecognized, list the recognized names and stop.
    - For methods/results: read `code/02-analyze.R`, `output/tables/*`, `output/figures/*`. The numbers in your prose must match the tables on disk.
 
 2. **Invoke the writing-style skill.**
-   - Use the **digiuseppe-writing-style** skill for tone, sentence rhythm, and vocabulary.
-   - If `.mstack/config.yaml` overrides `voice.writing_style`, honor that instead.
+   - Read `voice.writing_style` from `.mstack/config.yaml`.
+   - If set, invoke that skill for tone, sentence rhythm, and vocabulary.
+   - If unset or empty, write in a clean, generic academic voice: short sentences, active verbs where possible, no hedge-stuffing, no thesaurus reaches. Tell the user once that no `voice.writing_style` is configured and they can set one in `.mstack/config.yaml`.
 
 3. **Draft the section** with the section-specific bar:
 
@@ -69,7 +70,7 @@ If not supplied or unrecognized, list the recognized names and stop.
 
 - **Fabricating citations.** Mark missing refs as TODOs; never invent.
 - **Drafting `results` before `02-analyze.R` has stable output.** If tables/figures are missing, stop and tell the user to run `/analyze` first.
-- **Writing in a generic academic voice** when `digiuseppe-writing-style` is loaded. Defer to it; do not paper over it with hedge phrases.
+- **Writing in a generic academic voice** when a `voice.writing_style` skill is configured and loaded. Defer to it; do not paper over it with hedge phrases.
 - **Filling space.** A short, sharp section beats a long, hedging one.
 
 ## When to call other skills

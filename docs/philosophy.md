@@ -27,7 +27,7 @@ Every skill carries a **stage** and a **voice**. Stage tells you when to use it.
 
 - **Advisor / adversarial-advisor** voices are for early stages (ideate, scope-challenge). Their job is to talk you out of bad ideas.
 - **Methodologist** voice runs through map, design, and analysis. Its job is to make the inference defensible.
-- **Writer** voice owns the writing stage and defers to `digiuseppe-writing-style` for tone.
+- **Writer** voice owns the writing stage and defers to the user-configured writing-style skill (`.mstack/config.yaml` → `voice.writing_style`) for tone.
 - **Referee** voice (`/referee-mock`) defers to `journal-reviewer-style` and front-runs the actual reviewers.
 - **Replicator** voice closes the project (`/archive`) and asks: would a stranger rebuild every table from raw data?
 
@@ -35,7 +35,7 @@ Every skill carries a **stage** and a **voice**. Stage tells you when to use it.
 
 - **Stats stack:** R. Regenerate from `data/raw/` via numbered scripts in `code/`. Stata or Python users will need to fork or override.
 - **Manuscript format:** LaTeX by default; `mstack-init --quarto` for Quarto.
-- **Writing voice:** `digiuseppe-writing-style`. Override per-paper in `.mstack/config.yaml`.
+- **Writing voice:** user-configurable. Set `voice.writing_style` in `.mstack/config.yaml` to the name of a writing-style skill you've installed. MStack does not ship one; leave it empty to use a generic academic voice.
 - **Reviewer voice:** `journal-reviewer-style`.
 - **Survey work:** layered with `agent-disclosure` for AI-completion defenses.
 
