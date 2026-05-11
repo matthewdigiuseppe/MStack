@@ -8,33 +8,40 @@ Originally built for political science / international political economy work, b
 
 ## Install
 
-MStack ships as a single-plugin Claude Code marketplace. The slash-command install path works identically across the **CLI**, the **desktop app** (Mac/Windows), the **web app** at claude.ai/code, and the **IDE extensions** (VS Code, JetBrains).
+MStack works in every flavor of Claude Code: the **terminal CLI**, the **Mac and Windows desktop apps**, **Claude Code on the web** (claude.ai/code), and the **VS Code and JetBrains extensions**. The steps below are the same in all of them.
 
-### Recommended: install as a plugin (all interfaces)
+### Step 1 — Add MStack to Claude Code
 
-In any Claude Code session, run:
+Open Claude Code and type these two lines, one at a time, into the chat box:
 
-```text
+```
 /plugin marketplace add matthewdigiuseppe/MStack
 /plugin install mstack@mstack
 ```
 
-That registers MStack's marketplace and installs the plugin. The 34 slash commands (`/research-question`, `/draft-section`, …) become available immediately. You can also browse and manage MStack from `/plugin` (Discover / Installed / Marketplaces tabs).
+The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 34 MStack commands — `/research-question`, `/draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
 
-To scaffold a new paper folder from a Claude Code session, ask Claude to run the bundled `mstack-init` script — its path is `${CLAUDE_PLUGIN_ROOT}/bin/mstack-init <paper-name>` once the plugin is installed.
+### Step 2 — Start a new paper
 
-### Optional: manual install (CLI / desktop, puts `mstack-init` on shell PATH)
+In Claude Code, just ask in plain English:
 
-If you'd rather run `mstack-init` directly from your terminal without going through Claude Code, clone and run `./setup`:
+> Please run `mstack-init tariffs-aid` to set up a new MStack paper folder here.
+
+(Replace `tariffs-aid` with a short name for your paper.) Claude will create the folder with everything in the right place. Then open the file `.mstack/config.yaml` inside it and fill in your name, the paper title, and your target journals.
+
+You're done. From here you'd typically start with `/research-question` or `/idea-shotgun`.
+
+### Power-user alternative (optional, terminal users only)
+
+If you live in a Mac or Linux terminal and would rather run `mstack-init` directly from the command line instead of asking Claude, you can clone MStack manually:
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack \
-  && cd ~/.claude/plugins/mstack && ./setup
+git clone https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack
+cd ~/.claude/plugins/mstack
+./setup
 ```
 
-`./setup` symlinks the plugin into `~/.claude/skills/mstack` and prints a one-line export to add `bin/` to your `PATH`. Then `mstack-init my-paper` works from any directory.
-
-This path is for local shells only — on Claude Code on the web there is no persistent shell to add to, so use the plugin install above instead.
+`./setup` registers MStack with Claude Code and prints one line for you to paste into your shell config so that typing `mstack-init my-paper` in any folder will work. Skip this whole section if you already installed via `/plugin install` above — it does the same job.
 
 ## Workflow
 
