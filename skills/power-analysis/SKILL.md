@@ -32,8 +32,8 @@ After `/design-research` chooses a design. Before fielding. The prereg's "Sample
    - **Design constants** — clustering, ICC, attrition rate, blocking.
 
 3. **Write `code/00-power.R`** that:
-   - Loads `pwr`, or `DeclareDesign`, or `Superpower` depending on the design.
-   - Implements either an analytic formula (simple cases) or simulation (FE, panel, hierarchical, conjoint).
+   - **Defaults to `DeclareDesign`** (https://declaredesign.org/r/declaredesign/) — declare the model, inquiry, data strategy, and answer strategy, then `diagnose_design()` over a grid of N and effect sizes. This is the default because it generalizes across experimental, survey, FE, panel, hierarchical, and conjoint designs, and forces the design assumptions to be made explicit.
+   - Use `pwr` only as a quick analytic sanity check for textbook cases (two-sample t-test, single-level proportion). Use `Superpower` only for factorial ANOVA designs where DeclareDesign would be overkill. Note the fallback choice and its justification in the script header.
    - For experiments / surveys: report N for power = 0.80 *and* MDE at the user's planned N.
    - For observational with FE: simulate to find effective N for identification.
    - Saves a sensitivity curve (power vs. effect size; MDE vs. N) to `output/figures/power-sensitivity.pdf`.
@@ -61,6 +61,7 @@ After `/design-research` chooses a design. Before fielding. The prereg's "Sample
 - **Power calc on the wrong effect size.** Using the published median effect from a literature with publication bias inflates expected effect and underpowers the study.
 - **Black-box defaults.** Justify ICC, attrition, clustering — every assumption changes the answer.
 - **Skipping the sensitivity curve.** A single number for power is not informative; the curve is.
+- **Reaching for `pwr` first.** Default to DeclareDesign so the model, inquiry, data strategy, and answer strategy are explicit. Falling back to `pwr` is allowed only when the design is genuinely a textbook two-sample case and the script header documents why.
 
 ## When to call other skills
 
