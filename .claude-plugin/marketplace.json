@@ -10,7 +10,7 @@
     {
       "name": "mstack",
       "source": "./",
-      "description": "A Claude Code plugin for academic research — 34 role-based slash commands across the full paper lifecycle (ideate, map, design, build, analyze, write, submit, reflect).",
+      "description": "A Claude Code plugin for academic research — 35 role-based slash commands across the full paper lifecycle (ideate, map, design, build, analyze, write, submit, reflect).",
       "version": "0.1.0",
       "category": "productivity",
       "homepage": "https://github.com/matthewdigiuseppe/MStack"

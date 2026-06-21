@@ -78,6 +78,7 @@ Each skill is invokable as `/<name>` once the plugin is installed. Stages match 
 | `/freeze` | Lock edits to one directory. |
 | `/guard` | `/careful` + `/freeze`. |
 | `/unfreeze` | Remove the lock. |
+| `/llm-checklist` | An LLM is integral to the design (annotation, simulation, chatbots, classification). Logs model/version/config/prompts as you go and compiles the GUIDE-LLM reporting checklist. Writes `.mstack/llm-usage.jsonl` + `.mstack/llm-checklist.md`. |
 | `/learn` | Per-paper conventions Claude should remember. Writes `.mstack/learnings.jsonl`. |
 | `/mstack-upgrade` | Pull latest MStack from GitHub. |
 
@@ -95,6 +96,7 @@ Every skill writes to predictable paths inside the paper folder:
 | `/analyze` | `output/tables/*.tex` (via `code/02-analyze.R`, `code/04-tables.R`) |
 | `/viz` | `output/figures/*.{pdf,png}` (via `code/03-figures.R`) |
 | `/results-audit` | `.mstack/audits/<date>-results-audit.md` |
+| `/llm-checklist` | `.mstack/llm-usage.jsonl` (ledger) + `.mstack/llm-checklist.md` (+ optional `paper/sections/llm-checklist.tex`) |
 | `/coauthor-review` | `.mstack/referee-cache/coauthor-<persona>-<date>.md` |
 | `/referee-mock` | `.mstack/referee-cache/referee-mock-<date>.md` |
 | `/cover-letter` | `submission/cover-letter.md` |
