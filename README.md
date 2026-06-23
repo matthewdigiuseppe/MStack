@@ -2,7 +2,7 @@
 
 **A Claude Code plugin for academic research.** Inspired by [gstack](https://github.com/garrytan/gstack).
 
-gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships ~33 skills that walk a paper across all of them.
+gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships ~35 skills that walk a paper across all of them.
 
 Originally built for political science / international political economy work, but the spine generalizes to most quantitative social science.
 
@@ -19,7 +19,7 @@ Open Claude Code and type these two lines, one at a time, into the chat box:
 /plugin install mstack@mstack
 ```
 
-The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 34 MStack commands — `/research-question`, `/draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
+The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 35 MStack commands — `/research-question`, `/draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
 
 ### Step 2 — Start a new paper
 
@@ -76,6 +76,7 @@ cd ~/.claude/plugins/mstack
 | **Reflect** | `/retro` | Paper retrospective |
 | | `/archive` | Replication package + OSF/Dataverse prep |
 | **Power** | `/careful`, `/freeze`, `/guard`, `/unfreeze` | Edit-safety controls |
+| | `/llm-checklist` | Log LLM-as-instrument use; compile the GUIDE-LLM reporting checklist |
 | | `/learn` | Per-paper conventions Claude should remember |
 | | `/mstack-upgrade` | Self-update |
 
@@ -85,7 +86,7 @@ cd ~/.claude/plugins/mstack
 
 ```
 my-paper/
-  .mstack/{config.yaml, learnings.jsonl, referee-cache/}
+  .mstack/{config.yaml, learnings.jsonl, llm-usage.jsonl, referee-cache/}
   paper/{main.tex, refs.bib, sections/}
   data/{raw/, clean/, codebook.md}
   code/{01-clean.R, 02-analyze.R, 03-figures.R, 04-tables.R}
