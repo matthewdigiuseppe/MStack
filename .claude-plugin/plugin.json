@@ -1,7 +1,7 @@
 {
   "name": "mstack",
   "description": "A Claude Code plugin for academic research — an opinionated set of role-based slash commands that walk a paper from idea to archive. Inspired by gstack.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Matt DiGiuseppe",
     "email": "mdigiuseppe@gmail.com"

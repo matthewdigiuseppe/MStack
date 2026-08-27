@@ -1,7 +1,7 @@
 ---
 name: learn
-description: Append a per-paper convention or fact to .mstack/learnings.jsonl. Use to teach Claude variable names, design choices, framing, target-journal preferences. One JSON object per line — append-only.
-user-invocable: true
+description: Appends a paper-specific fact — variable names, conventions, design decisions, formatting preferences — to .mstack/learnings.jsonl so every later skill applies it. Use whenever the user states a convention Claude should remember, or repeats a correction twice.
+argument-hint: "<fact to remember>"
 allowed-tools:
   - Read
   - Write
@@ -42,7 +42,7 @@ Whenever you find yourself telling Claude the same paper-specific fact twice. Th
 
 4. **Echo back** what was written so the user can confirm.
 
-5. **Hint at scope.** If the fact looks like it generalizes across papers (a methodological habit, a tooling preference, a writing rule), tell the user to consider also writing it to global memory at `~/.claude/projects/.../memory/` rather than only here.
+5. **Hint at scope.** If the fact looks like it generalizes across papers (a methodological habit, a tooling preference, a writing rule), tell the user to consider also adding it to their global memory (`~/.claude/CLAUDE.md`) rather than only here.
 
 ## Outputs
 

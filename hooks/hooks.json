@@ -1,0 +1,16 @@
+{
+  "description": "MStack safety enforcement. Backs /mstack:careful and /mstack:freeze with real PreToolUse checks, and keeps data/raw/ read-only after acquisition.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/mstack-guard.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

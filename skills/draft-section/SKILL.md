@@ -1,7 +1,7 @@
 ---
 name: draft-section
-description: Drafts a paper section (intro, theory, data, methods, results, discussion, abstract) in voice. Anchors tone to the writing-style skill named in `.mstack/config.yaml` (`voice.writing_style`); falls back to a generic academic voice if unset. Section name passed as argument. Writes to paper/sections/<name>.tex. Never fabricates citations.
-user-invocable: true
+description: Drafts one manuscript section (intro, theory, data, methods, results, discussion, abstract) to paper/sections/, in the user's configured writing voice, with numbers checked against output/ and no invented citations. Use when the user asks to write or revise any part of the paper.
+argument-hint: "intro|theory|data|methods|results|discussion|abstract"
 allowed-tools:
   - Read
   - Write
@@ -60,6 +60,7 @@ If not supplied or unrecognized, list the recognized names and stop.
 5. **Write to disk.**
    - Output goes to `paper/sections/<name>.tex` (or `.qmd` if `.mstack/config.yaml` says `format: quarto`).
    - Overwrite if the file is empty or contains only a placeholder comment. Otherwise: produce a candidate to stdout and ask whether to overwrite, append, or save to `paper/sections/<name>.candidate.tex`.
+   - On the first substantive section drafted, set `paper.status: "writing"` in `.mstack/config.yaml`.
 
 ## Outputs
 
@@ -69,13 +70,13 @@ If not supplied or unrecognized, list the recognized names and stop.
 ## Anti-patterns to refuse
 
 - **Fabricating citations.** Mark missing refs as TODOs; never invent.
-- **Drafting `results` before `02-analyze.R` has stable output.** If tables/figures are missing, stop and tell the user to run `/analyze` first.
+- **Drafting `results` before `02-analyze.R` has stable output.** If tables/figures are missing, stop and tell the user to run `/mstack:analyze` first.
 - **Writing in a generic academic voice** when a `voice.writing_style` skill is configured and loaded. Defer to it; do not paper over it with hedge phrases.
 - **Filling space.** A short, sharp section beats a long, hedging one.
 
 ## When to call other skills
 
-- **Before drafting `intro`:** if no `/lit-map` output exists in `.mstack/`, suggest running `/lit-map` first.
-- **Before drafting `methods`:** if no `/identification-review` output exists, suggest running it first.
-- **After drafting `abstract`:** suggest `/abstract-shotgun` to generate variants.
-- **After all sections are drafted:** suggest `/coauthor-review` then `/referee-mock`.
+- **Before drafting `intro`:** if no `/mstack:lit-map` output exists in `.mstack/`, suggest running `/mstack:lit-map` first.
+- **Before drafting `methods`:** if no `/mstack:identification-review` output exists, suggest running it first.
+- **After drafting `abstract`:** suggest `/mstack:abstract-shotgun` to generate variants.
+- **After all sections are drafted:** suggest `/mstack:coauthor-review` then `/mstack:referee-mock`.

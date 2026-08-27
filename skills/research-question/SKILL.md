@@ -1,7 +1,6 @@
 ---
 name: research-question
-description: Forcing-question interrogation about contribution, identification, feasibility, and scoop risk before you commit to a research question. Use at the start of a project, or when reconsidering one. Analog to gstack's /office-hours.
-user-invocable: true
+description: Interrogates a candidate research idea with six forcing questions — contribution, audience, identification, falsifiability, feasibility, scoop risk — and issues a green/yellow/red verdict. Use when the user pitches a new paper idea, asks whether a project is worth pursuing, or wants to pressure-test a research question before committing.
 allowed-tools:
   - Read
   - Write
@@ -21,7 +20,7 @@ This is an interrogation, not a brainstorm. Do not leap to encouragement.
 
 ## Procedure
 
-Ask each question, one at a time, and wait for the user's answer before the next. After all six, write the answers to `.mstack/research-question.md` with a verdict.
+Ask each question and wait for the user's answer before moving on — one at a time in a live conversation. Offer upfront that the user may instead answer all six in a single message, and in an asynchronous context (web/mobile, or a user who is clearly batching), present all six together rather than forcing six round-trips. After all six answers, write them to `.mstack/research-question.md` with a verdict.
 
 ### The six questions
 
@@ -41,11 +40,11 @@ Ask each question, one at a time, and wait for the user's answer before the next
 
 After the six answers, write a verdict in `.mstack/research-question.md`:
 
-- **Green light** — All six have substantive answers. Proceed to `/lit-map`.
+- **Green light** — All six have substantive answers. Proceed to `/mstack:lit-map`.
 - **Yellow light** — Identification or scoop risk are weak. Proceed only after addressing the weak link explicitly.
 - **Red light** — Two or more answers are vague or unsubstantiated. Recommend either:
   - Deferring the project until the gaps close, OR
-  - `/idea-shotgun` to find a different angle on the same data/question.
+  - `/mstack:idea-shotgun` to find a different angle on the same data/question.
 
 The verdict is the skill's job. Do not soften it; if the answers don't justify the project, say so.
 
@@ -62,6 +61,6 @@ The verdict is the skill's job. Do not soften it; if the answers don't justify t
 
 ## When to call other skills
 
-- After green light: `/lit-map` (next stage in the workflow).
+- After green light: `/mstack:lit-map` (next stage in the workflow).
 - After yellow light: address the weak link, then re-run.
-- After red light: `/idea-shotgun` for divergent angles, or `/scope-challenge` to test whether the project is too big.
+- After red light: `/mstack:idea-shotgun` for divergent angles, or `/mstack:scope-challenge` to test whether the project is too big.

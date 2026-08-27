@@ -1,7 +1,6 @@
 ---
 name: preregister
-description: Drafts an OSF / AsPredicted preregistration document. Writes to prereg/osf-prereg.md and updates .mstack/config.yaml. Use before any data collection or analysis on a fresh sample.
-user-invocable: true
+description: Drafts a complete OSF/AsPredicted preregistration — hypotheses, sample, exclusions with thresholds, measures, the exact primary specification, robustness, deviations policy — and refuses to mark it ready until every field is specific. Use before fielding or before touching a fresh sample, or when the user mentions preregistration, OSF, or AsPredicted.
 allowed-tools:
   - Read
   - Write
@@ -27,7 +26,7 @@ Before fielding a survey, before running a secondary-data analysis on a sample y
 
 2. **Pick a registry.** Default to OSF; AsPredicted if the design is small (≤ 9-section format). Note the choice in the document header.
 
-3. **Draft `prereg/osf-prereg.md`** with these sections, all required:
+3. **Draft `prereg/osf-prereg.md`** — start from the bundled skeleton at `${CLAUDE_PLUGIN_ROOT}/skills/preregister/assets/prereg-template.md` — with these sections, all required:
 
    ### 1. Hypotheses
    List H1, H2, … with direction and effect size sign. State which is primary; secondaries are explicitly secondary.
@@ -35,7 +34,7 @@ Before fielding a survey, before running a secondary-data analysis on a sample y
    ### 2. Sample
    - Population.
    - Recruitment source (Prolific, MTurk, panel name, observational frame).
-   - Target N. Justification = `/power-analysis` output.
+   - Target N. Justification = `/mstack:power-analysis` output.
    - Stopping rule: time-bound, N-bound, or both.
 
    ### 3. Exclusions
@@ -87,5 +86,5 @@ Before fielding a survey, before running a secondary-data analysis on a sample y
 
 ## When to call other skills
 
-- Before: `/identification-review`, `/power-analysis`, `/survey-build` (if survey-based).
-- After: proceed to fielding / `/data-acquire`. Do not run `/analyze` until preregistered if you intend the analysis to be confirmatory.
+- Before: `/mstack:identification-review`, `/mstack:power-analysis`, `/mstack:survey-build` (if survey-based).
+- After: proceed to fielding / `/mstack:data-acquire`. Do not run `/mstack:analyze` until preregistered if you intend the analysis to be confirmatory.

@@ -14,14 +14,14 @@ authors:
   #   role: "coauthor"
 
 target_journals:
-  # Tier in priority order. /journal-fit will populate this.
+  # Tier in priority order. /mstack:journal-fit will populate this.
   # - name: "International Organization"
   #   tier: 1
   #   why: ""
 
 design:
   type: ""                 # survey | experiment | quasi-experiment | observational
-  prereg: false            # set true once /preregister is filed
+  prereg: false            # set true once /mstack:preregister is filed
   prereg_url: ""
 
 stats:
@@ -37,4 +37,6 @@ voice:
   # vocabulary). MStack does not ship one — install or author your own and put
   # its skill name here. Leave empty to use a generic academic voice.
   writing_style: ""
-  reviewer_style: "journal-reviewer-style"
+  # Name of a reviewer-style skill for /mstack:referee-mock. Leave empty to use
+  # MStack's built-in fallback (references/referee-report-conventions.md).
+  reviewer_style: ""

@@ -1,6 +1,6 @@
 # Preregistration
 
-`/preregister` writes here. Keep this file in sync with the OSF / AsPredicted submission.
+`/mstack:preregister` writes here. Keep this file in sync with the OSF / AsPredicted submission.
 
 ## Sections
 
@@ -9,6 +9,7 @@
 3. Exclusions
 4. Measures
 5. Primary analysis
-6. Secondary analysis
+6. Secondary analyses
 7. Robustness checks
 8. Deviations policy
+9. Data and code availability

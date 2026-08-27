@@ -77,15 +77,22 @@ format:
 bibliography: refs.bib
 ---
 
-{{< include sections/abstract.tex >}}
+{{< include sections/abstract.qmd >}}
 
-{{< include sections/intro.tex >}}
-{{< include sections/theory.tex >}}
-{{< include sections/data.tex >}}
-{{< include sections/methods.tex >}}
-{{< include sections/results.tex >}}
-{{< include sections/discussion.tex >}}
+{{< include sections/intro.qmd >}}
+{{< include sections/theory.qmd >}}
+{{< include sections/data.qmd >}}
+{{< include sections/methods.qmd >}}
+{{< include sections/results.qmd >}}
+{{< include sections/discussion.qmd >}}
 QMD
+    # Convert the section stubs to .qmd (main.qmd includes sections/*.qmd).
+    for f in "$DEST"/paper/sections/*.tex; do
+      [[ -f "$f" ]] || continue
+      base="${f%.tex}"
+      sed 's|^% \(.*\)$|<!-- \1 -->|' "$f" > "$base.qmd"
+      rm "$f"
+    done
     # Update config.yaml format field.
     if [[ -f "$CFG" ]]; then
       tmp="$(mktemp)"
@@ -102,4 +109,4 @@ echo ""
 echo "Next:"
 echo "  cd $NAME"
 echo "  edit .mstack/config.yaml (set title, target journals, coauthors)"
-echo "  start with /research-question or /idea-shotgun in Claude Code"
+echo "  start with /mstack:research-question or /mstack:idea-shotgun in Claude Code"

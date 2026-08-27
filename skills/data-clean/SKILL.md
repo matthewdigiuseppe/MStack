@@ -1,7 +1,6 @@
 ---
 name: data-clean
-description: Reproducible cleaning pipeline. Reads from data/raw/, writes to data/clean/. Wraps the r-coding-skills skill for R conventions. Every drop, recode, and merge is logged with row-count checks.
-user-invocable: true
+description: Writes the reproducible raw-to-clean pipeline in code/01-clean.R — every join, drop, and recode logged with row-count checks — producing data/clean/analytic.rds. Use when the user needs to clean, merge, or recode data, build the analytic dataset, or fix a data issue (raw files are never edited).
 allowed-tools:
   - Read
   - Write
@@ -18,13 +17,13 @@ allowed-tools:
 
 ## When to invoke
 
-After `/data-acquire` has populated `data/raw/` and the provenance log. Run before any analysis. Re-run when the analytic dataset changes.
+After `/mstack:data-acquire` has populated `data/raw/` and the provenance log. Run before any analysis. Re-run when the analytic dataset changes.
 
 ## Procedure
 
-1. **Read the provenance log** at `data/raw/PROVENANCE.md` (or whatever `/data-acquire` wrote). If missing, stop and tell the user to run `/data-acquire` first — undocumented raw data is not cleanable.
+1. **Read the provenance log** at `data/raw/PROVENANCE.md` (or whatever `/mstack:data-acquire` wrote). If missing, stop and tell the user to run `/mstack:data-acquire` first — undocumented raw data is not cleanable.
 
-2. **Invoke the r-coding-skills skill** for R conventions: tidyverse style, `here::here()` paths, named pipes, snake_case, no `setwd()`, package versioning notes.
+2. **Apply R conventions.** Use the `r-coding-skills` skill if the user has it installed; otherwise follow `${CLAUDE_PLUGIN_ROOT}/references/r-conventions.md`. Either way: tidyverse style, `here::here()` paths, snake_case, no `setwd()`, package versioning notes.
 
 3. **Plan the pipeline.** Before writing code, list (in chat) the cleaning steps:
    - Reads (which raw files).
@@ -54,7 +53,7 @@ After `/data-acquire` has populated `data/raw/` and the provenance log. Run befo
    - Unit of analysis is unique (`stopifnot(!anyDuplicated(df[, key_cols]))`).
    - Print a `summary()` and a head/tail snapshot to a log file at `data/clean/clean-log.md`.
 
-7. **Suggest the next step:** `/codebook` to auto-document the cleaned dataset.
+7. **Suggest the next step:** `/mstack:codebook` to auto-document the cleaned dataset.
 
 ## Outputs
 
@@ -65,7 +64,7 @@ After `/data-acquire` has populated `data/raw/` and the provenance log. Run befo
 
 ## Anti-patterns to refuse
 
-- **Editing `data/raw/`.** Raw is read-only forever. If a fix to raw is needed, document it as a recode in the cleaning script, not as an edit to the file.
+- **Editing `data/raw/`.** Raw is read-only forever — MStack's guard hook denies such edits at the tool layer. If a fix to raw is needed, document it as a recode in the cleaning script, not as an edit to the file.
 - **Silent drops.** Every drop is logged with a row-count check.
 - **Hardcoded absolute paths.** Use `here::here()`.
 - **Mixed-purpose scripts.** `01-clean.R` cleans. Modeling goes in `02-analyze.R`. Don't mix.
@@ -73,5 +72,5 @@ After `/data-acquire` has populated `data/raw/` and the provenance log. Run befo
 
 ## When to call other skills
 
-- Before: `/data-acquire` (must produce `data/raw/PROVENANCE.md` first).
-- After: `/codebook` to auto-document; then `/analyze` to model.
+- Before: `/mstack:data-acquire` (must produce `data/raw/PROVENANCE.md` first).
+- After: `/mstack:codebook` to auto-document; then `/mstack:analyze` to model.

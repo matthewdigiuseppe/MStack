@@ -1,7 +1,7 @@
 ---
 name: coauthor-review
-description: Simulated coauthor critique on a complete draft. Configurable persona — skeptical methodologist, big-picture theorist, or junior reader. Writes to .mstack/referee-cache/coauthor-<persona>-<date>.md.
-user-invocable: true
+description: Simulated coauthor read of the full draft — biggest hole, biggest distraction, biggest opportunity, one structural suggestion, a few line edits — as a skeptical methodologist, big-picture theorist, or junior reader. Use on a complete draft before the mock referee, or when the user wants tough feedback on the paper.
+argument-hint: "[skeptical-methodologist|big-picture-theorist|junior-reader]"
 allowed-tools:
   - Read
   - Write
@@ -16,7 +16,7 @@ allowed-tools:
 
 ## When to invoke
 
-You have a complete draft, ideally one round before `/referee-mock`. The coauthor catches structural and clarity issues that a referee would gloss past or that you'd internalize too deeply to see.
+You have a complete draft, ideally one round before `/mstack:referee-mock`. The coauthor catches structural and clarity issues that a referee would gloss past or that you'd internalize too deeply to see.
 
 ## Argument
 
@@ -30,7 +30,7 @@ If unrecognized, default to `skeptical-methodologist`.
 
 ## Procedure
 
-1. **Load.** `paper/main.tex` and every `paper/sections/*.tex`. Read prior `/coauthor-review` outputs in `.mstack/referee-cache/` so you can reference what changed since.
+1. **Load.** `paper/main.tex` and every `paper/sections/*.tex`. Read prior `/mstack:coauthor-review` outputs in `.mstack/referee-cache/` so you can reference what changed since.
 
 2. **Read end-to-end.** Resist the urge to summarize. The first read is for impressions, not corrections.
 
@@ -66,5 +66,5 @@ If unrecognized, default to `skeptical-methodologist`.
 
 ## When to call other skills
 
-- Before: `/draft-section` for any obviously-broken section.
-- After: revise, then run `/referee-mock` (different persona) for a final pre-submission read.
+- Before: `/mstack:draft-section` for any obviously-broken section.
+- After: revise, then run `/mstack:referee-mock` (different persona) for a final pre-submission read.

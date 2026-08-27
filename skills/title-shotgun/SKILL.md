@@ -1,8 +1,8 @@
 ---
 name: title-shotgun
-description: Generates 8–12 title options ranked on hook strength × precision × searchability. Use late in the writing stage, after the abstract is settled.
-user-invocable: true
+description: Generates 8-12 title candidates across forms (declarative, question, colon, anomaly, mechanism), scores them on hook x precision x searchability, and pairs the winner with the abstract framing. Use late in writing when the user asks for title ideas or a better title.
 allowed-tools:
+  - Bash(date *)
   - Read
   - Write
   - Edit
@@ -15,7 +15,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/abstract-shotgun` settles a framing. The title and abstract are read together by editors and search engines; pair them deliberately.
+After `/mstack:abstract-shotgun` settles a framing. The title and abstract are read together by editors and search engines; pair them deliberately.
 
 ## Procedure
 
@@ -59,5 +59,5 @@ After `/abstract-shotgun` settles a framing. The title and abstract are read tog
 
 ## When to call other skills
 
-- Before: `/abstract-shotgun` (the abstract framing constrains good title choices).
-- After: `/journal-fit` to confirm the title-abstract pair fits the target journal's style.
+- Before: `/mstack:abstract-shotgun` (the abstract framing constrains good title choices).
+- After: `/mstack:journal-fit` to confirm the title-abstract pair fits the target journal's style.

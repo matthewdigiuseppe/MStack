@@ -1,7 +1,7 @@
 ---
 name: referee-mock
-description: Generates a mock R1 referee report on the current draft. Wraps the journal-reviewer-style skill. Front-runs the actual reviewer so problems are caught pre-submission. Writes to .mstack/referee-cache/.
-user-invocable: true
+description: Writes a mock R1 referee report (methodologist, theorist, area-expert, or editor persona) calibrated to the target journal — summary, major and minor comments, and an honest recommendation. Use when a draft is near submission-ready or the user asks how reviewers will react.
+argument-hint: "[methodologist|theorist|area-expert|editor]"
 allowed-tools:
   - Read
   - Write
@@ -40,8 +40,8 @@ If unrecognized, default to `methodologist`.
 2. **Load prior referee snapshots** in `.mstack/referee-cache/`. If the same persona produced a report on an earlier draft, the new report should explicitly note what improved and what didn't.
 
 3. **Invoke the reviewer-style skill.**
-   - Use the **journal-reviewer-style** skill for voice, tone, and structural conventions of a referee report in IPE / political science.
-   - If `.mstack/config.yaml` overrides `voice.reviewer_style`, honor that.
+   - Read `voice.reviewer_style` from `.mstack/config.yaml`; if it names a skill the user has installed, use it for voice, tone, and structural conventions.
+   - Otherwise follow `${CLAUDE_PLUGIN_ROOT}/references/referee-report-conventions.md` — the built-in structure and tone for an IPE / political science referee report.
 
 4. **Write the report** with the persona's bias dialed in:
 
@@ -73,5 +73,5 @@ If unrecognized, default to `methodologist`.
 
 ## When to call other skills
 
-- After report: if recommendation is `Major revisions` or worse, suggest `/results-audit` and `/identification-review` before the user revises.
-- Once the user has revised: suggest re-running `/referee-mock` with a different persona to triangulate.
+- After report: if recommendation is `Major revisions` or worse, suggest `/mstack:results-audit` and `/mstack:identification-review` before the user revises.
+- Once the user has revised: suggest re-running `/mstack:referee-mock` with a different persona to triangulate.

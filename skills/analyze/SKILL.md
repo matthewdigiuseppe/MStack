@@ -1,7 +1,6 @@
 ---
 name: analyze
-description: Runs the primary specification(s) and produces regression tables. Writes to code/02-analyze.R and code/04-tables.R, output to output/tables/. Defers to r-coding-skills for R conventions and to the preregistration for the primary spec.
-user-invocable: true
+description: Runs the primary specification and pre-specified secondaries in code/02-analyze.R and renders publication tables via modelsummary in code/04-tables.R. Use when the user asks to run the models, estimate the main results, or produce regression tables; the preregistration, if present, is the contract.
 allowed-tools:
   - Read
   - Write
@@ -18,7 +17,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/data-clean` produces a stable analytic dataset and `/codebook` has flagged any data issues. If the project is preregistered, the primary spec is in `prereg/osf-prereg.md` — this skill executes it.
+After `/mstack:data-clean` produces a stable analytic dataset and `/mstack:codebook` has flagged any data issues. If the project is preregistered, the primary spec is in `prereg/osf-prereg.md` — this skill executes it.
 
 ## Procedure
 
@@ -36,7 +35,7 @@ After `/data-clean` produces a stable analytic dataset and `/codebook` has flagg
    - Sample restrictions (must match prereg if preregistered).
    - Software / package (default: `fixest::feols` for OLS / FE; `marginaleffects` for AMEs; `modelsummary` for tables).
 
-3. **Invoke r-coding-skills** for style conventions.
+3. **Apply R conventions** — the `r-coding-skills` skill if the user has it installed, otherwise `${CLAUDE_PLUGIN_ROOT}/references/r-conventions.md`.
 
 4. **Write `code/02-analyze.R`.**
    - Header: purpose, inputs, outputs, run order, link to prereg if applicable.
@@ -60,7 +59,7 @@ After `/data-clean` produces a stable analytic dataset and `/codebook` has flagg
    - The headline coefficient sign matches H1 (or, if it doesn't, flag this loudly — the user needs to know before drafting `results`).
    - Standard errors clustered as specified.
 
-8. **Hand-off.** Suggest `/results-audit` next. Do **not** run `/robustness` until the primary table is locked.
+8. **Hand-off.** Set `paper.status: "analyzing"` in `.mstack/config.yaml`. Suggest `/mstack:results-audit` next. Do **not** run `/mstack:robustness` until the primary table is locked.
 
 ## Outputs
 
@@ -78,5 +77,5 @@ After `/data-clean` produces a stable analytic dataset and `/codebook` has flagg
 
 ## When to call other skills
 
-- Before: `/data-clean`, `/codebook`, `/identification-review`, `/preregister`.
-- After: `/results-audit` (mandatory before drafting), then `/robustness`, then `/viz`, then `/draft-section results`.
+- Before: `/mstack:data-clean`, `/mstack:codebook`, `/mstack:identification-review`, `/mstack:preregister`.
+- After: `/mstack:results-audit` (mandatory before drafting), then `/mstack:robustness`, then `/mstack:viz`, then `/mstack:draft-section results`.

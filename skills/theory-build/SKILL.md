@@ -1,7 +1,6 @@
 ---
 name: theory-build
-description: Builds the formal mechanism, sketches a DAG, specifies scope conditions. Use after /lit-map identifies the conversation and before /hypothesis-design operationalizes. Writes to .mstack/theory.md and feeds paper/sections/theory.tex.
-user-invocable: true
+description: Builds the causal mechanism (X causes Y because Z), an ASCII DAG with signed edges, scope conditions, and out-of-sample predictions. Use after the lit map, when the user asks to formalize a theory or mechanism, sketch a DAG, or derive predictions — and before hypotheses are operationalized.
 allowed-tools:
   - Read
   - Write
@@ -15,7 +14,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/lit-map` so you know the conversation. Before `/hypothesis-design` so the hypotheses are derived from a stated mechanism, not retrofitted to results.
+After `/mstack:lit-map` so you know the conversation. Before `/mstack:hypothesis-design` so the hypotheses are derived from a stated mechanism, not retrofitted to results.
 
 ## Procedure
 
@@ -42,12 +41,12 @@ After `/lit-map` so you know the conversation. Before `/hypothesis-design` so th
 
 5. **Implications.** What does this theory predict for cases / observations not in the data? At least two predictions outside the proposed sample. These are the "off-the-line" predictions that distinguish a real theory from a story tuned to the data.
 
-6. **Compatibility check** with `/lit-map`:
+6. **Compatibility check** with `/mstack:lit-map`:
    - Which Foundation paper(s) does the mechanism build on?
    - Which Frontier paper(s) does it dispute?
    - Where does the theory stand on the contested edge of the conversation?
 
-7. **Save** the full theory to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence + scope conditions; full drafting later via `/draft-section theory`.
+7. **Save** the full theory to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence + scope conditions; full drafting later via `/mstack:draft-section theory`.
 
 ## Outputs
 
@@ -63,4 +62,4 @@ After `/lit-map` so you know the conversation. Before `/hypothesis-design` so th
 
 ## When to call other skills
 
-- After: `/hypothesis-design` to operationalize, then `/identification-review` to stress-test the implied design.
+- After: `/mstack:hypothesis-design` to operationalize, then `/mstack:identification-review` to stress-test the implied design.

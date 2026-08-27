@@ -1,7 +1,7 @@
 ---
 name: r-and-r
-description: Drafts a response-to-reviewers document with a change log mapping every reviewer comment to a manuscript change. Use during revise-and-resubmit. Writes to submission/response-to-reviewers/r<N>-response.md.
-user-invocable: true
+description: Builds the response-to-reviewers document — every comment quoted verbatim, answered, and mapped to a located manuscript change, plus an editor summary and change log. Use when the user has a revise-and-resubmit decision letter or referee reports to answer.
+argument-hint: "[r1|r2|r3]"
 allowed-tools:
   - Read
   - Write
@@ -60,7 +60,7 @@ You have a decision letter from the journal. The paper has been revised. Now you
 
 8. **Save.**
    - `submission/response-to-reviewers/r<N>-response.md` — the response document.
-   - Append a row to `.mstack/decisions.log` (or create it): `<date> | r<N> | <decision> | response drafted`.
+   - Append to the `decisions:` list in `.mstack/config.yaml` (`- "<date>: r<N> <decision> — response drafted"`) and set `paper.status: "r-and-r"`.
 
 ## Outputs
 
@@ -77,5 +77,5 @@ You have a decision letter from the journal. The paper has been revised. Now you
 
 ## When to call other skills
 
-- Before: `/results-audit` if any results changed during revision; `/referee-mock editor` to stress-test the response.
-- After: spot-check by running `/coauthor-review` on the revised manuscript.
+- Before: `/mstack:results-audit` if any results changed during revision; `/mstack:referee-mock editor` to stress-test the response.
+- After: spot-check by running `/mstack:coauthor-review` on the revised manuscript.

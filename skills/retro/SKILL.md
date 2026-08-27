@@ -1,7 +1,6 @@
 ---
 name: retro
-description: Paper retrospective — what took longest, what surprised you, what to do differently next time. Run after acceptance or rejection. Writes to .mstack/retro.md. Optionally promotes lessons to global memory via /learn.
-user-invocable: true
+description: Structured paper retrospective — timeline reconstruction plus five questions on where time went, unforced errors, surprises, wins, and the one systematizable lesson. Use after acceptance, rejection, or a major R&R round, or when the user wants to debrief a finished project.
 allowed-tools:
   - Read
   - Write
@@ -37,7 +36,7 @@ After acceptance, after rejection, after a major R&R. Memory is freshest now; in
 
 4. **Save** to `.mstack/retro.md`.
 
-5. **Promote.** If question 5 produced a lesson worth carrying across papers, suggest the user run `/learn` to write it to their global memory (not just `.mstack/learnings.jsonl`, which is paper-local).
+5. **Promote.** If question 5 produced a lesson worth carrying across papers, suggest the user run `/mstack:learn` to write it to their global memory (not just `.mstack/learnings.jsonl`, which is paper-local).
 
 ## Outputs
 
@@ -52,5 +51,5 @@ After acceptance, after rejection, after a major R&R. Memory is freshest now; in
 
 ## When to call other skills
 
-- After (optional): `/learn` to promote the lesson to global memory.
-- If the lesson is "I should run /X earlier next time," update the workflow note in `docs/skills.md` so the next paper inherits it.
+- After (optional): `/mstack:learn` to promote the lesson to global memory.
+- If the lesson is "I should run /mstack:X earlier next time," record it via `/mstack:learn` and in your global memory (`~/.claude/CLAUDE.md`) — the plugin's own docs are replaced on every update, so edits there don't survive.

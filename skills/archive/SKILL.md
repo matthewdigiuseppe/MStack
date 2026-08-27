@@ -1,7 +1,6 @@
 ---
 name: archive
-description: Assembles a replication package — data, code, README, codebook, dependency manifest — and preps OSF / Dataverse upload. Run at acceptance. Verifies via clean-room rebuild that every table and figure regenerates from raw data.
-user-invocable: true
+description: Assembles the replication package — inventory, licenses, renv lockfile, replication README, clean-room rebuild that regenerates every table and figure from raw data — and stages the OSF/Dataverse upload. Use at acceptance or whenever the user asks for a replication or reproducibility package.
 allowed-tools:
   - Read
   - Write
@@ -34,6 +33,7 @@ The paper is accepted. Before the journal sets the production deadline you forgo
    - Output files in `output/` (tables, figures, model objects).
    - Manuscript files (final accepted version).
    - Preregistration documents.
+   - `.mstack/llm-usage.jsonl` plus every `prompt_user_ref` / `code_ref` file it names (GUIDE-LLM artifacts), if the ledger exists.
    Save the inventory to `replication-manifest.txt`.
 
 3. **Check licenses.** For each raw data file:
@@ -49,13 +49,12 @@ The paper is accepted. Before the journal sets the production deadline you forgo
 5. **Extend `README.md`** into a replication README with:
    - One-paragraph paper summary + final citation.
    - Layout (the standard MStack tree).
-   - Reproduction steps:
+   - Reproduction steps — run **every** numbered script, not a hardcoded four; `/mstack:codebook`, `/mstack:power-analysis`, and `/mstack:robustness` add 00/05/06-series scripts whose outputs also ship:
      ```r
      renv::restore()
-     source("code/01-clean.R")
-     source("code/02-analyze.R")
-     source("code/03-figures.R")
-     source("code/04-tables.R")
+     scripts <- sort(list.files("code", pattern = "^[0-9].*\\.R$", full.names = TRUE))
+     scripts <- scripts[!grepl("00-fetch", scripts)]  # raw data ships in the package; fetch scripts hit the network
+     for (f in scripts) source(f)
      ```
    - Mapping: which script produces which table / figure (a table indexed by `output/` filename).
    - Data source documentation (one entry per raw file).
@@ -65,7 +64,7 @@ The paper is accepted. Before the journal sets the production deadline you forgo
 
 6. **Clean-room rebuild test.**
    - Move the project to a temporary clean directory.
-   - Run `renv::restore()` then the four `source()` calls in order.
+   - Run `renv::restore()`, then every numbered script in ascending order (the loop above), skipping `00-fetch-*`.
    - Diff the rebuilt `output/tables/` and `output/figures/` against the originals (file-level checksum or visual diff for figures).
    - Any divergence: fix or document. **Refuse to mark the package "ready" if divergences are unexplained.**
 
@@ -93,5 +92,5 @@ The paper is accepted. Before the journal sets the production deadline you forgo
 
 ## When to call other skills
 
-- Before: `/retro` to capture lessons before they fade.
-- After: `/learn` to write any cross-paper conventions you discovered into your global memory (not the per-paper `learnings.jsonl`).
+- Before: `/mstack:retro` to capture lessons before they fade.
+- After: `/mstack:learn` to write any cross-paper conventions you discovered into your global memory (not the per-paper `learnings.jsonl`).

@@ -1,7 +1,6 @@
 ---
 name: viz
-description: Publication-quality figures with ggplot conventions baked in. One claim per figure. Writes to output/figures/ as both PDF and PNG. Defers to r-coding-skills for code style.
-user-invocable: true
+description: Publication-quality ggplot figures — one claim per figure, claim-stating titles, colorblind-safe palette, PDF+PNG+underlying CSV — via a bundled theme. Use when the user asks for figures, plots, coefficient or marginal-effects charts, or slide-ready graphics from results.
 allowed-tools:
   - Read
   - Write
@@ -17,11 +16,11 @@ allowed-tools:
 
 ## When to invoke
 
-After `/analyze` and `/robustness` produce stable results. Before `/draft-section results`. Figures lock the visual argument; once stable, the prose can describe them.
+After `/mstack:analyze` and `/mstack:robustness` produce stable results. Before `/mstack:draft-section results`. Figures lock the visual argument; once stable, the prose can describe them.
 
 ## Procedure
 
-1. **Load.** `output/models/`, `data/clean/analytic.rds`, the journal style guide if `target_journals` in `.mstack/config.yaml` is set.
+1. **Load.** `output/models/`, `data/clean/analytic.rds`. If `target_journals` in `.mstack/config.yaml` is set, match that journal's figure conventions (column width, color policy) — ask the user for the artwork specs when unknown rather than guessing them.
 
 2. **Decide the figure set.** A typical IPE / political science paper has 1–3 figures. Each is a claim:
 
@@ -36,7 +35,7 @@ After `/analyze` and `/robustness` produce stable results. Before `/draft-sectio
 
    Pick the figures that carry the headline. Skip figures that just decorate.
 
-3. **Write `code/03-figures.R`** with conventions:
+3. **Write `code/03-figures.R`.** First copy the bundled theme — `${CLAUDE_PLUGIN_ROOT}/skills/viz/assets/theme_mstack.R` → `code/theme_mstack.R`, once per paper, so the replication package is self-contained — and `source()` it: it provides `theme_mstack()`, Okabe–Ito color scales, and `save_figure()` (PDF + PNG + underlying CSV in one call). Conventions:
    - One ggplot object per figure, named `fig_<n>_<descriptor>`.
    - **Title states the claim**, not the variables (e.g., `"Trade exposure raises protectionist vote share"`, not `"Effect of trade on voting"`).
    - **Subtitle / caption** carries the methodological detail.
@@ -70,5 +69,5 @@ After `/analyze` and `/robustness` produce stable results. Before `/draft-sectio
 
 ## When to call other skills
 
-- Before: `/analyze`, `/robustness`.
-- After: `/draft-section results` references the figures by their claim-titles.
+- Before: `/mstack:analyze`, `/mstack:robustness`.
+- After: `/mstack:draft-section results` references the figures by their claim-titles.

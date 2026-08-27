@@ -1,5 +1,5 @@
 % MStack paper template.
-% /draft-section writes into sections/<name>.tex; this file just \input{}s them.
+% /mstack:draft-section writes into sections/<name>.tex; this file just \input{}s them.
 
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
@@ -28,7 +28,9 @@
 \input{sections/results}
 \input{sections/discussion}
 
-\bibliographystyle{apsr}
+% plainnat ships with every TeX distribution; swap for the journal's own
+% style (e.g. apsr.bst, downloaded from the journal) at submission time.
+\bibliographystyle{plainnat}
 \bibliography{refs}
 
 \end{document}
