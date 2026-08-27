@@ -1,7 +1,6 @@
 ---
 name: design-research
-description: Picks the design type (survey, experiment, quasi-experiment, observational) and justifies the trade-offs against alternatives. Use after /identification-review and before /preregister.
-user-invocable: true
+description: Chooses the research design (survey experiment, field experiment, RDD/IV/DiD, observational, qualitative) by scoring options on identification, validity, power, and cost — with an explicit plan B. Use after identification review, or when the user asks which design or method fits their question.
 allowed-tools:
   - Read
   - Write
@@ -14,7 +13,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/identification-review` produces at least a `Conditional pass`. The question is no longer "can this be identified?" but "which design identifies it best given the constraints?"
+After `/mstack:identification-review` produces at least a `Conditional pass`. The question is no longer "can this be identified?" but "which design identifies it best given the constraints?"
 
 ## Procedure
 
@@ -35,14 +34,14 @@ After `/identification-review` produces at least a `Conditional pass`. The quest
    | **Identification** | How cleanly does this design separate the effect from confounds? |
    | **External validity** | How representative is the population the design generalizes to? |
    | **Construct validity** | Does the operationalization measure what theory predicts? |
-   | **Statistical power** | Is the achievable N at this design enough to detect the expected effect? (Defer to `/power-analysis`.) |
+   | **Statistical power** | Is the achievable N at this design enough to detect the expected effect? (Defer to `/mstack:power-analysis`.) |
    | **Cost** | Time, money, IRB, fieldwork. |
 
 4. **Recommend one.** State why this design dominates the others on the dimensions that matter most given the question. Be explicit about what the chosen design *gives up* — don't pretend it's a free win.
 
 5. **Identify the closest substitute.** If the chosen design fails (e.g., no IRB, no funding, scoop), what's plan B? Save plan B to the file so the project doesn't restart from zero.
 
-6. **Save** to `.mstack/design-research.md`. Update `.mstack/config.yaml`'s `design.type` field.
+6. **Save** to `.mstack/design-research.md`. Update `.mstack/config.yaml`: set `design.type` and `paper.status: "designing"`.
 
 ## Outputs
 
@@ -57,4 +56,4 @@ After `/identification-review` produces at least a `Conditional pass`. The quest
 
 ## When to call other skills
 
-- After: `/power-analysis`, `/preregister`. If survey-based, `/survey-build`.
+- After: `/mstack:power-analysis`, `/mstack:preregister`. If survey-based, `/mstack:survey-build`.

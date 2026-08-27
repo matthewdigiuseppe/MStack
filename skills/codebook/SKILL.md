@@ -1,7 +1,6 @@
 ---
 name: codebook
-description: Auto-generates a codebook from the cleaned analytic dataset and flags suspicious distributions. Writes data/codebook.md. Use after /data-clean produces a stable analytic dataset.
-user-invocable: true
+description: Auto-generates data/codebook.md from the analytic dataset — per-variable stats plus flags for missingness, near-constants, duplicates, and implausible values. Use after cleaning stabilizes, when the user asks to document variables, or before analysis.
 allowed-tools:
   - Read
   - Write
@@ -17,13 +16,13 @@ allowed-tools:
 
 ## When to invoke
 
-After `/data-clean` writes `data/clean/analytic.rds` and the script runs without errors. Re-run when the analytic dataset changes.
+After `/mstack:data-clean` writes `data/clean/analytic.rds` and the script runs without errors. Re-run when the analytic dataset changes.
 
 ## Procedure
 
 1. **Load.** `data/clean/analytic.rds`. Read `code/01-clean.R` to know what the variables are supposed to mean.
 
-2. **Generate the codebook** via R. Write a one-off script `code/00-codebook.R` (idempotent — safe to re-run):
+2. **Generate the codebook** via R. Copy the bundled generator — `${CLAUDE_PLUGIN_ROOT}/skills/codebook/scripts/00-codebook.R` → `code/00-codebook.R` — and edit its PARAMETERS block (`KEY_COLS`, `UNIT`). It is idempotent — safe to re-run — and reports:
 
    For each variable:
    - **Name.**
@@ -63,4 +62,4 @@ After `/data-clean` writes `data/clean/analytic.rds` and the script runs without
 
 ## When to call other skills
 
-- After: `/analyze`. If flags are unaddressed, suggest fixing `01-clean.R` first.
+- After: `/mstack:analyze`. If flags are unaddressed, suggest fixing `01-clean.R` first.

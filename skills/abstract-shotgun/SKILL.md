@@ -1,7 +1,6 @@
 ---
 name: abstract-shotgun
-description: Generates 4–6 abstract variants with different positioning bets. Use after a complete draft to find the best framing before submission. Writes variants to paper/sections/abstract.tex as commented options.
-user-invocable: true
+description: Generates 4-6 abstract variants with different positioning bets (puzzle-, policy-, theory-, finding-, anomaly-first), tags each with audience and risk, and recommends one for the target journal. Use when a full draft exists and the user wants the abstract written, improved, or reframed.
 allowed-tools:
   - Read
   - Write
@@ -41,7 +40,7 @@ The full draft exists. The abstract is the single hardest paragraph in the paper
    - Implicit audience (IPE, comparative, methods, public).
    - Risk: the framing's main vulnerability (e.g., "puzzle-first risks looking like it doesn't engage the literature").
 
-6. **Write to `paper/sections/abstract.tex`** with all variants as LaTeX comments and one designated `\begin{abstract} ... \end{abstract}` block containing the recommended variant. Format:
+6. **Write the variants file.** Check `format` in `.mstack/config.yaml`. LaTeX: `paper/sections/abstract.tex`, variants as `%` comments plus one designated `\begin{abstract} ... \end{abstract}` block containing the recommended variant. Quarto: `paper/sections/abstract.qmd`, variants as `<!-- ... -->` comments plus the recommended text uncommented. LaTeX format:
 
    ```
    % VARIANT 1 (puzzle-first):
@@ -70,5 +69,5 @@ The full draft exists. The abstract is the single hardest paragraph in the paper
 
 ## When to call other skills
 
-- Before: `/draft-section abstract` (to get a baseline).
-- After: `/title-shotgun` to find a title that pairs with the chosen abstract framing.
+- Before: `/mstack:draft-section abstract` (to get a baseline).
+- After: `/mstack:title-shotgun` to find a title that pairs with the chosen abstract framing.

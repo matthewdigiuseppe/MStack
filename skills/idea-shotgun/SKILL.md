@@ -1,8 +1,8 @@
 ---
 name: idea-shotgun
-description: Generates 4–6 alternative angles on the same data or research question, each with a one-line claim, contribution, and identification sketch. Use when you have a dataset or topic and want divergence before convergence. Analog to gstack's /design-shotgun.
-user-invocable: true
+description: Generates 4-6 genuinely different angles on the same data or topic — each with claim, contribution, identification sketch, cost, and risk — then ranks them. Use when the user has data or a topic but no committed question, wants alternatives before investing, or a red-light verdict sent them back to ideation.
 allowed-tools:
+  - Bash(date *)
   - Read
   - Write
 ---
@@ -46,7 +46,7 @@ You have data, a topic, or an unanswered question — and you're not yet committ
 ## Outputs
 
 - `.mstack/idea-shotgun-<date>.md` — full angle set with cards.
-- Summary block: top 2 angles with a one-line case for each, and a recommendation on which to take to `/research-question`.
+- Summary block: top 2 angles with a one-line case for each, and a recommendation on which to take to `/mstack:research-question`.
 
 ## Anti-patterns to refuse
 
@@ -55,4 +55,4 @@ You have data, a topic, or an unanswered question — and you're not yet committ
 
 ## When to call other skills
 
-- After: `/research-question` on the chosen angle.
+- After: `/mstack:research-question` on the chosen angle.

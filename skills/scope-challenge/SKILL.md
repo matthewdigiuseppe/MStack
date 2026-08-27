@@ -1,8 +1,8 @@
 ---
 name: scope-challenge
-description: Adversarial advisor voice that challenges scope. "Is this a paper or a footnote?" "Is this one paper or three?" Use when a project is sprawling or you suspect you're writing a book chapter, not a journal article. Analog to gstack's /plan-ceo-review.
-user-invocable: true
+description: Adversarial scope check — is this a paper, a footnote, or three papers? Four challenges force the contribution into one sentence and one table. Use when a project is sprawling, sections keep multiplying, the user cannot name the headline result, or they ask whether to split a paper.
 allowed-tools:
+  - Bash(date *)
   - Read
   - Write
 ---
@@ -54,5 +54,5 @@ The verdict is opinionated by design. Soft verdicts produce sprawling papers.
 
 ## When to call other skills
 
-- After `Sprawl` verdict: re-run `/research-question` for the trimmed project.
+- After `Sprawl` verdict: re-run `/mstack:research-question` for the trimmed project.
 - After `Multi-paper` verdict: `mstack-init` a new sibling folder for the second paper.

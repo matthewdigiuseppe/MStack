@@ -1,7 +1,6 @@
 ---
 name: power-analysis
-description: Computes sample size and minimum detectable effect with R code. Writes a power-analysis report to .mstack/power-analysis.md. Use after /design-research and before /preregister.
-user-invocable: true
+description: Computes target N and minimum detectable effect in R, defaulting to DeclareDesign simulation with a sensitivity curve. Use after a design is chosen and before fielding or preregistration, or whenever the user asks about sample size, statistical power, or MDE.
 allowed-tools:
   - Read
   - Write
@@ -16,7 +15,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/design-research` chooses a design. Before fielding. The prereg's "Sample" section pulls its target N from this skill's output.
+After `/mstack:design-research` chooses a design. Before fielding. The prereg's "Sample" section pulls its target N from this skill's output.
 
 ## Procedure
 
@@ -31,7 +30,7 @@ After `/design-research` chooses a design. Before fielding. The prereg's "Sample
    - **Power** (typically 0.80; for high-stakes preregistered work, 0.90).
    - **Design constants** — clustering, ICC, attrition rate, blocking.
 
-3. **Write `code/00-power.R`** that:
+3. **Write `code/00-power.R`.** Start from the bundled template — copy `${CLAUDE_PLUGIN_ROOT}/skills/power-analysis/assets/00-power-template.R` → `code/00-power.R`, then adapt the PARAMETERS block and the declared design to the actual study. It:
    - **Defaults to `DeclareDesign`** (https://declaredesign.org/r/declaredesign/) — declare the model, inquiry, data strategy, and answer strategy, then `diagnose_design()` over a grid of N and effect sizes. This is the default because it generalizes across experimental, survey, FE, panel, hierarchical, and conjoint designs, and forces the design assumptions to be made explicit.
    - Use `pwr` only as a quick analytic sanity check for textbook cases (two-sample t-test, single-level proportion). Use `Superpower` only for factorial ANOVA designs where DeclareDesign would be overkill. Note the fallback choice and its justification in the script header.
    - For experiments / surveys: report N for power = 0.80 *and* MDE at the user's planned N.
@@ -65,5 +64,5 @@ After `/design-research` chooses a design. Before fielding. The prereg's "Sample
 
 ## When to call other skills
 
-- Before: `/design-research`, `/lit-map` (for effect-size benchmarks).
-- After: `/preregister` (which quotes this report verbatim).
+- Before: `/mstack:design-research`, `/mstack:lit-map` (for effect-size benchmarks).
+- After: `/mstack:preregister` (which quotes this report verbatim).

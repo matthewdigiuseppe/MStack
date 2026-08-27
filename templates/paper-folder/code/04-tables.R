@@ -6,4 +6,4 @@ library(tidyverse)
 library(modelsummary)
 library(here)
 
-# /analyze and /robustness write here.
+# /mstack:analyze and /mstack:robustness write here.

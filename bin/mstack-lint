@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""mstack-lint — consistency checks for the MStack skill set.
+
+Run from anywhere: python3 bin/mstack-lint
+Exit 0 = clean (warnings allowed), 1 = errors.
+
+Checks:
+  * every skills/<dir>/SKILL.md parses, and frontmatter `name` == <dir>
+  * description present, single-line, non-empty, <= 1024 chars
+  * no `user-invocable: true` (redundant — it's the default)
+  * every /mstack:<name> reference resolves to an existing skill
+  * no bare /<skill-name> references (plugin skills are namespaced)
+  * $ARGUMENTS in a body implies an argument-hint (warning)
+  * every skill appears in docs/skills.md (warning)
+  * hooks/hooks.json is valid JSON; hook scripts byte-compile
+"""
+import json
+import os
+import py_compile
+import re
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SKILLS = ROOT / "skills"
+
+errors, warnings = [], []
+
+
+def parse_frontmatter(text, label):
+    m = re.match(r"\A---\n(.*?\n)---\n", text, re.S)
+    if not m:
+        errors.append(f"{label}: missing frontmatter")
+        return {}
+    fm = {}
+    for line in m.group(1).splitlines():
+        if line[:1] not in (" ", "\t", "-", "#") and ":" in line:
+            key, _, value = line.partition(":")
+            fm[key.strip()] = value.strip()
+    return fm
+
+
+skill_names = sorted(p.name for p in SKILLS.iterdir() if p.is_dir())
+
+for name in skill_names:
+    path = SKILLS / name / "SKILL.md"
+    label = f"skills/{name}/SKILL.md"
+    if not path.exists():
+        errors.append(f"{label}: missing")
+        continue
+    text = path.read_text()
+    fm = parse_frontmatter(text, label)
+    if fm.get("name") != name:
+        errors.append(f"{label}: frontmatter name {fm.get('name')!r} != directory {name!r}")
+    desc = fm.get("description", "")
+    if not desc:
+        errors.append(f"{label}: missing/empty description")
+    elif len(desc) > 1024:
+        errors.append(f"{label}: description is {len(desc)} chars (> 1024)")
+    if fm.get("user-invocable") == "true":
+        errors.append(f"{label}: 'user-invocable: true' is redundant (it's the default) — remove it")
+    if "$ARGUMENTS" in text and "argument-hint" not in fm:
+        warnings.append(f"{label}: uses $ARGUMENTS but has no argument-hint")
+
+# Cross-references: namespaced ones must exist; bare ones are forbidden.
+ref_files = (
+    list(SKILLS.glob("*/SKILL.md"))
+    + list((ROOT / "docs").glob("*.md"))
+    + [ROOT / "README.md"]
+    + list((ROOT / "templates").rglob("*.md"))
+    + list((ROOT / "templates").rglob("*.tex"))
+    + list((ROOT / "templates").rglob("*.R"))
+)
+ns_ref = re.compile(r"/mstack:([a-z0-9-]+)")
+bare_ref = re.compile(r"(?<![\w.:@/-])/(" + "|".join(map(re.escape, skill_names)) + r")\b")
+for f in ref_files:
+    rel = f.relative_to(ROOT)
+    text = f.read_text()
+    for m in ns_ref.finditer(text):
+        if m.group(1) not in skill_names:
+            errors.append(f"{rel}: reference to unknown skill /mstack:{m.group(1)}")
+    for m in bare_ref.finditer(text):
+        errors.append(f"{rel}: bare reference {m.group(0)!r} — use /mstack:{m.group(1)}")
+
+# Docs coverage.
+docs_skills = (ROOT / "docs" / "skills.md").read_text()
+for name in skill_names:
+    if f"/mstack:{name}" not in docs_skills:
+        warnings.append(f"docs/skills.md: no row mentions /mstack:{name}")
+
+# Hooks.
+hooks_json = ROOT / "hooks" / "hooks.json"
+if hooks_json.exists():
+    try:
+        json.loads(hooks_json.read_text())
+    except json.JSONDecodeError as e:
+        errors.append(f"hooks/hooks.json: invalid JSON ({e})")
+for script in (ROOT / "hooks").glob("*.py"):
+    with tempfile.NamedTemporaryFile(suffix=".pyc", delete=False) as tmp:
+        cfile = tmp.name
+    try:
+        py_compile.compile(str(script), cfile=cfile, doraise=True)
+    except py_compile.PyCompileError as e:
+        errors.append(f"{script.relative_to(ROOT)}: {e.msg}")
+    finally:
+        os.unlink(cfile)
+
+for w in warnings:
+    print(f"WARN  {w}")
+for e in errors:
+    print(f"ERROR {e}")
+print(f"\n{len(skill_names)} skills checked: {len(errors)} error(s), {len(warnings)} warning(s)")
+sys.exit(1 if errors else 0)

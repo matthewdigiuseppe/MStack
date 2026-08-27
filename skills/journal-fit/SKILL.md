@@ -1,8 +1,8 @@
 ---
 name: journal-fit
-description: Picks 3 target journals and produces a comparison table on impact × fit × turnaround × desk-reject risk. Use when the paper is submission-ready. Updates .mstack/config.yaml with the tier.
-user-invocable: true
+description: Scores 6-8 candidate journals on impact, fit, method receptivity, word limits, turnaround, and desk-reject risk, then sets a reach/realistic/backup tier in config. Use when the user asks where to submit or which journal fits the paper.
 allowed-tools:
+  - Bash(date *)
   - Read
   - Write
   - Edit
@@ -17,7 +17,7 @@ allowed-tools:
 
 ## When to invoke
 
-The manuscript is submission-ready (passed `/results-audit`, `/coauthor-review`, `/referee-mock`). You need to pick a journal — and a backup, and a backup's backup.
+The manuscript is submission-ready (passed `/mstack:results-audit`, `/mstack:coauthor-review`, `/mstack:referee-mock`). You need to pick a journal — and a backup, and a backup's backup.
 
 ## Procedure
 
@@ -51,7 +51,7 @@ The manuscript is submission-ready (passed `/results-audit`, `/coauthor-review`,
 
 6. **Update `.mstack/config.yaml`'s `target_journals`** with the three tiers.
 
-7. **Recommend** the submission journal. Justify in two sentences. Tie it to the abstract framing chosen in `/abstract-shotgun`.
+7. **Recommend** the submission journal. Justify in two sentences. Tie it to the abstract framing chosen in `/mstack:abstract-shotgun`.
 
 ## Outputs
 
@@ -67,5 +67,5 @@ The manuscript is submission-ready (passed `/results-audit`, `/coauthor-review`,
 
 ## When to call other skills
 
-- Before: `/referee-mock editor` to stress-test fit.
-- After: `/cover-letter` for the chosen journal.
+- Before: `/mstack:referee-mock editor` to stress-test fit.
+- After: `/mstack:submission-pack` to stage the anonymized bundle, then `/mstack:cover-letter` for the chosen journal.

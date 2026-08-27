@@ -1,7 +1,6 @@
 ---
 name: cover-letter
-description: Drafts a cover letter to a chosen journal and editor. Three short paragraphs — fit, contribution, declarations. Use after /journal-fit. Writes to submission/cover-letter.md.
-user-invocable: true
+description: Drafts the three-paragraph submission cover letter — fit to this journal, contribution, declarations — in 400 words or fewer. Use after a target journal is chosen, when the user asks for a cover letter or submission materials.
 allowed-tools:
   - Read
   - Write
@@ -15,7 +14,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/journal-fit` settles a target journal. The cover letter is read in 30 seconds; precision and specificity matter more than warmth.
+After `/mstack:journal-fit` settles a target journal. The cover letter is read in 30 seconds; precision and specificity matter more than warmth.
 
 ## Procedure
 
@@ -29,7 +28,7 @@ After `/journal-fit` settles a target journal. The cover letter is read in 30 se
    What the paper does, in one sentence, and why it fits *this* journal. Reference one or two recent papers from the journal it's in conversation with — concrete, not "this builds on the journal's strong tradition in X."
 
    ### ¶2: Contribution
-   What the paper adds. Use the contribution sentence from `/research-question`. State the headline finding and the design that delivers it. Resist hedge language.
+   What the paper adds. Use the contribution sentence from `/mstack:research-question`. State the headline finding and the design that delivers it. Resist hedge language.
 
    ### ¶3: Declarations
    - Preregistration status + URL (from `.mstack/config.yaml`).
@@ -53,7 +52,7 @@ After `/journal-fit` settles a target journal. The cover letter is read in 30 se
 ## Outputs
 
 - `submission/cover-letter.md`.
-- Summary block: word count, editor addressed, declarations covered.
+- Summary block: word count, editor addressed, declarations covered — plus a reminder to set `paper.status: "submitted"` in `.mstack/config.yaml` once the portal confirms.
 
 ## Anti-patterns to refuse
 
@@ -64,5 +63,5 @@ After `/journal-fit` settles a target journal. The cover letter is read in 30 se
 
 ## When to call other skills
 
-- Before: `/journal-fit`.
-- After: submit. On decision: `/r-and-r` if R&R; `/journal-fit` again if rejected.
+- Before: `/mstack:journal-fit`.
+- After: submit. On decision: `/mstack:r-and-r` if R&R; `/mstack:journal-fit` again if rejected.

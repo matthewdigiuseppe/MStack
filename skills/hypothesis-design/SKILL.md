@@ -1,7 +1,6 @@
 ---
 name: hypothesis-design
-description: Operationalizes hypotheses, runs a falsifiability check, pre-commits to direction. Use after /theory-build and before any data analysis. Writes to .mstack/hypotheses.md.
-user-invocable: true
+description: Turns theory into operationalized, falsifiable hypotheses — statement, direction, magnitude, X/Y operationalization, and the pattern that would falsify each — with exactly one marked primary. Use before any data collection or analysis, before preregistration, or whenever the user drafts or revises hypotheses.
 allowed-tools:
   - Read
   - Write
@@ -14,7 +13,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/theory-build`. Before fielding or analyzing. Before `/preregister` (the prereg quotes these hypotheses).
+After `/mstack:theory-build`. Before fielding or analyzing. Before `/mstack:preregister` (the prereg quotes these hypotheses).
 
 ## Procedure
 
@@ -54,4 +53,4 @@ After `/theory-build`. Before fielding or analyzing. Before `/preregister` (the 
 
 ## When to call other skills
 
-- After: `/identification-review`, then `/preregister`.
+- After: `/mstack:identification-review`, then `/mstack:preregister`.

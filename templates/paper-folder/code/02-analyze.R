@@ -7,4 +7,4 @@ library(fixest)
 library(modelsummary)
 library(here)
 
-# /analyze writes here.
+# /mstack:analyze writes here.

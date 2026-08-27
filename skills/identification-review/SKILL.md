@@ -1,7 +1,6 @@
 ---
 name: identification-review
-description: Methodologist voice prosecuting the identification strategy. Names threats to inference, alternative explanations, and what would change your mind. Front-runs the R1 reviewer who would tank the paper on identification grounds. Analog to gstack's /plan-eng-review.
-user-invocable: true
+description: Methodologist prosecution of the identification strategy — states the identifying assumption, names concrete threats (selection, confounding, reverse causality, SUTVA, clustering), demands falsification tests, and issues a pass/fail verdict. Use before locking a design, before submission, or whenever the user asks whether the effect is identified or worries about endogeneity.
 allowed-tools:
   - Read
   - Write
@@ -16,7 +15,7 @@ allowed-tools:
 
 ## When to invoke
 
-- After `/theory-build` and before `/design-research`: lock down identification before committing to a design.
+- After `/mstack:theory-build` and before `/mstack:design-research`: lock down identification before committing to a design.
 - Before submission: re-run on the actual specification to catch what you missed.
 
 ## Procedure
@@ -69,6 +68,6 @@ allowed-tools:
 
 ## When to call other skills
 
-- Pre-fail: redesign with `/design-research` before any data work.
-- Post-pass: proceed to `/design-research` (if pre-data) or `/preregister` (if data is about to be collected).
+- Pre-fail: redesign with `/mstack:design-research` before any data work.
+- Post-pass: proceed to `/mstack:design-research` (if pre-data) or `/mstack:preregister` (if data is about to be collected).
 - Before submission: re-run; the post-fact spec often differs from the pre-fact plan.

@@ -1,7 +1,6 @@
 ---
 name: results-audit
-description: Staff-statistician audit of the analysis. Catches off-by-one errors, sample-size mismatches, SE-clustering mistakes, p-hacking risk, and forking-paths exposure. Run after /analyze and before /draft-section results. Analog to gstack's /review.
-user-invocable: true
+description: Staff-statistician audit of the full analysis — sample-size consistency across tables, spec-vs-prereg match, clustering, multiple comparisons, forking-paths exposure, end-to-end reproducibility. Use after /mstack:analyze and before drafting results, or whenever the user asks to check the analysis or the numbers look off.
 allowed-tools:
   - Read
   - Bash
@@ -17,7 +16,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/analyze` writes the primary table. Before `/draft-section results`. This skill is the one your future self wishes had run before the R2 reviewer found the same problem in three pages.
+After `/mstack:analyze` writes the primary table. Before `/mstack:draft-section results`. This skill is the one your future self wishes had run before the R2 reviewer found the same problem in three pages.
 
 ## Procedure
 
@@ -38,7 +37,7 @@ After `/analyze` writes the primary table. Before `/draft-section results`. This
    ### Specification integrity
    - [ ] Primary spec matches prereg's "Primary analysis" word-for-word (variables, sample, SE).
    - [ ] FE dimensions are justified (not just "everyone uses two-way FE").
-   - [ ] Clustering matches the dependence structure described in `/identification-review`.
+   - [ ] Clustering matches the dependence structure described in `/mstack:identification-review`.
    - [ ] Standard errors are not naïve when the design has obvious dependence (panel, geographic, dyadic).
 
    ### Inference integrity
@@ -54,7 +53,7 @@ After `/analyze` writes the primary table. Before `/draft-section results`. This
    - [ ] Sample restrictions match prereg.
 
    ### Reproducibility
-   - [ ] `01-clean.R` → `02-analyze.R` → `04-tables.R` runs end-to-end on a fresh R session (test if feasible: `Rscript -e 'source("code/01-clean.R"); source("code/02-analyze.R"); source("code/04-tables.R")'`).
+   - [ ] The numbered pipeline runs end-to-end on a fresh R session — every `code/[0-9]*.R` present, in ascending order, skipping `00-fetch-*` (test if feasible: `Rscript -e 'for (f in sort(list.files("code", pattern = "^[0-9].*[.]R$", full.names = TRUE))) if (!grepl("00-fetch", f)) source(f)'`).
    - [ ] `output/analyze-log.md` matches the tables on disk.
    - [ ] No hard-coded paths.
    - [ ] `sessionInfo()` is captured somewhere.
@@ -62,7 +61,7 @@ After `/analyze` writes the primary table. Before `/draft-section results`. This
 3. **Run the failures.** For each failed check, write a one-paragraph diagnosis: what is wrong, where (file + line), and the fix.
 
 4. **Verdict.**
-   - **Pass** — all checks clean. Proceed to `/robustness` then `/draft-section results`.
+   - **Pass** — all checks clean. Proceed to `/mstack:robustness` then `/mstack:draft-section results`.
    - **Conditional pass** — minor failures fixable in code without re-spec. List them.
    - **Fail** — at least one specification, sample, or inference issue. Halt drafting until resolved.
 
@@ -81,5 +80,5 @@ After `/analyze` writes the primary table. Before `/draft-section results`. This
 
 ## When to call other skills
 
-- Pre-fail: re-run `/analyze` after fixing.
-- Pre-pass: `/robustness` next, then `/viz`, then `/draft-section results`.
+- Pre-fail: re-run `/mstack:analyze` after fixing.
+- Pre-pass: `/mstack:robustness` next, then `/mstack:viz`, then `/mstack:draft-section results`.

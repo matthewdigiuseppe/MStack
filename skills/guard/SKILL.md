@@ -1,7 +1,8 @@
 ---
 name: guard
-description: /careful + /freeze combined in one toggle. Maximum-safety mode. Lifted from gstack's /guard.
-user-invocable: true
+description: Maximum-safety mode — /mstack:careful plus /mstack:freeze in one toggle, enforced by the MStack hook.
+argument-hint: "[directory]"
+disable-model-invocation: true
 allowed-tools:
   - Read
   - Write
@@ -15,13 +16,13 @@ allowed-tools:
 
 ## Argument
 
-`$ARGUMENTS` — directory to freeze writes to (forwarded to `/freeze`).
+`$ARGUMENTS` — directory to freeze writes to (forwarded to `/mstack:freeze`). If omitted, ask which directory to lock to, as `/mstack:freeze` does.
 
 ## Procedure
 
-1. Run the equivalent of `/careful` (toggle `careful: true` in `.mstack/safety.yaml`).
-2. Run the equivalent of `/freeze` with the supplied path (or paper-folder root if none).
-3. Print the combined state.
+1. Run the equivalent of `/mstack:careful` (set `careful: true` in `.mstack/safety.yaml`).
+2. Run the equivalent of `/mstack:freeze` with the supplied path.
+3. Print the combined state. Both flags are enforced by MStack's `PreToolUse` hook (`hooks/mstack-guard.py`), not just by convention: destructive commands prompt for confirmation, and writes outside the freeze path are denied.
 
 ## Outputs
 
@@ -30,5 +31,5 @@ allowed-tools:
 
 ## When to call other skills
 
-- `/unfreeze` to remove just the freeze (careful stays on).
-- `/careful off` to remove just careful (freeze stays on).
+- `/mstack:unfreeze` to remove just the freeze (careful stays on).
+- `/mstack:careful off` to remove just careful (freeze stays on).

@@ -1,7 +1,6 @@
 ---
 name: lit-map
-description: Systematic literature scan that identifies the 3-5 papers you must engage and the gap you fill. Builds a citation-graph sketch and locates the project in the active conversation. Use after a candidate research question is locked in.
-user-invocable: true
+description: Systematic literature scan that finds the 3-5 must-engage papers, synthesizes the consensus and where it cracks, states the gap, and stages BibTeX into paper/refs.bib. Use after a research question is locked, when the user asks what to cite or who has written on a topic, or before drafting the intro or theory.
 allowed-tools:
   - Read
   - Write
@@ -18,7 +17,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/research-question` returns a green or yellow verdict and you have a concrete claim. The lit-map exists to answer one question: **what conversation is this paper joining, and where does it crack the consensus?**
+After `/mstack:research-question` returns a green or yellow verdict and you have a concrete claim. The lit-map exists to answer one question: **what conversation is this paper joining, and where does it crack the consensus?**
 
 ## Procedure
 
@@ -54,13 +53,13 @@ After `/research-question` returns a green or yellow verdict and you have a conc
 
 7. **Stage `refs.bib` entries.** For every Foundation + Frontier paper, produce a BibTeX entry and append to `paper/refs.bib` (deduped by key). Do not invent fields — if a field (e.g., page numbers) isn't available, leave it blank with a `% TODO` comment.
 
-8. **Save the map** to `.mstack/lit-map.md` with the full classification, synthesis, and gap statement.
+8. **Save the map** to `.mstack/lit-map.md` with the full classification, synthesis, and gap statement. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
 
 ## Outputs
 
 - `.mstack/lit-map.md` — full map with consensus + gap statement.
 - `paper/refs.bib` — appended with new entries (no overwrites; dedupe by key).
-- A summary block to the user: top 5 must-engage papers, the gap statement, and the suggestion to run `/identification-review` or `/theory-build` next.
+- A summary block to the user: top 5 must-engage papers, the gap statement, and the suggestion to run `/mstack:identification-review` or `/mstack:theory-build` next.
 
 ## Anti-patterns to refuse
 
@@ -71,5 +70,5 @@ After `/research-question` returns a green or yellow verdict and you have a conc
 
 ## When to call other skills
 
-- Before drafting `intro` or `theory`: `/lit-map` is a prerequisite.
-- After the map: `/theory-build` (sharpen mechanism), then `/hypothesis-design`.
+- Before drafting `intro` or `theory`: `/mstack:lit-map` is a prerequisite.
+- After the map: `/mstack:theory-build` (sharpen mechanism), then `/mstack:hypothesis-design`.

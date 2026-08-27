@@ -1,7 +1,6 @@
 ---
 name: survey-build
-description: Scaffolds a Qualtrics survey instrument with bot/agent defenses baked in. Wraps the agent-disclosure skill for layered defenses against AI-completed responses. Use whenever designing a new survey instrument.
-user-invocable: true
+description: Designs a Qualtrics survey instrument — blocks, question table, randomization, embedded data — with layered AI-agent/bot defenses and a probe manifest baked in. Use whenever the user is designing or programming a survey, survey experiment, or panel study, even if they do not mention bot protection.
 allowed-tools:
   - Read
   - Write
@@ -31,8 +30,8 @@ You're designing a new survey instrument — a survey experiment, a panel, or a 
      - Inference unit — individual, dyad, time-series.
    - Record the answers in `.mstack/survey-design.md`.
 
-2. **Invoke the agent-disclosure skill.**
-   - Use the **agent-disclosure** skill to layer in:
+2. **Layer in the bot/agent defenses.**
+   - Use the **agent-disclosure** skill if the user has it installed; otherwise follow `${CLAUDE_PLUGIN_ROOT}/references/survey-bot-defenses.md`. Either way, layer in:
      - Attention checks calibrated to expected human reading time.
      - Behavioral probes (timing distributions, paste-detection, mouse-tracking opt-ins).
      - Instructional manipulation checks.
@@ -57,8 +56,8 @@ You're designing a new survey instrument — a survey experiment, a panel, or a 
    - [ ] Attention checks placed at expected fail rates ≤ 10% for engaged humans.
    - [ ] Open-ended questions have a defined quality-check protocol.
    - [ ] Treatment randomization is documented and reproducible.
-   - [ ] Preregistration (`/preregister`) has been run or explicitly waived.
-   - [ ] Power analysis (`/power-analysis`) supports the proposed N.
+   - [ ] Power analysis (`/mstack:power-analysis`) supports the proposed N.
+   - [ ] Preregistration (`/mstack:preregister`) has been run or explicitly waived. The sequence is deliberate — draft the spec here, then `/mstack:power-analysis`, then `/mstack:preregister` (which copies the probe thresholds into its exclusions), then return here to mark ready-to-field.
 
 ## Outputs
 
@@ -67,11 +66,11 @@ You're designing a new survey instrument — a survey experiment, a panel, or a 
 
 ## Anti-patterns to refuse
 
-- **No bot defenses.** If a user wants to skip agent-disclosure, refuse and explain why — agent contamination is now the default failure mode of online survey research.
+- **No bot defenses.** If a user wants to skip the bot/agent defenses, refuse and explain why — agent contamination is now the default failure mode of online survey research.
 - **Single attention check.** One check is not a defense; it's theater.
 - **Ad-hoc exclusions.** Every exclusion rule must be pre-specified with a threshold.
 
 ## When to call other skills
 
-- Before fielding: `/preregister`, `/power-analysis`.
-- After fielding: `/data-acquire` (provenance log), then `/data-clean` (with the survey design as ground truth).
+- Before fielding: `/mstack:preregister`, `/mstack:power-analysis`.
+- After fielding: `/mstack:data-acquire` (provenance log), then `/mstack:data-clean` (with the survey design as ground truth).

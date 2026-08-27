@@ -1,7 +1,6 @@
 ---
 name: robustness
-description: Builds a robustness matrix — alternative specifications, samples, and operationalizations. Fights the cherry-picking / forking-paths problem. Run after /analyze + /results-audit, before /draft-section results.
-user-invocable: true
+description: Stress-tests the headline result across alternative samples, operationalizations, fixed effects, clustering, and functional forms, rendering a robustness table and specification curve with a stable/sensitive/fragile verdict. Use after the primary table is locked, or when the user asks for robustness checks or worries about cherry-picking.
 allowed-tools:
   - Read
   - Write
@@ -16,7 +15,7 @@ allowed-tools:
 
 ## When to invoke
 
-After `/analyze` produces a primary table and `/results-audit` passes. Robustness is not "more tables for the appendix" — it's the test of whether the headline is fragile.
+After `/mstack:analyze` produces a primary table and `/mstack:results-audit` passes. Robustness is not "more tables for the appendix" — it's the test of whether the headline is fragile.
 
 ## Procedure
 
@@ -42,7 +41,7 @@ After `/analyze` produces a primary table and `/results-audit` passes. Robustnes
    - Stores results in a long data frame: `(spec_name, dimension, value, coef, se, ci_low, ci_high, n)`.
    - Saves the result as `output/models/robustness.rds`.
 
-4. **Write `code/06-robustness-table-and-curve.R`** that:
+4. **Write `code/06-robustness-table-and-curve.R`.** Copy the bundled helper — `${CLAUDE_PLUGIN_ROOT}/skills/robustness/assets/spec-curve.R` → `code/spec-curve.R` — and `source()` it for `plot_spec_curve()` and `summarize_robustness()`. The script:
    - Renders a **robustness table** at `output/tables/table-robustness.tex` showing each alternative against the primary.
    - Renders a **specification curve** at `output/figures/specification-curve.pdf` plotting all coefficients with CIs ranked by magnitude, with the primary spec marked.
 
@@ -70,5 +69,5 @@ After `/analyze` produces a primary table and `/results-audit` passes. Robustnes
 
 ## When to call other skills
 
-- Before: `/results-audit` must pass.
-- After: `/viz` (specification curve is one of the figures), then `/draft-section results`.
+- Before: `/mstack:results-audit` must pass.
+- After: `/mstack:viz` (specification curve is one of the figures), then `/mstack:draft-section results`.

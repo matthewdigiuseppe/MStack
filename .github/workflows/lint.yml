@@ -1,0 +1,28 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  mstack-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run MStack lint
+        run: python3 bin/mstack-lint
+
+  plugin-validate:
+    # Best-effort: `claude plugin validate` catches frontmatter/schema issues,
+    # but the CLI is installed fresh here, so don't let its availability
+    # break CI for contributors.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate plugin manifest and skills
+        run: npx -y @anthropic-ai/claude-code plugin validate . --strict
