@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# mstack-upgrade — pull latest MStack from GitHub and re-run setup.
+# mstack-upgrade — pull the latest MStack into this clone.
+#
+# Pulling updates the files; Claude Code still has to reload them. How depends
+# on how the skills were registered:
+#   * installed from GitHub  -> /plugin marketplace update mstack
+#   * installed from this clone -> /plugin marketplace update mstack (it re-reads
+#     this directory), or reinstall with /plugin install mstack@mstack
+# Either way, restart Claude Code afterwards so the reloaded skills take effect.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,13 +14,34 @@ MSTACK_ROOT="$(cd "$HERE/.." && pwd)"
 
 if [[ ! -d "$MSTACK_ROOT/.git" ]]; then
   echo "MStack root at $MSTACK_ROOT is not a git checkout; cannot upgrade." >&2
+  echo "For a marketplace install, run: /plugin marketplace update mstack" >&2
   exit 1
 fi
 
-echo "Pulling latest MStack..."
+before="$(git -C "$MSTACK_ROOT" rev-parse --short HEAD)"
+version_before="$(grep -o '"version": "[^"]*"' "$MSTACK_ROOT/.claude-plugin/plugin.json" | head -1 | cut -d'"' -f4)"
+
+echo "Pulling latest MStack into $MSTACK_ROOT..."
 git -C "$MSTACK_ROOT" pull --ff-only
 
-echo "Re-running setup..."
+after="$(git -C "$MSTACK_ROOT" rev-parse --short HEAD)"
+version_after="$(grep -o '"version": "[^"]*"' "$MSTACK_ROOT/.claude-plugin/plugin.json" | head -1 | cut -d'"' -f4)"
+
+if [[ "$before" == "$after" ]]; then
+  echo "Already up to date at $after (version $version_after)."
+  exit 0
+fi
+
+echo ""
+echo "Updated $before -> $after (version $version_before -> $version_after)."
+echo "Skills changed:"
+git -C "$MSTACK_ROOT" diff --name-only "$before" "$after" -- skills references \
+  | sed 's|^|  |' || true
+echo ""
+echo "Re-running setup (PATH and permissions)..."
 "$MSTACK_ROOT/setup"
 
-echo "Upgrade done."
+echo ""
+echo "Now reload the skills in Claude Code:"
+echo "  /plugin marketplace update mstack"
+echo "then restart Claude Code."

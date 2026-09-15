@@ -33,17 +33,19 @@ In Claude Code, type:
 
 You're done. From here you'd typically start with `/mstack:research-question` or `/mstack:idea-shotgun`.
 
-### Power-user alternative (optional, terminal users only)
+### Optional extra for terminal users: the command-line tools
 
-If you live in a Mac or Linux terminal and would rather run `mstack-init` directly from the command line instead of asking Claude, you can clone MStack manually:
+MStack ships three scripts that are useful outside Claude Code: `mstack-init` (scaffold a paper), `mstack-status` (what stage a paper is at), and `mstack-pdf2md` (turn PDFs into token-cheap Markdown). To run them directly from a Mac or Linux terminal, clone the repository and put its `bin/` on your PATH:
 
 ```bash
-git clone https://github.com/matthewdigiuseppe/MStack.git ~/.claude/plugins/mstack
-cd ~/.claude/plugins/mstack
+git clone https://github.com/matthewdigiuseppe/MStack.git ~/mstack
+cd ~/mstack
 ./setup
 ```
 
-`./setup` registers MStack with Claude Code and prints one line for you to paste into your shell config so that typing `mstack-init my-paper` (or `mstack-status` inside a paper) in any folder will work. Skip this whole section if you already installed via `/plugin install` above — it does the same job.
+`./setup` makes the scripts executable and prints the one line to paste into your shell config. It does **not** register the skills: those come from the `/plugin install` above, which is what namespaces them as `/mstack:<name>`. The two steps are complements, not alternatives, and you only need this one if you want the terminal commands.
+
+To update a clone later, run `bin/mstack-upgrade` (or `/mstack:mstack-upgrade` in Claude Code); it pulls, lists what changed, and reminds you to run `/plugin marketplace update mstack`.
 
 ## Workflow
 
