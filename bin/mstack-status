@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+"""mstack-status — deterministic inventory of an MStack paper folder.
+
+Backs /mstack:paper-status. One call replaces a couple of dozen globs, greps,
+and stat lookups: it prints the config summary, every pipeline artifact with
+its state (present / stub / missing), date, and verdict line, the verdicts
+that are stale because an input changed after they were written, the stage
+the artifacts imply, and whether that agrees with paper.status in
+.mstack/config.yaml. It never writes anything. Standard library only.
+
+Usage:
+  mstack-status                 # inspect the paper folder at or above cwd
+  mstack-status path/to/paper
+  mstack-status --json          # machine-readable
+"""
+from __future__ import annotations
+
+import datetime as dt
+import glob
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+STAGES = ["ideate", "map", "design", "build", "analyze", "write", "submit", "reflect"]
+STATUS_STAGE = {
+    "ideating": "ideate", "mapping": "map", "designing": "design",
+    "building": "build", "analyzing": "analyze", "writing": "write",
+    "submitted": "submit", "r-and-r": "submit", "accepted": "submit",
+    "archived": "reflect",
+}
+
+# (stage, pattern, kind, required). kind: "verdict" pulls the first
+# Verdict/Recommendation line; "sections" reports drafted-vs-stub counts;
+# "files" counts non-stub files. Patterns may list alternatives with "|".
+# Only required artifacts count as gaps; optional ones are shown but never
+# block the next-step recommendation. survey-design becomes required when
+# design.type mentions a survey.
+ARTIFACTS = [
+    ("ideate", ".mstack/research-question.md", "verdict", True),
+    ("ideate", ".mstack/idea-shotgun-*.md", "file", False),
+    ("ideate", ".mstack/scope-challenge-*.md", "verdict", False),
+    ("map", "lit/pdf/*.pdf", "files", False),
+    ("map", "lit/index.md", "file", False),
+    ("map", ".mstack/lit-map.md", "file", True),
+    ("map", ".mstack/theory.md", "file", True),
+    ("map", ".mstack/hypotheses.md", "file", True),
+    ("map", ".mstack/identification-review-*.md", "verdict", True),
+    ("design", ".mstack/design-research.md", "file", True),
+    ("design", ".mstack/power-analysis.md", "verdict", True),
+    ("design", ".mstack/survey-design.md", "file", False),
+    ("design", "prereg/osf-prereg.md", "file", False),
+    ("build", "data/raw/PROVENANCE.md", "file", True),
+    ("build", "data/clean/analytic.rds", "file", True),
+    ("build", "data/codebook.md", "file", True),
+    ("analyze", "code/02-analyze.R", "file", True),
+    ("analyze", "output/tables/*.tex", "files", True),
+    ("analyze", ".mstack/results-audit-*.md", "verdict", True),
+    ("analyze", ".mstack/robustness-*.md", "verdict", True),
+    ("analyze", "output/figures/*.pdf|output/figures/*.png", "files", True),
+    ("write", "paper/sections/*.tex|paper/sections/*.qmd", "sections", True),
+    ("write", ".mstack/referee-cache/*.md", "verdict", True),
+    ("write", ".mstack/title-shotgun-*.md", "file", False),
+    ("submit", ".mstack/journal-fit-*.md", "file", True),
+    ("submit", "submission/submission-checklist-*.md", "file", True),
+    ("submit", "submission/cover-letter.md", "file", True),
+    ("submit", "submission/response-to-reviewers/*-response.md", "file", False),
+    ("reflect", ".mstack/retro.md", "file", True),
+    ("reflect", "replication-manifest.txt", "file", True),
+]
+
+# A verdict is stale when any of these inputs is newer than the newest
+# matching verdict file.
+STALE_INPUTS = {
+    ".mstack/results-audit-*.md": ["code/01-clean.R", "code/02-analyze.R", "code/04-tables.R", "data/clean/analytic.rds"],
+    ".mstack/robustness-*.md": ["code/02-analyze.R", "code/05-robustness.R", "data/clean/analytic.rds"],
+    ".mstack/identification-review-*.md": ["paper/sections/methods.*", "code/02-analyze.R", ".mstack/theory.md", ".mstack/hypotheses.md"],
+    ".mstack/referee-cache/*.md": ["paper/sections/*"],
+    ".mstack/lit-map.md": ["lit/index.md"],
+    ".mstack/theory.md": [".mstack/lit-map.md"],
+    ".mstack/hypotheses.md": [".mstack/theory.md"],
+    ".mstack/design-research.md": [".mstack/identification-review-*.md", ".mstack/hypotheses.md"],
+    ".mstack/power-analysis.md": [".mstack/design-research.md", ".mstack/hypotheses.md"],
+    "prereg/osf-prereg.md": [".mstack/hypotheses.md", ".mstack/power-analysis.md", ".mstack/survey-design.md"],
+    "data/codebook.md": ["data/clean/analytic.rds", "code/01-clean.R"],
+    ".mstack/journal-fit-*.md": ["paper/sections/abstract.*"],
+    ".mstack/title-shotgun-*.md": ["paper/sections/abstract.*"],
+    "submission/cover-letter.md": [".mstack/journal-fit-*.md", "paper/sections/abstract.*"],
+}
+
+STUB_MARKER = "writes here"
+
+
+def find_project(start: Path):
+    p = start.resolve()
+    for c in [p, *p.parents]:
+        if (c / ".mstack").is_dir():
+            return c
+    return None
+
+
+def read_config(project: Path) -> dict:
+    """Minimal reader for the few config.yaml keys status needs (no PyYAML)."""
+    cfg = {"title": "", "short_name": "", "format": "", "status": "", "prereg": "",
+           "prereg_url": "", "type": "", "journals": [], "writing_style": ""}
+    try:
+        lines = (project / ".mstack" / "config.yaml").read_text().splitlines()
+    except OSError:
+        return cfg
+    section = None
+    for raw in lines:
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        indent = len(raw) - len(raw.lstrip())
+        line = raw.split(" #")[0].strip()
+        if indent == 0:
+            section = line.rstrip(":") if line.endswith(":") else None
+            continue
+        key, _, value = line.partition(":")
+        key, value = key.strip().lstrip("- ").strip(), value.strip().strip("\"'")
+        if section == "paper" and key in cfg:
+            cfg[key] = value
+        elif section == "design" and key in ("prereg", "prereg_url", "type"):
+            cfg[key] = value
+        elif section == "voice" and key == "writing_style":
+            cfg[key] = value
+        elif section == "target_journals" and key == "name" and value:
+            cfg["journals"].append(value)
+    return cfg
+
+
+def is_stub(path: Path) -> bool:
+    try:
+        text = path.read_text(errors="ignore")
+    except OSError:
+        return True
+    if STUB_MARKER in text:
+        return True
+    suffix = path.suffix.lower()
+    if suffix in (".tex", ".qmd", ".md", ".r", ".txt"):
+        body = []
+        for line in text.splitlines():
+            s = line.strip()
+            if not s or s.startswith(("%", "<!--", "#")) and suffix != ".md":
+                continue
+            if suffix == ".r" and (s.startswith("#") or s.startswith("library(")):
+                continue
+            body.append(s)
+        return len(" ".join(body)) < 40
+    return path.stat().st_size == 0
+
+
+def verdict_line(path: Path) -> str:
+    """First Verdict/Recommendation line; if that line is only a heading, the line after it."""
+    def clean(s):
+        return re.sub(r"\s+", " ", re.sub(r"[*#_`>\-\[\]]+", " ", s)).strip()
+    try:
+        lines = [l for l in path.read_text(errors="ignore").splitlines() if l.strip()]
+    except OSError:
+        return ""
+    for i, line in enumerate(lines):
+        if re.search(r"\b(verdict|recommendation)\b", line, re.I):
+            text = clean(line)
+            if re.fullmatch(r"(?i)(the )?(verdict|recommendation):?", text) and i + 1 < len(lines):
+                text = f"{text.rstrip(':')}: {clean(lines[i + 1])}"
+            return text[:90]
+    return ""
+
+
+def mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def day(ts: float) -> str:
+    return dt.date.fromtimestamp(ts).isoformat() if ts else ""
+
+
+def matches(project: Path, pattern: str):
+    hits = [Path(p) for alt in pattern.split("|") for p in glob.glob(str(project / alt))]
+    return sorted((h for h in hits if h.is_file() and h.name != ".gitkeep"), key=mtime)
+
+
+def inventory(project: Path, cfg: dict):
+    rows, present_by_stage = [], {s: False for s in STAGES}
+    for stage, pattern, kind, required in ARTIFACTS:
+        if pattern == ".mstack/survey-design.md" and "survey" in cfg.get("type", "").lower():
+            required = True
+        files = matches(project, pattern)
+        row = {"stage": stage, "artifact": pattern, "required": required,
+               "state": "missing" if required else "optional", "date": "", "note": ""}
+        if files:
+            newest = files[-1]
+            row["date"] = day(mtime(newest))
+            if kind == "sections":
+                drafted = [f.stem for f in files if not is_stub(f)]
+                stubs = [f.stem for f in files if is_stub(f)]
+                row["state"] = f"{len(drafted)}/{len(files)}"
+                row["note"] = (f"drafted: {', '.join(drafted) or 'none'}"
+                               + (f"; stubs: {', '.join(stubs)}" if stubs else ""))
+                if drafted:
+                    present_by_stage[stage] = True
+                else:
+                    row["state"] = "stub"
+            elif kind == "files":
+                real = [f for f in files if not is_stub(f)]
+                row["state"] = f"{len(real)} file{'s' if len(real) != 1 else ''}" if real else "stub"
+                if real:
+                    present_by_stage[stage] = True
+            else:
+                stub = is_stub(newest)
+                row["state"] = "stub" if stub else "present"
+                if not stub:
+                    present_by_stage[stage] = True
+                    if kind == "verdict":
+                        row["note"] = verdict_line(newest)
+                if len(files) > 1:
+                    row["note"] = (row["note"] + f" ({len(files)} files; newest shown)").strip()
+        rows.append(row)
+    return rows, present_by_stage
+
+
+def stale_verdicts(project: Path):
+    out = []
+    for pattern, inputs in STALE_INPUTS.items():
+        files = [f for f in matches(project, pattern) if not is_stub(f)]
+        if not files:
+            continue
+        newest = files[-1]
+        for inp in inputs:
+            for f in matches(project, inp):
+                if not is_stub(f) and mtime(f) > mtime(newest) + 1:
+                    out.append({"verdict": str(newest.relative_to(project)), "verdict_date": day(mtime(newest)),
+                                "input": str(f.relative_to(project)), "input_date": day(mtime(f))})
+    return out
+
+
+def derived_stage(present_by_stage):
+    stage = None
+    for s in STAGES:
+        if present_by_stage[s]:
+            stage = s
+    return stage or "ideate"
+
+
+def gaps_before(rows, stage):
+    """Missing artifacts in stages up to and including the derived stage."""
+    upto = STAGES[: STAGES.index(stage) + 1]
+    return [f"{r['stage']}: {r['artifact']}" for r in rows
+            if r["required"] and r["stage"] in upto and r["state"] in ("missing", "stub")]
+
+
+def main(argv=None):
+    args = [a for a in (argv or sys.argv[1:])]
+    as_json = "--json" in args
+    args = [a for a in args if a != "--json"]
+    start = Path(args[0]) if args else Path.cwd()
+    project = find_project(start)
+    if project is None:
+        print(f"No .mstack/ found at or above {start.resolve()}; run /mstack:mstack-init first.", file=sys.stderr)
+        return 1
+    cfg = read_config(project)
+    rows, present = inventory(project, cfg)
+    stale = stale_verdicts(project)
+    pdfs, index = matches(project, "lit/pdf/*.pdf"), matches(project, "lit/index.md")
+    if pdfs and (not index or mtime(pdfs[-1]) > mtime(index[-1]) + 1):
+        stale.append({"verdict": "lit/index.md", "verdict_date": day(mtime(index[-1])) if index else "missing",
+                      "input": f"lit/pdf/ ({len(pdfs)} PDFs)", "input_date": day(mtime(pdfs[-1])),
+                      "note": "PDFs not yet ingested; run /mstack:pdf-ingest"})
+    stage = derived_stage(present)
+    cfg_stage = STATUS_STAGE.get(cfg["status"], "")
+    gaps = gaps_before(rows, stage)
+    result = {
+        "project": str(project), "config": cfg, "artifacts": rows, "stale": stale,
+        "derived_stage": stage, "config_stage": cfg_stage,
+        "status_matches": (cfg_stage == stage) if cfg_stage else None, "gaps": gaps,
+    }
+    if as_json:
+        print(json.dumps(result, indent=2))
+        return 0
+
+    name = cfg["title"] or cfg["short_name"] or project.name
+    print(f"MStack status: {name}")
+    print(f"  folder {project}")
+    print(f"  config: status={cfg['status'] or '?'} (stage {cfg_stage or '?'}) · format={cfg['format'] or '?'} "
+          f"· design={cfg['type'] or '?'} · prereg={cfg['prereg'] or 'false'} · writing_style={cfg['writing_style'] or '(none)'}")
+    print(f"  journals: {', '.join(cfg['journals']) or '(none set)'}")
+    print()
+    print(f"{'STAGE':8} {'ARTIFACT':46} {'STATE':9} {'DATE':11} NOTE   (optional = not required for the next step)")
+    for r in rows:
+        print(f"{r['stage']:8} {r['artifact']:46} {r['state']:9} {r['date']:11} {r['note']}")
+    print()
+    if stale:
+        print("STALE (input changed after the verdict was written):")
+        for s in stale:
+            extra = f" — {s['note']}" if s.get("note") else ""
+            print(f"  - {s['verdict']} ({s['verdict_date']}) predates {s['input']} ({s['input_date']}){extra}")
+    else:
+        print("STALE: none")
+    print()
+    agree = "matches config" if cfg_stage == stage else f"config says {cfg['status'] or '?'} (stage {cfg_stage or '?'}) — MISMATCH"
+    print(f"DERIVED STAGE: {stage} — {agree}")
+    if gaps:
+        print("GAPS UP TO THAT STAGE (earliest gap wins for the next-step recommendation):")
+        for g in gaps:
+            print(f"  - {g}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

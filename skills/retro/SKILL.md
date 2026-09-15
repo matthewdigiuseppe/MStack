@@ -16,7 +16,7 @@ After acceptance, rejection, or a major R&R, while memory is fresh.
 
 ## Procedure
 
-1. **Load** `.mstack/config.yaml` (status, journals), the `.mstack/*.md` files in date order, the project git log if any, decision letters in `submission/`.
+1. **Load** the dated artifact table from `python3 "${CLAUDE_PLUGIN_ROOT}/bin/mstack-status"` (every verdict with its date), `git log --reverse --date=short --format='%ad %s'` if the project is a git repo, and the decision letters in `submission/response-to-reviewers/`. Open a `.mstack/*.md` file in full only when a question below needs its detail; the verdict lines in the table are usually enough.
 2. **Timeline:** first commit / `mstack-init` date; milestones (lit-map, prereg, first analysis, first draft, submission, R1, R2, accept); approximate days between them.
 3. **Five questions**, one paragraph each; push for specifics, vague retros are worth nothing:
    1. **Where did time actually go?** Estimated vs. actual on the longest stage.

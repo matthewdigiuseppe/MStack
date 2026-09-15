@@ -82,7 +82,7 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 
 | Skill | Use when |
 |---|---|
-| `/mstack:paper-status` | Opening a session on an existing paper, or asking "what's next?". Reads `.mstack/` and recommends the next skill. |
+| `/mstack:paper-status` | Opening a session on an existing paper, or asking "what's next?". Runs `bin/mstack-status` (one deterministic inventory: artifacts, dates, stale verdicts, derived stage) and recommends the next skill. |
 | `/mstack:careful` | Near a deadline. Destructive commands require confirmation — enforced by the plugin's PreToolUse hook, not just convention. |
 | `/mstack:freeze` | Lock edits to one directory — writes elsewhere are denied by the hook. |
 | `/mstack:guard` | `/mstack:careful` + `/mstack:freeze`. |

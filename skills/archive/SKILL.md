@@ -1,6 +1,6 @@
 ---
 name: archive
-description: Assembles the replication package — inventory, licenses, renv lockfile, replication README, clean-room rebuild of every table and figure from raw data — and stages the OSF/Dataverse upload. Use at acceptance or whenever the user asks for a replication or reproducibility package.
+description: Assembles the replication package — inventory, licenses, renv lockfile, replication README, clean-room rebuild of every table and figure from raw data — and stages the OSF/Dataverse upload. Use at acceptance, whenever the user asks for a replication or reproducibility package, or mentions a Dataverse/OSF deposit or the journal's data policy.
 allowed-tools:
   - Read
   - Write

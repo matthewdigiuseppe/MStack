@@ -1,6 +1,6 @@
 ---
 name: llm-checklist
-description: Logs LLM-as-research-instrument use (model version, access mode, config, prompts) to a ledger as it happens and compiles the 14-item GUIDE-LLM reporting checklist (Feuerriegel et al. 2026) for the methods/SI. Use whenever an LLM is integral to the design — annotation, classification, simulated participants, stimulus generation, data extraction, participant-facing chatbots — not editorial drafting, and before submission to flag every missing item.
+description: Logs LLM-as-research-instrument use (model version, access mode, config, prompts) to a ledger as it happens and compiles the 14-item GUIDE-LLM reporting checklist (Feuerriegel et al. 2026) for the methods/SI. Use whenever an LLM is integral to the design — annotation, classification, simulated participants, stimulus generation, data extraction, participant-facing chatbots — even if the user only mentions having used ChatGPT, Claude, Gemini, or an open model to code or label data; not for editorial drafting. Run before submission to flag missing items.
 argument-hint: "[log <details>|status|report|latex]"
 allowed-tools:
   - Read

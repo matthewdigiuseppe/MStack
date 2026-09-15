@@ -21,7 +21,19 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 
 ## Procedure
 
-1. **Load** `.mstack/config.yaml` (title, target journals, status); `.mstack/learnings.jsonl` (conventions, variable names, framing); `paper/refs.bib` (what can be cited); sibling sections in `paper/sections/` (voice and cross-references); for `methods` / `results`, also `code/02-analyze.R`, `output/tables/*`, `output/figures/*`, because every number in the prose must match the tables on disk.
+1. **Load** `.mstack/config.yaml` (title, target journals, status) and `.mstack/learnings.jsonl` (conventions, variable names, framing). List the citable keys instead of reading the whole bibliography: `grep -o '^@[A-Za-z]*{[^,]*' paper/refs.bib`. Read in full only the files the section depends on, and skim the other sections by heading (`grep -n '^\\section' paper/sections/*.tex`) so cross-references stay consistent without loading the manuscript every time:
+
+   | Section | Reads in full |
+   |---|---|
+   | `intro` | `theory`, `results` (the contribution and headline it must promise); `.mstack/lit-map.md` |
+   | `theory` | `intro`; `.mstack/theory.md`, `.mstack/hypotheses.md` |
+   | `data` | `methods`; `data/codebook.md`, `data/raw/PROVENANCE.md` |
+   | `methods` | `data`, `theory`; `.mstack/identification-review-*.md`, `code/02-analyze.R` |
+   | `results` | `methods`; `code/02-analyze.R`, `output/tables/*`, `output/figures/*` |
+   | `discussion` | `results`, `intro`; `.mstack/identification-review-*.md`, `.mstack/robustness-*.md` |
+   | `abstract` | `intro`, `results`, `discussion` |
+
+   Every number in `methods` / `results` prose must match the tables on disk.
 2. **Voice.** If `voice.writing_style` names a skill, invoke it for tone, rhythm, and vocabulary. If unset, write clean generic academic prose (short sentences, active verbs, no hedge-stuffing, no thesaurus reaches) and tell the user once that they can set a style skill in `.mstack/config.yaml`.
 3. **Draft to the section's bar:**
 

@@ -43,7 +43,7 @@ cd ~/.claude/plugins/mstack
 ./setup
 ```
 
-`./setup` registers MStack with Claude Code and prints one line for you to paste into your shell config so that typing `mstack-init my-paper` in any folder will work. Skip this whole section if you already installed via `/plugin install` above — it does the same job.
+`./setup` registers MStack with Claude Code and prints one line for you to paste into your shell config so that typing `mstack-init my-paper` (or `mstack-status` inside a paper) in any folder will work. Skip this whole section if you already installed via `/plugin install` above — it does the same job.
 
 ## Workflow
 

@@ -1,12 +1,13 @@
 ---
 name: r-and-r
-description: Builds the response-to-reviewers document — every comment quoted verbatim, answered, and mapped to a located manuscript change, plus editor summary and change log. Use when the user has a revise-and-resubmit decision letter or referee reports to answer.
+description: Builds the response-to-reviewers document — every comment quoted verbatim, answered, and mapped to a located manuscript change, plus editor summary and change log. Use when the user has a revise-and-resubmit decision letter or referee reports to answer, or pastes reviewer comments and asks how to respond.
 argument-hint: "[r1|r2|r3]"
 allowed-tools:
   - Read
   - Write
   - Edit
   - Bash(date *)
+  - Bash(git log *)
   - Grep
 ---
 

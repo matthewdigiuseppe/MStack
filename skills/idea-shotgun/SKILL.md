@@ -16,7 +16,7 @@ Produces variants so the user picks from a set instead of a hunch.
 ## Procedure
 
 1. **Load** `.mstack/research-question.md` (if a prior attempt exists) and any data documentation.
-2. **Get the seed.** One paragraph from the user: what they have (data, theoretical interest), what the question might be, the audience they imagine.
+2. **Get the seed.** One paragraph from the user: what they have (data, theoretical interest), what the question might be, the audience they imagine. If the conversation or `.mstack/research-question.md` already supplies these, do not re-ask.
 3. **Generate 4–6 angles**, each varying along one axis:
    - same data, different question;
    - same question, different identification;

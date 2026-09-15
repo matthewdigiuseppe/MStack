@@ -6,6 +6,7 @@ allowed-tools:
   - Read
   - Write
   - Bash(date *)
+  - Bash(git rev-parse *)
   - Glob
   - Grep
 ---
@@ -31,7 +32,7 @@ When every section exists and the draft is "submission-ready": the last line of 
 2. **Prior reports** in `.mstack/referee-cache/`: if the same persona reviewed an earlier draft, say explicitly what improved and what did not.
 3. **Reviewer style.** If `voice.reviewer_style` names an installed skill, use it for voice, tone, and structure; otherwise `${CLAUDE_PLUGIN_ROOT}/references/referee-report-conventions.md`.
 4. **Write the report:** **summary** (one paragraph: what the paper does and claims); **major comments** (3–6 substantive issues that change the headline if unaddressed); **minor comments** (5–15: clarity, presentation, missing citations, table / figure issues); **recommendation** — `Reject`, `Major revisions`, `Minor revisions`, or `Accept`. Be the reviewer the author fears, not the one they hope for.
-5. **Save** to `.mstack/referee-cache/referee-mock-<persona>-<YYYY-MM-DD>.md` with a header: persona, target journal, draft commit hash (if a git repo) or word count, date.
+5. **Save** to `.mstack/referee-cache/referee-mock-<persona>-<YYYY-MM-DD>.md` with a header: persona, target journal, draft commit hash (`git rev-parse --short HEAD` if a git repo) or word count, date.
 
 ## Outputs
 
