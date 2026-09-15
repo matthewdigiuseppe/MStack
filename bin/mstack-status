@@ -238,13 +238,13 @@ def inventory(project: Path, cfg: dict):
 def stale_verdicts(project: Path):
     out = []
     for pattern, inputs in STALE_INPUTS.items():
-        files = [f for f in matches(project, pattern) if not is_stub(f)]
+        files = [f for f in matches(project, pattern) if content_state(f) != "stub"]
         if not files:
             continue
         newest = files[-1]
         for inp in inputs:
             for f in matches(project, inp):
-                if not is_stub(f) and mtime(f) > mtime(newest) + 1:
+                if content_state(f) != "stub" and mtime(f) > mtime(newest) + 1:
                     out.append({"verdict": str(newest.relative_to(project)), "verdict_date": day(mtime(newest)),
                                 "input": str(f.relative_to(project)), "input_date": day(mtime(f))})
     return out
