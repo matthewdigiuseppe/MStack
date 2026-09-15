@@ -3,7 +3,7 @@
 
 Backs /mstack:paper-status. One call replaces a couple of dozen globs, greps,
 and stat lookups: it prints the config summary, every pipeline artifact with
-its state (present / stub / missing), date, and verdict line, the verdicts
+its state (present / thin / stub / missing), date, and verdict line, the verdicts
 that are stale because an input changed after they were written, the stage
 the artifacts imply, and whether that agrees with paper.status in
 .mstack/config.yaml. It never writes anything. Standard library only.
@@ -75,7 +75,8 @@ ARTIFACTS = [
 STALE_INPUTS = {
     ".mstack/results-audit-*.md": ["code/01-clean.R", "code/02-analyze.R", "code/04-tables.R", "data/clean/analytic.rds"],
     ".mstack/robustness-*.md": ["code/02-analyze.R", "code/05-robustness.R", "data/clean/analytic.rds"],
-    ".mstack/identification-review-*.md": ["paper/sections/methods.*", "code/02-analyze.R", ".mstack/theory.md", ".mstack/hypotheses.md"],
+    ".mstack/identification-review-*.md": [".mstack/research-question.md", ".mstack/lit-map.md", ".mstack/theory.md",
+                                           ".mstack/hypotheses.md", "paper/sections/methods.*", "code/02-analyze.R"],
     ".mstack/referee-cache/*.md": ["paper/sections/*"],
     ".mstack/lit-map.md": ["lit/index.md"],
     ".mstack/theory.md": [".mstack/lit-map.md"],
@@ -90,6 +91,7 @@ STALE_INPUTS = {
 }
 
 STUB_MARKER = "writes here"
+THIN_CHARS = 250   # non-comment chars below which a real artifact is suspicious
 
 
 def find_project(start: Path):
@@ -130,13 +132,15 @@ def read_config(project: Path) -> dict:
     return cfg
 
 
-def is_stub(path: Path) -> bool:
+def content_state(path: Path) -> str:
+    """'stub' (template placeholder or empty), 'thin' (too small to be a real
+    artifact of its kind; open it before trusting it), or 'present'."""
     try:
         text = path.read_text(errors="ignore")
     except OSError:
-        return True
+        return "stub"
     if STUB_MARKER in text:
-        return True
+        return "stub"
     suffix = path.suffix.lower()
     if suffix in (".tex", ".qmd", ".md", ".r", ".txt"):
         body = []
@@ -147,8 +151,14 @@ def is_stub(path: Path) -> bool:
             if suffix == ".r" and (s.startswith("#") or s.startswith("library(")):
                 continue
             body.append(s)
-        return len(" ".join(body)) < 40
-    return path.stat().st_size == 0
+        n = len(" ".join(body))
+        return "stub" if n < 40 else "thin" if n < THIN_CHARS else "present"
+    size = path.stat().st_size
+    return "stub" if size == 0 else "thin" if size < THIN_CHARS else "present"
+
+
+def is_stub(path: Path) -> bool:
+    return content_state(path) != "present"
 
 
 def verdict_line(path: Path) -> str:
@@ -196,8 +206,8 @@ def inventory(project: Path, cfg: dict):
             newest = files[-1]
             row["date"] = day(mtime(newest))
             if kind == "sections":
-                drafted = [f.stem for f in files if not is_stub(f)]
-                stubs = [f.stem for f in files if is_stub(f)]
+                drafted = [f.stem for f in files if content_state(f) == "present"]
+                stubs = [f.stem for f in files if content_state(f) != "present"]
                 row["state"] = f"{len(drafted)}/{len(files)}"
                 row["note"] = (f"drafted: {', '.join(drafted) or 'none'}"
                                + (f"; stubs: {', '.join(stubs)}" if stubs else ""))
@@ -211,12 +221,14 @@ def inventory(project: Path, cfg: dict):
                 if real:
                     present_by_stage[stage] = True
             else:
-                stub = is_stub(newest)
-                row["state"] = "stub" if stub else "present"
-                if not stub:
+                state = content_state(newest)
+                row["state"] = state
+                if state == "present":
                     present_by_stage[stage] = True
                     if kind == "verdict":
                         row["note"] = verdict_line(newest)
+                elif state == "thin":
+                    row["note"] = "too small to be a real artifact; open it before trusting it"
                 if len(files) > 1:
                     row["note"] = (row["note"] + f" ({len(files)} files; newest shown)").strip()
         rows.append(row)
@@ -250,7 +262,7 @@ def gaps_before(rows, stage):
     """Missing artifacts in stages up to and including the derived stage."""
     upto = STAGES[: STAGES.index(stage) + 1]
     return [f"{r['stage']}: {r['artifact']}" for r in rows
-            if r["required"] and r["stage"] in upto and r["state"] in ("missing", "stub")]
+            if r["required"] and r["stage"] in upto and r["state"] in ("missing", "stub", "thin")]
 
 
 def main(argv=None):
@@ -265,7 +277,8 @@ def main(argv=None):
     cfg = read_config(project)
     rows, present = inventory(project, cfg)
     stale = stale_verdicts(project)
-    pdfs, index = matches(project, "lit/pdf/*.pdf"), matches(project, "lit/index.md")
+    pdfs = [f for f in matches(project, "lit/pdf/*.pdf") if content_state(f) == "present"]
+    index = matches(project, "lit/index.md")
     if pdfs and (not index or mtime(pdfs[-1]) > mtime(index[-1]) + 1):
         stale.append({"verdict": "lit/index.md", "verdict_date": day(mtime(index[-1])) if index else "missing",
                       "input": f"lit/pdf/ ({len(pdfs)} PDFs)", "input_date": day(mtime(pdfs[-1])),
@@ -289,7 +302,7 @@ def main(argv=None):
           f"· design={cfg['type'] or '?'} · prereg={cfg['prereg'] or 'false'} · writing_style={cfg['writing_style'] or '(none)'}")
     print(f"  journals: {', '.join(cfg['journals']) or '(none set)'}")
     print()
-    print(f"{'STAGE':8} {'ARTIFACT':46} {'STATE':9} {'DATE':11} NOTE   (optional = not required for the next step)")
+    print(f"{'STAGE':8} {'ARTIFACT':46} {'STATE':9} {'DATE':11} NOTE   (optional = not required; thin = present but suspiciously small)")
     for r in rows:
         print(f"{r['stage']:8} {r['artifact']:46} {r['state']:9} {r['date']:11} {r['note']}")
     print()
