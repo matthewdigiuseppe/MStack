@@ -31,7 +31,12 @@ At acceptance, before the production deadline. The goal is not the journal's dat
    for (f in scripts) source(f)
    ```
 
-   plus a script-to-output map indexed by `output/` filename; data-source documentation per raw file; known divergences from the published paper (e.g. a figure hand-edited in Illustrator); license (CC-BY for code unless the user says otherwise; data licenses inherit from sources); contact and a DOI placeholder.
+   and these further sections:
+   - **Script-to-output map** — which script produces which table / figure, indexed by `output/` filename.
+   - **Data sources** — one entry per raw file.
+   - **Known divergences** from the published paper (e.g. a figure hand-edited in Illustrator).
+   - **License** — CC-BY for code unless the user says otherwise; data licenses inherit from sources.
+   - **Contact** and a DOI placeholder for the published paper.
 6. **Clean-room rebuild.** Copy the project to a temporary directory; `renv::restore()`; run the loop above; diff the rebuilt `output/tables/` and `output/figures/` against the originals (checksums, or visual diff for figures). Fix or document every divergence; **refuse to mark the package ready while any divergence is unexplained.**
 7. **Stage the upload:** repository (OSF unless the journal specifies; Dataverse; institutional); build `submission/replication-<short_name>.zip` excluding `.git/`, `renv/library/` (rebuilt from `renv.lock`), and restricted raw files (stubs instead); print the upload checklist.
 8. **Config:** `paper.status: "archived"`; add the DOI / OSF URL once the user has it.

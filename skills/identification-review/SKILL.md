@@ -29,7 +29,10 @@ Run after `/mstack:theory-build` to lock identification before committing to a d
    - **Multiple comparisons** — how many tests; family-wise error rate.
    - **Specification curve** — how many reasonable specs exist, have they been run, where does the headline sit?
    - **External validity** — the population of generalization; is the headline phrased to match?
-4. **Falsification tests**, at least two: placebo (a sample, period, or outcome where the effect should be zero), pre-trend / pre-treatment outcome, negative control (a predictor that should not predict the outcome).
+4. **Falsification tests**, at least two, each named with what it would show:
+   - **Placebo** — a sample, period, or outcome where the effect should be zero. Is it?
+   - **Pre-trend / pre-treatment outcome** — does the relationship exist before treatment?
+   - **Negative control** — a predictor that should not predict the outcome. Does it?
 5. **What would change your mind:** one paragraph on what the author must show (additional analysis, alternative data) to rule out the most plausible threat.
 6. **Verdict:** **Pass** (defensible against the listed threats; document the assumption in the paper), **Conditional pass** (one or two threats need a named additional analysis), **Fail** (the design cannot identify the claim; redesign or weaken the headline).
 7. **Save** to `.mstack/identification-review-<YYYY-MM-DD>.md`.

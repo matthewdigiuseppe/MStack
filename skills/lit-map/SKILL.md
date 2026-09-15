@@ -22,8 +22,14 @@ After `/mstack:research-question` returns green or yellow. One question: **what 
 2. **Define the search** in one paragraph and get sign-off: 3–5 keyword combinations; the 2–3 most directly engaged authors; time window (typically 10 years plus the foundational older work); venues (top-3 field journals plus SSRN, NBER, OSF).
 3. **Search.** Local corpus first (`lit/index.md`, then the relevant section of a converted paper rather than the whole file). WebSearch for keyword + author scans; WebFetch (or a Google Scholar / Semantic Scholar MCP if available) for abstracts and citation counts. Build 20–40 candidates.
 4. **Triage** each paper: **Foundation** (3–5; the canonical works the conversation rests on; must-cite), **Frontier** (5–10; recent work in active conversation with the claim; engage explicitly), **Adjacent** (5–10; related but a different question; cite once), **Discard** (noted in the file, not engaged).
-5. **Map the consensus** (Foundation + Frontier, one paragraph): what it believes, where it cracks and what is contested, what the canonical work does not answer.
-6. **Locate the gap** (one paragraph): which papers the project most directly engages, what it adds that they lack, and which hostile reviewer would object and why.
+5. **Map the consensus** (Foundation + Frontier, one paragraph answering three questions):
+   - What does the consensus believe?
+   - Where does it crack; what is contested?
+   - What does the canonical work *not* answer?
+6. **Locate the gap** (one paragraph answering three questions):
+   - Which paper(s) does the project most directly engage?
+   - What does it add that they lack?
+   - Which hostile reviewer would object, and why?
 7. **Stage `refs.bib`.** A BibTeX entry per Foundation + Frontier paper, appended to `paper/refs.bib` (dedupe by key, never overwrite). Do not invent fields; leave unknowns blank with a `% TODO`. Prefer entries from `lit/refs-ingested.bib` for ingested papers, but only those without a `% TODO verify` marker (metadata parsed from the PDF rather than fetched from Crossref).
 8. **Save** to `.mstack/lit-map.md`: classification, synthesis, gap. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
 

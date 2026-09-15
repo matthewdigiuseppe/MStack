@@ -24,7 +24,10 @@ Decision letter in hand, revision done: write the response that gets the paper a
 1. **Decision letter.** Read `submission/response-to-reviewers/r<N>-decision.md`; if absent or empty, ask the user to paste the editor's letter and the reviewer reports there and stop until they do.
 2. **Manuscript and diff.** Read `paper/main.tex` + `paper/sections/`, and `output/tables/` and `output/figures/` (they may have changed). If git is in use, `git log --since="<submission date>" --stat -- paper/` shows what actually changed.
 3. **Parse the comments** into a structured list: editor comments (top-level, then specific); each reviewer's comments numbered as the reviewer numbered them; tag each `Major`, `Minor`, or `Editor`.
-4. **Respond to each comment**, three parts in order: **quote it verbatim** (blockquote) so response and comment stay aligned; **respond** — concede where conceding is right, defend where defending is right, never concede the contribution to placate; keep "we appreciate / we agree" sparse, the structure is enough; **point to the change** — section, page or paragraph, and the new text quoted; if nothing changed, say so and why.
+4. **Respond to each comment** in three parts, in this order:
+   1. **Quote the comment verbatim** (blockquote), so response and comment stay aligned.
+   2. **Respond.** Concede where conceding is right, defend where defending is right, never concede the contribution to placate. Keep "we appreciate / we agree" sparse; the structure is enough.
+   3. **Point to the change** — section, page or paragraph, and the new text quoted. If nothing changed, say so and why.
 5. **Editor opener:** thank editor and reviewers once, briefly; the three most consequential changes; the structure of the document.
 6. **Change log** table at the end: `Comment ID | Change made | Location`.
 7. **Cross-checks:** every comment has a response; every claimed change cites a location; the contribution sentence in abstract / intro has not weakened relative to the prior version; no new claims beyond the letter (don't pick fights).

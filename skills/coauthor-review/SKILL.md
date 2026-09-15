@@ -27,7 +27,10 @@ On a complete draft, one round before `/mstack:referee-mock`. The coauthor catch
 
 1. **Load** `paper/main.tex` and every `paper/sections/*.tex`, plus prior coauthor reviews in `.mstack/referee-cache/` so you can say what changed since.
 2. **Read end-to-end first**, for impressions, not corrections.
-3. **Three structural notes**, one paragraph each, quoting the specific section: **the biggest hole** (where the argument is weakest), **the biggest distraction** (what to cut; often the part the author is proudest of), **the biggest opportunity** (a missing argument, framing, or analysis that would land the paper better).
+3. **Three structural notes**, one paragraph each, quoting the specific section:
+   - **The biggest hole** — where the argument is weakest.
+   - **The biggest distraction** — what to cut; often the part the author is proudest of.
+   - **The biggest opportunity** — a missing argument, framing, or analysis that would land the paper better. Specific.
 4. **One structural suggestion:** a concrete reordering, restructuring, or refocusing. The one that changes the most, not ten.
 5. **Three to five line edits:** quote the line, give the alternative, five words on why.
 6. **Save** to `.mstack/referee-cache/coauthor-<persona>-<YYYY-MM-DD>.md`.

@@ -91,7 +91,8 @@ STALE_INPUTS = {
 }
 
 STUB_MARKER = "writes here"
-THIN_CHARS = 250   # non-comment chars below which a real artifact is suspicious
+THIN_CHARS = 250          # non-comment chars below which a real artifact is suspicious
+SECTION_CHARS = 1000      # a drafted manuscript section is longer than this
 
 
 def find_project(start: Path):
@@ -132,9 +133,19 @@ def read_config(project: Path) -> dict:
     return cfg
 
 
-def content_state(path: Path) -> str:
-    """'stub' (template placeholder or empty), 'thin' (too small to be a real
-    artifact of its kind; open it before trusting it), or 'present'."""
+def _repetitive(lines) -> bool:
+    """Placeholder text is often one line or sentence pasted several times."""
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", " ".join(lines)) if s.strip()]
+    for units in (lines, sentences):
+        if len(units) >= 4 and len(set(units)) / len(units) <= 0.5:
+            return True
+    return False
+
+
+def content_state(path: Path, min_chars: int = THIN_CHARS) -> str:
+    """'stub' (template placeholder or empty), 'thin' (too small or too
+    repetitive to be a real artifact of its kind; open it before trusting it),
+    or 'present'."""
     try:
         text = path.read_text(errors="ignore")
     except OSError:
@@ -152,9 +163,11 @@ def content_state(path: Path) -> str:
                 continue
             body.append(s)
         n = len(" ".join(body))
-        return "stub" if n < 40 else "thin" if n < THIN_CHARS else "present"
+        if n < 40:
+            return "stub"
+        return "thin" if n < min_chars or _repetitive(body) else "present"
     size = path.stat().st_size
-    return "stub" if size == 0 else "thin" if size < THIN_CHARS else "present"
+    return "stub" if size == 0 else "thin" if size < min_chars else "present"
 
 
 def is_stub(path: Path) -> bool:
@@ -206,11 +219,11 @@ def inventory(project: Path, cfg: dict):
             newest = files[-1]
             row["date"] = day(mtime(newest))
             if kind == "sections":
-                drafted = [f.stem for f in files if content_state(f) == "present"]
-                stubs = [f.stem for f in files if content_state(f) != "present"]
+                drafted = [f.stem for f in files if content_state(f, SECTION_CHARS) == "present"]
+                stubs = [f.stem for f in files if content_state(f, SECTION_CHARS) != "present"]
                 row["state"] = f"{len(drafted)}/{len(files)}"
                 row["note"] = (f"drafted: {', '.join(drafted) or 'none'}"
-                               + (f"; stubs: {', '.join(stubs)}" if stubs else ""))
+                               + (f"; stub or thin: {', '.join(stubs)}" if stubs else ""))
                 if drafted:
                     present_by_stage[stage] = True
                 else:
@@ -228,7 +241,7 @@ def inventory(project: Path, cfg: dict):
                     if kind == "verdict":
                         row["note"] = verdict_line(newest)
                 elif state == "thin":
-                    row["note"] = "too small to be a real artifact; open it before trusting it"
+                    row["note"] = "too small or repetitive to be a real artifact; open it before trusting it"
                 if len(files) > 1:
                     row["note"] = (row["note"] + f" ({len(files)} files; newest shown)").strip()
         rows.append(row)
@@ -281,8 +294,10 @@ def main(argv=None):
     index = matches(project, "lit/index.md")
     if pdfs and (not index or mtime(pdfs[-1]) > mtime(index[-1]) + 1):
         stale.append({"verdict": "lit/index.md", "verdict_date": day(mtime(index[-1])) if index else "missing",
-                      "input": f"lit/pdf/ ({len(pdfs)} PDFs)", "input_date": day(mtime(pdfs[-1])),
-                      "note": "PDFs not yet ingested; run /mstack:pdf-ingest"})
+                      "input": f"lit/pdf/ ({len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''})", "input_date": day(mtime(pdfs[-1])),
+                      "note": f"{len(pdfs)} PDF{'s' if len(pdfs) != 1 else ''} in lit/pdf/ newer than the index"
+                              f"{'' if index else ' (no index yet)'}: not ingested, run /mstack:pdf-ingest",
+                      "kind": "unconverted-pdfs"})
     stage = derived_stage(present)
     cfg_stage = STATUS_STAGE.get(cfg["status"], "")
     gaps = gaps_before(rows, stage)
@@ -309,8 +324,10 @@ def main(argv=None):
     if stale:
         print("STALE (input changed after the verdict was written):")
         for s in stale:
-            extra = f" — {s['note']}" if s.get("note") else ""
-            print(f"  - {s['verdict']} ({s['verdict_date']}) predates {s['input']} ({s['input_date']}){extra}")
+            if s.get("kind") == "unconverted-pdfs":
+                print(f"  - {s['note']} (newest PDF {s['input_date']})")
+            else:
+                print(f"  - {s['verdict']} ({s['verdict_date']}) predates {s['input']} ({s['input_date']})")
     else:
         print("STALE: none")
     print()
