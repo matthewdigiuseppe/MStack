@@ -30,8 +30,9 @@ Run after `/mstack:theory-build` to lock identification before committing to a d
    plus the design-specific tests from the reference (density test at the cutoff, event-study pre-period, first-stage strength, Rotemberg weights and share balance, covariate balance).
 6. **Sensitivity.** Name the sensitivity analysis the paper must report for this design (`sensemakr` robustness value, `HonestDiD` breakdown, plausibly-exogenous interval, bandwidth and donut sensitivity) and the sentence it should produce in the paper.
 7. **What would change your mind:** one paragraph on what the author must show (an additional analysis, alternative data, a different comparison) to rule out the single most plausible threat.
-8. **Verdict:** **Pass** (defensible against every listed threat; document the assumption and the tests in the paper), **Conditional pass** (one or two threats need a named analysis; list them with their tests), **Fail** (the design cannot identify the estimand; redesign, or weaken the headline to what is identified, such as a descriptive association or a LATE for a named subpopulation).
-9. **Save** to `.mstack/identification-review-<YYYY-MM-DD>.md`.
+8. **Check your own advice against the table.** A redesign, a narrower window, or an added control that removes the variation the effective-sample row says identifies the effect is not a fix; every recommendation in the review must survive the rows above it.
+9. **Verdict:** **Pass** (defensible against every listed threat; document the assumption and the tests in the paper), **Conditional pass** (one or two threats need a named analysis; list them with their tests), **Fail** (the design cannot identify the estimand; redesign, or weaken the headline to what is identified, such as a descriptive association or a LATE for a named subpopulation).
+10. **Save** to `.mstack/identification-review-<YYYY-MM-DD>.md`.
 
 ## Outputs
 
