@@ -62,6 +62,14 @@ for (v in names(df)) {
   }
   if (inherits(x, "Date") && any(x > Sys.Date(), na.rm = TRUE))
     flag(sprintf("`%s`: contains future dates.", v))
+  # Sentinel codes that survive cleaning (Polity -66/-77/-88, -9, 99/999/9999)
+  # are the classic silent bug; flag any that remain in an integer-like column.
+  if (is.numeric(x) && all(x == round(x), na.rm = TRUE)) {
+    sentinels <- intersect(unique(na.omit(x)), c(-66, -77, -88, -99, -9, -8, -1, 99, 999, 9999, 99999))
+    if (length(sentinels) && length(unique(na.omit(x))) > 3)
+      flag(sprintf("`%s`: values %s look like sentinel/missing codes; recode to NA in %s if so.",
+                   v, paste(sentinels, collapse = ", "), SOURCE))
+  }
 }
 num <- df[vapply(df, is.numeric, logical(1))]
 if (ncol(num) >= 2) {

@@ -27,7 +27,7 @@ Produces variants so the user picks from a set instead of a hunch.
    ```
    ANGLE N: <one-sentence claim>
    Contribution:    <the new sentence this adds to the literature>
-   Identification:  <how the effect is separated from the obvious confound>
+   Identification:  <the design, the quantity it identifies, and how it separates the effect from the obvious confound>
    Cost:            <data-acquire weeks | analysis weeks | total months>
    Risk:            <highest single risk: data, identification, scoop, fit>
    ```
