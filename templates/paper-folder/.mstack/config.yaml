@@ -28,6 +28,14 @@ stats:
   language: "R"            # default; r-coding-skills conventions apply
   primary_spec: ""         # one line describing THE specification
 
+library:
+  # /mstack:pdf-ingest converts lit/pdf/*.pdf into lit/md/*.md.
+  backend: "auto"          # auto | pymupdf4llm | docling | marker | mineru | pdftotext
+  quality_min: 0.70        # escalate to a heavier backend below this score
+  split_references: true   # keep reference lists out of the main .md
+  crossref: true           # look up metadata by DOI (sends the DOI only)
+  crossref_mailto: ""      # your email, to use Crossref's polite pool
+
 decisions:
   # Append a one-liner every time you make a non-obvious call.
   # - "2026-05-09: dropped 2008-2010 from sample due to crisis confound."
