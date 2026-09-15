@@ -1,6 +1,6 @@
 ---
 name: lit-map
-description: Systematic literature scan that finds the 3-5 must-engage papers, synthesizes the consensus and where it cracks, states the gap, and stages BibTeX into paper/refs.bib. Use after a research question is locked, when the user asks what to cite or who has written on a topic, or before drafting the intro or theory.
+description: Systematic literature scan — the 3-5 must-engage papers, the consensus and where it cracks, the gap, and BibTeX staged into paper/refs.bib. Use once a research question is locked, when the user asks what to cite or who has written on a topic, or before drafting the intro or theory.
 allowed-tools:
   - Read
   - Write
@@ -12,73 +12,34 @@ allowed-tools:
 
 # /mstack:lit-map
 
-**Stage:** map
-**Voice:** systematic-reviewer
+**Stage:** map · **Voice:** systematic-reviewer
 
-## When to invoke
-
-After `/mstack:research-question` returns a green or yellow verdict and you have a concrete claim. The lit-map exists to answer one question: **what conversation is this paper joining, and where does it crack the consensus?**
+After `/mstack:research-question` returns green or yellow. One question: **what conversation is this paper joining, and where does it crack the consensus?**
 
 ## Procedure
 
-1. **Load context.** Read `.mstack/research-question.md` (the contribution sentence is the seed).
-
-   Then check whether the literature is already on disk. If `lit/index.md`
-   exists, read it first: it is the converted corpus, and triaging from it costs
-   a fraction of what opening the papers costs. If `lit/pdf/` holds PDFs that
-   have not been converted, run `/mstack:pdf-ingest` before going further —
-   mapping a literature you already own by searching the web for its abstracts
-   is backwards.
-
-2. **Define the search.** Produce a one-paragraph search strategy:
-   - 3–5 keyword combinations.
-   - 2–3 authors whose work is most directly engaged.
-   - Time window (typically last 10 years, plus the foundational older papers).
-   - Venues (top-3 IPE / political science journals plus working-paper repositories like SSRN, NBER, OSF).
-   Get user sign-off before searching.
-
-3. **Search.**
-   - Start with the local corpus when there is one: `lit/index.md` for triage,
-     then the relevant section of a converted paper rather than the whole file.
-   - Use WebSearch for keyword + author scans.
-   - Use WebFetch (or, if available, a Google Scholar / Semantic Scholar MCP) to pull abstracts and citation counts for top hits.
-   - Build a candidate set of 20–40 papers.
-
-4. **Triage.** Classify each paper into:
-   - **Foundation** (3–5): the canonical works the conversation rests on. Must-cite or you look unread.
-   - **Frontier** (5–10): recent work in active conversation with the paper's claim. Engage explicitly.
-   - **Adjacent** (5–10): related but on a different question. Cite once, don't engage at length.
-   - **Discard** (the rest): noted in the file, not engaged.
-
-5. **Map the consensus.** For Foundation + Frontier, produce a one-paragraph synthesis:
-   - What does the consensus believe?
-   - Where does it crack? What is contested?
-   - What does the canonical work *not* answer?
-
-6. **Locate the gap.** State, in one paragraph, where the user's project fits:
-   - Which paper(s) does it most directly engage?
-   - What does it add that they don't have?
-   - Which hostile reviewer would object, and why?
-
-7. **Stage `refs.bib` entries.** For every Foundation + Frontier paper, produce a BibTeX entry and append to `paper/refs.bib` (deduped by key). Do not invent fields — if a field (e.g., page numbers) isn't available, leave it blank with a `% TODO` comment. If `lit/refs-ingested.bib` exists, prefer its entries for papers already ingested — but only those without a `% TODO verify` marker, which flags metadata parsed from the PDF rather than fetched from Crossref.
-
-8. **Save the map** to `.mstack/lit-map.md` with the full classification, synthesis, and gap statement. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
+1. **Load** `.mstack/research-question.md`; the contribution sentence is the seed. If `lit/index.md` exists, read it first: triaging the converted corpus costs a fraction of opening papers. If `lit/pdf/` holds unconverted PDFs, run `/mstack:pdf-ingest` before going further; searching the web for abstracts of papers you already own is backwards.
+2. **Define the search** in one paragraph and get sign-off: 3–5 keyword combinations; the 2–3 most directly engaged authors; time window (typically 10 years plus the foundational older work); venues (top-3 field journals plus SSRN, NBER, OSF).
+3. **Search.** Local corpus first (`lit/index.md`, then the relevant section of a converted paper rather than the whole file). WebSearch for keyword + author scans; WebFetch (or a Google Scholar / Semantic Scholar MCP if available) for abstracts and citation counts. Build 20–40 candidates.
+4. **Triage** each paper: **Foundation** (3–5; the canonical works the conversation rests on; must-cite), **Frontier** (5–10; recent work in active conversation with the claim; engage explicitly), **Adjacent** (5–10; related but a different question; cite once), **Discard** (noted in the file, not engaged).
+5. **Map the consensus** (Foundation + Frontier, one paragraph): what it believes, where it cracks and what is contested, what the canonical work does not answer.
+6. **Locate the gap** (one paragraph): which papers the project most directly engages, what it adds that they lack, and which hostile reviewer would object and why.
+7. **Stage `refs.bib`.** A BibTeX entry per Foundation + Frontier paper, appended to `paper/refs.bib` (dedupe by key, never overwrite). Do not invent fields; leave unknowns blank with a `% TODO`. Prefer entries from `lit/refs-ingested.bib` for ingested papers, but only those without a `% TODO verify` marker (metadata parsed from the PDF rather than fetched from Crossref).
+8. **Save** to `.mstack/lit-map.md`: classification, synthesis, gap. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
 
 ## Outputs
 
-- `.mstack/lit-map.md` — full map with consensus + gap statement.
-- `paper/refs.bib` — appended with new entries (no overwrites; dedupe by key).
-- A summary block to the user: top 5 must-engage papers, the gap statement, and the suggestion to run `/mstack:identification-review` or `/mstack:theory-build` next.
+- `.mstack/lit-map.md` — map, consensus, gap statement.
+- `paper/refs.bib` — appended entries.
+- Summary block: top 5 must-engage papers, the gap, next skill.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Skipping the synthesis step.** A list of 30 papers is not a lit map. The map is the synthesis.
-- **Inventing citations.** If a paper isn't found via search, leave it out — don't fabricate.
-- **Engaging too broad a frontier.** Five engaged papers > fifteen name-drops.
-- **Hiding contradictions.** If the consensus contradicts the user's claim, surface it explicitly. Better here than at R1.
+- **A list instead of a synthesis.** Thirty papers is not a map; the synthesis is.
+- **Inventing citations.** Not found by search means left out.
+- **Too broad a frontier.** Five engaged papers beat fifteen name-drops.
+- **Hiding contradictions.** If the consensus contradicts the claim, say so now rather than at R1.
 
-## When to call other skills
+## Next
 
-- Before mapping, when the PDFs are already on disk: `/mstack:pdf-ingest`.
-- Before drafting `intro` or `theory`: `/mstack:lit-map` is a prerequisite.
-- After the map: `/mstack:theory-build` (sharpen mechanism), then `/mstack:hypothesis-design`.
+`/mstack:theory-build`, then `/mstack:hypothesis-design` and `/mstack:identification-review`. A lit map is a prerequisite for drafting `intro` or `theory`.

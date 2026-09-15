@@ -1,6 +1,6 @@
 ---
 name: identification-review
-description: Methodologist prosecution of the identification strategy — states the identifying assumption, names concrete threats (selection, confounding, reverse causality, SUTVA, clustering), demands falsification tests, and issues a pass/fail verdict. Use before locking a design, before submission, or whenever the user asks whether the effect is identified or worries about endogeneity.
+description: Methodologist prosecution of the identification strategy — the identifying assumption, concrete threats (selection, confounding, reverse causality, SUTVA, clustering), falsification tests, pass/fail verdict. Use before locking a design, before submission, or whenever the user asks whether the effect is identified or worries about endogeneity.
 allowed-tools:
   - Read
   - Write
@@ -10,64 +10,41 @@ allowed-tools:
 
 # /mstack:identification-review
 
-**Stage:** map (before design lock-in) — re-run before submission
-**Voice:** methodologist
+**Stage:** map (re-run before submission) · **Voice:** methodologist
 
-## When to invoke
-
-- After `/mstack:theory-build` and before `/mstack:design-research`: lock down identification before committing to a design.
-- Before submission: re-run on the actual specification to catch what you missed.
+Run after `/mstack:theory-build` to lock identification before committing to a design, and again before submission on the actual specification, which usually differs from the plan. This skill is the prosecution; the user is the defense.
 
 ## Procedure
 
-1. **Load context.**
-   - `.mstack/research-question.md` for the claim.
-   - `.mstack/lit-map.md` for what the literature already disputes.
-   - `paper/sections/methods.tex` (if it exists) for the current spec.
-   - `code/02-analyze.R` (if it exists) for what is actually run.
-
-2. **State the identifying assumption in one sentence.** If the user can't, the review fails before it starts; surface that as the top finding.
-
-3. **Run the prosecution checklist.** For each item, name a concrete violation a reviewer could plausibly raise:
-
-   - **Selection.** Who is in the sample? Who isn't? Is selection on the dependent variable?
-   - **Confounding.** What is the most plausible omitted variable? Why does the design rule it out?
-   - **Reverse causality.** Could Y cause X? What evidence rules it out?
-   - **Measurement.** Is X measured pre-treatment? Is Y measured cleanly? What is the reliability?
-   - **SUTVA / spillovers.** Are units independent? If not, what is the dependence structure?
-   - **Effective sample.** What units actually contribute to identification (e.g., within-variation under FE)? Are they representative?
-   - **Standard errors.** What is the level of clustering? What is the dependence structure that justifies it?
-   - **Multiple comparisons.** How many tests? What is the family-wise error rate?
-   - **Specification curve.** How many reasonable specifications exist? Have they been run? Where does the headline sit?
-   - **External validity.** What is the population of generalization? Is the headline phrased to match?
-
-4. **Falsification tests.** Name at least two:
-   - **Placebo.** A sample / time / outcome where the effect should be zero. Is it?
-   - **Pre-trend / pre-treatment outcome.** Does the relationship exist before treatment?
-   - **Negative control.** A predictor that should not predict the outcome — does it?
-
-5. **What would change your mind?** State, in one paragraph, what the author would have to show — additional analysis, alternative data — to rule out the most plausible threat.
-
-6. **Verdict.**
-   - **Pass** — identification is defensible against the listed threats. Document the assumption in the paper.
-   - **Conditional pass** — one or two threats need additional analysis. Specify which.
-   - **Fail** — the design cannot identify the claim. Recommend either redesigning or weakening the headline.
-
+1. **Load** `.mstack/research-question.md` (the claim), `.mstack/lit-map.md` (what is already disputed), and, if they exist, `paper/sections/methods.tex` (the current spec) and `code/02-analyze.R` (what is actually run).
+2. **State the identifying assumption in one sentence.** If the user cannot, that is the top finding and the review fails before it starts.
+3. **Prosecution checklist.** For each item name a concrete violation a reviewer could plausibly raise:
+   - **Selection** — who is in the sample, who is not; selection on the dependent variable?
+   - **Confounding** — the most plausible omitted variable; why the design rules it out.
+   - **Reverse causality** — could Y cause X; what rules it out?
+   - **Measurement** — X measured pre-treatment? Y measured cleanly? Reliability?
+   - **SUTVA / spillovers** — are units independent; if not, what is the dependence structure?
+   - **Effective sample** — which units actually identify the effect (e.g. within-variation under FE); are they representative?
+   - **Standard errors** — clustering level, and the dependence structure that justifies it.
+   - **Multiple comparisons** — how many tests; family-wise error rate.
+   - **Specification curve** — how many reasonable specs exist, have they been run, where does the headline sit?
+   - **External validity** — the population of generalization; is the headline phrased to match?
+4. **Falsification tests**, at least two: placebo (a sample, period, or outcome where the effect should be zero), pre-trend / pre-treatment outcome, negative control (a predictor that should not predict the outcome).
+5. **What would change your mind:** one paragraph on what the author must show (additional analysis, alternative data) to rule out the most plausible threat.
+6. **Verdict:** **Pass** (defensible against the listed threats; document the assumption in the paper), **Conditional pass** (one or two threats need a named additional analysis), **Fail** (the design cannot identify the claim; redesign or weaken the headline).
 7. **Save** to `.mstack/identification-review-<YYYY-MM-DD>.md`.
 
 ## Outputs
 
-- `.mstack/identification-review-<date>.md` — full review with assumption, threats, falsification tests, verdict.
-- Summary block: assumption sentence, top 3 threats, verdict, suggested next steps.
+- `.mstack/identification-review-<date>.md` — assumption, threats, falsification tests, verdict.
+- Summary block: assumption, top 3 threats, verdict, next step.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Vague threats.** "Endogeneity" is not a threat; "pre-treatment income predicts treatment assignment, which biases the coefficient downward" is.
-- **Defending instead of prosecuting.** This skill is the prosecution. The user is the defense.
-- **Skipping falsification tests.** If there is no test that could fail, the design isn't testing anything.
+- **Vague threats.** "Endogeneity" is not a threat; "pre-treatment income predicts assignment and biases β downward" is.
+- **Defending instead of prosecuting.**
+- **No falsification test.** A design nothing could fail is not testing anything.
 
-## When to call other skills
+## Next
 
-- Pre-fail: redesign with `/mstack:design-research` before any data work.
-- Post-pass: proceed to `/mstack:design-research` (if pre-data) or `/mstack:preregister` (if data is about to be collected).
-- Before submission: re-run; the post-fact spec often differs from the pre-fact plan.
+Fail → `/mstack:design-research` before any data work. Pass → `/mstack:design-research` (pre-data) or `/mstack:preregister` (data about to be collected).

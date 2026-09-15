@@ -11,63 +11,32 @@ allowed-tools:
 
 # /mstack:viz
 
-**Stage:** analyze
-**Voice:** figure-designer (anchored to `r-coding-skills`)
+**Stage:** analyze · **Voice:** figure-designer
 
-## When to invoke
-
-After `/mstack:analyze` and `/mstack:robustness` produce stable results. Before `/mstack:draft-section results`. Figures lock the visual argument; once stable, the prose can describe them.
+After `/mstack:analyze` and `/mstack:robustness`, before `/mstack:draft-section results`: figures lock the visual argument, then the prose describes them.
 
 ## Procedure
 
-1. **Load.** `output/models/`, `data/clean/analytic.rds`. If `target_journals` in `.mstack/config.yaml` is set, match that journal's figure conventions (column width, color policy) — ask the user for the artwork specs when unknown rather than guessing them.
-
-2. **Decide the figure set.** A typical IPE / political science paper has 1–3 figures. Each is a claim:
-
-   | Figure type | Claim it makes |
-   |---|---|
-   | Coefficient plot | "Here are the estimated effects with CIs." |
-   | Marginal effects / predicted probability | "Here is what the model implies at substantively interesting values." |
-   | Heterogeneity plot | "The effect varies across S as theory predicts." |
-   | Specification curve | "Findings are robust across reasonable design choices." |
-   | Map | "Spatial / contextual variation is X." |
-   | Density / distribution | "Here is the relevant variation in the data." |
-
-   Pick the figures that carry the headline. Skip figures that just decorate.
-
-3. **Write `code/03-figures.R`.** First copy the bundled theme — `${CLAUDE_PLUGIN_ROOT}/skills/viz/assets/theme_mstack.R` → `code/theme_mstack.R`, once per paper, so the replication package is self-contained — and `source()` it: it provides `theme_mstack()`, Okabe–Ito color scales, and `save_figure()` (PDF + PNG + underlying CSV in one call). Conventions:
-   - One ggplot object per figure, named `fig_<n>_<descriptor>`.
-   - **Title states the claim**, not the variables (e.g., `"Trade exposure raises protectionist vote share"`, not `"Effect of trade on voting"`).
-   - **Subtitle / caption** carries the methodological detail.
-   - Colorblind-safe palette (`viridisLite::viridis()` or Okabe–Ito).
-   - No chart-junk: no shadows, no 3D, no gradient fills, no excess gridlines.
-   - Theme: `theme_minimal()` or a custom journal-style theme; consistent across figures.
-   - Save each figure to **both** `output/figures/<name>.pdf` (vector, for the paper) and `output/figures/<name>.png` (raster, for slides / web). Use `ggsave(..., width = X, height = Y, units = "in")` with explicit dimensions; never `dev.off()` without dimensions.
-   - Save underlying figure data to `output/figures/<name>-data.csv` so the figure is replicable from CSV alone.
-
-4. **Run** `Rscript code/03-figures.R`. Capture stdout/stderr.
-
-5. **Sanity check.**
-   - Each figure renders.
-   - Axis labels are human-readable (not variable names).
-   - Legends are present where needed and absent where redundant.
-   - Aspect ratio is sensible (no squished or stretched plots).
+1. **Load** `output/models/` and `data/clean/analytic.rds`. If `target_journals` is set in `.mstack/config.yaml`, match that journal's figure conventions (column width, color policy); ask the user for the artwork specs rather than guessing.
+2. **Decide the figure set** (typically 1–3). Each figure is a claim: coefficient plot ("here are the estimated effects with CIs"); marginal effects / predicted probabilities ("what the model implies at substantively interesting values"); heterogeneity ("the effect varies across S as theory predicts"); specification curve ("robust to reasonable design choices"); map ("spatial / contextual variation is X"); density ("here is the relevant variation in the data"). Keep the figures that carry the headline; skip decoration.
+3. **Write `code/03-figures.R`** (R conventions: `r-coding-skills` if installed, else `${CLAUDE_PLUGIN_ROOT}/references/r-conventions.md`). Copy `${CLAUDE_PLUGIN_ROOT}/skills/viz/assets/theme_mstack.R` to `code/theme_mstack.R` once per paper (so the replication package is self-contained) and `source()` it for `theme_mstack()`, Okabe–Ito scales, and `save_figure()` (PDF + PNG + CSV in one call). Conventions: one ggplot object per figure named `fig_<n>_<descriptor>`; **the title states the claim** ("Trade exposure raises protectionist vote share", not "Effect of trade on voting"); subtitle / caption carries the method; colorblind-safe palette (Okabe–Ito or `viridisLite::viridis()`); no chart-junk (shadows, 3D, gradients, excess gridlines); one consistent theme; explicit `width` / `height` / `units` on every save; `output/figures/<name>.pdf` (vector, paper), `.png` (raster, slides), `<name>-data.csv` (rebuildable from CSV alone).
+4. **Run** `Rscript code/03-figures.R` and capture output.
+5. **Check:** every figure renders; axis labels are human-readable, not variable names; legends present where needed and absent where redundant; sensible aspect ratio.
 
 ## Outputs
 
-- `code/03-figures.R`.
-- `output/figures/<name>.pdf`, `<name>.png`, `<name>-data.csv` per figure.
-- Summary block: count of figures, the headline claim each carries.
+- `code/03-figures.R`, `code/theme_mstack.R`.
+- `output/figures/<name>.pdf`, `.png`, `-data.csv` per figure.
+- Summary block: figure count and the headline claim each carries.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Default ggplot.** No figure ships with `theme_grey()`.
+- **Default ggplot.** Nothing ships with `theme_grey()`.
 - **Variables as titles.** Titles state claims.
-- **No CSV.** A figure that can't be rebuilt from a CSV is brittle.
-- **Stars on coefficient plots.** Show CIs, let the reader decide.
-- **More than 5 colors.** If you need a sixth, use a panel.
+- **No CSV.** A figure that cannot be rebuilt from a CSV is brittle.
+- **Stars on coefficient plots.** Show CIs; let the reader decide.
+- **More than 5 colors.** Use a panel.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:analyze`, `/mstack:robustness`.
-- After: `/mstack:draft-section results` references the figures by their claim-titles.
+`/mstack:draft-section results` references figures by their claim titles.

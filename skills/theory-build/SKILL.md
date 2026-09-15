@@ -1,6 +1,6 @@
 ---
 name: theory-build
-description: Builds the causal mechanism (X causes Y because Z), an ASCII DAG with signed edges, scope conditions, and out-of-sample predictions. Use after the lit map, when the user asks to formalize a theory or mechanism, sketch a DAG, or derive predictions — and before hypotheses are operationalized.
+description: Builds the causal mechanism (X causes Y because Z), a signed ASCII DAG, scope conditions, and out-of-sample predictions. Use after the lit map, when the user wants to formalize a theory or mechanism, sketch a DAG, or derive predictions — before hypotheses are operationalized.
 allowed-tools:
   - Read
   - Write
@@ -9,57 +9,32 @@ allowed-tools:
 
 # /mstack:theory-build
 
-**Stage:** map
-**Voice:** theorist
+**Stage:** map · **Voice:** theorist
 
-## When to invoke
-
-After `/mstack:lit-map` so you know the conversation. Before `/mstack:hypothesis-design` so the hypotheses are derived from a stated mechanism, not retrofitted to results.
+After `/mstack:lit-map`, before `/mstack:hypothesis-design`, so hypotheses derive from a stated mechanism rather than being retrofitted to results.
 
 ## Procedure
 
-1. **Load.** `.mstack/research-question.md` and `.mstack/lit-map.md`.
-
-2. **State the mechanism in one sentence.** "X causes Y because Z." If the user can't, ask until they can. The sentence is the spine of the paper.
-
-3. **Draw the DAG (in prose / ASCII).** Nodes:
-   - The treatment / IV.
-   - The outcome.
-   - Mediators (M1, M2, …).
-   - Pre-treatment confounders (W1, W2, …).
-   - Post-treatment colliders (C1, …) — flag these explicitly; controlling on a collider is a common error.
-
-   Edges with sign and a one-line justification per edge.
-
-   Save the DAG to `.mstack/theory.md` as ASCII; the user can rebuild it as a figure later.
-
-4. **Scope conditions.** Three to five sentences:
-   - **Population scope** — for whom should this hold?
-   - **Time scope** — what era?
-   - **Institutional scope** — what kind of state, regime, market?
-   - **Boundary** — where would you expect the mechanism to break?
-
-5. **Implications.** What does this theory predict for cases / observations not in the data? At least two predictions outside the proposed sample. These are the "off-the-line" predictions that distinguish a real theory from a story tuned to the data.
-
-6. **Compatibility check** with `/mstack:lit-map`:
-   - Which Foundation paper(s) does the mechanism build on?
-   - Which Frontier paper(s) does it dispute?
-   - Where does the theory stand on the contested edge of the conversation?
-
-7. **Save** the full theory to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence + scope conditions; full drafting later via `/mstack:draft-section theory`.
+1. **Load** `.mstack/research-question.md` and `.mstack/lit-map.md`.
+2. **Mechanism in one sentence:** "X causes Y because Z." Ask until the user can say it; it is the spine of the paper.
+3. **DAG (ASCII).** Nodes: treatment / IV, outcome, mediators (M1, M2, …), pre-treatment confounders (W1, W2, …), post-treatment colliders (C1, …) flagged explicitly, since controlling on one is a common error. Every edge signed, with a one-line justification.
+4. **Scope conditions** (3–5 sentences): population, time, institutional scope (what kind of state, regime, market), and the boundary where the mechanism should break.
+5. **Implications.** At least two predictions for cases or observations outside the proposed sample; these off-the-line predictions separate a theory from a story tuned to the data.
+6. **Compatibility with the lit map:** which Foundation papers it builds on, which Frontier papers it disputes, where it stands on the contested edge.
+7. **Save** to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence and scope conditions; full drafting is `/mstack:draft-section theory`.
 
 ## Outputs
 
-- `.mstack/theory.md` — mechanism, DAG, scope, predictions, lit-positioning.
-- (Optional) stubbed `paper/sections/theory.tex`.
-- Summary block: mechanism sentence + the one off-the-line prediction most likely to falsify.
+- `.mstack/theory.md` — mechanism, DAG, scope, predictions, positioning.
+- Optional stub `paper/sections/theory.tex`.
+- Summary block: mechanism sentence + the off-the-line prediction most likely to falsify.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Mechanism by association.** "X is correlated with Y, and theoretically Y matters for Z" is not a mechanism.
-- **DAGs without arrows.** If you can't sign the edges, you don't have a directed model.
-- **Universal scope.** "This holds everywhere, always" predicts nothing.
+- **Mechanism by association.** "X correlates with Y, and Y matters for Z" is not a mechanism.
+- **Unsigned edges.** No signs, no directed model.
+- **Universal scope.** "Everywhere, always" predicts nothing.
 
-## When to call other skills
+## Next
 
-- After: `/mstack:hypothesis-design` to operationalize, then `/mstack:identification-review` to stress-test the implied design.
+`/mstack:hypothesis-design`, then `/mstack:identification-review`.

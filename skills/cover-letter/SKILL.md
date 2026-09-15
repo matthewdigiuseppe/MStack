@@ -9,59 +9,34 @@ allowed-tools:
 
 # /mstack:cover-letter
 
-**Stage:** submit
-**Voice:** editor (calibrated as the author addressing the editor)
+**Stage:** submit · **Voice:** the author addressing the editor
 
-## When to invoke
-
-After `/mstack:journal-fit` settles a target journal. The cover letter is read in 30 seconds; precision and specificity matter more than warmth.
+After `/mstack:journal-fit`. Read in 30 seconds; precision beats warmth.
 
 ## Procedure
 
-1. **Load.** `.mstack/config.yaml` (target journal — top tier), abstract from `paper/sections/abstract.tex`, contribution sentence from `.mstack/research-question.md`.
-
-2. **Identify the editor.** Ask the user for the current editor name and salutation if not in `.mstack/config.yaml`. Don't guess from training data — editors change.
-
-3. **Draft three paragraphs, ≤ 400 words total:**
-
-   ### ¶1: Fit
-   What the paper does, in one sentence, and why it fits *this* journal. Reference one or two recent papers from the journal it's in conversation with — concrete, not "this builds on the journal's strong tradition in X."
-
-   ### ¶2: Contribution
-   What the paper adds. Use the contribution sentence from `/mstack:research-question`. State the headline finding and the design that delivers it. Resist hedge language.
-
-   ### ¶3: Declarations
-   - Preregistration status + URL (from `.mstack/config.yaml`).
-   - Data and code availability (link or commitment).
-   - Not under review elsewhere.
-   - Conflicts of interest.
-   - IRB approval if applicable.
-   - Word count.
-   - Acknowledgement of past presentations / earlier versions if any.
-
-4. **Sign-off.** Author name(s) and affiliation(s). One line.
-
-5. **Save** to `submission/cover-letter.md`. Format as Markdown — convert to whatever the journal accepts at submission time.
-
-6. **Cross-check** before declaring done:
-   - Editor name correct and current.
-   - Journal name spelled correctly throughout.
-   - Word count within journal limit.
-   - Declarations cover everything the journal's submission portal will ask.
+1. **Load** `.mstack/config.yaml` (top-tier target journal), `paper/sections/abstract.tex`, the contribution sentence in `.mstack/research-question.md`.
+2. **Editor.** Ask the user for the current editor's name and salutation if not in config; editors change, so never guess from memory.
+3. **Three paragraphs, ≤ 400 words:**
+   - **Fit** — what the paper does in one sentence and why it belongs in *this* journal, naming one or two recent papers there it is in conversation with; not "builds on the journal's strong tradition in X".
+   - **Contribution** — the contribution sentence from `/mstack:research-question`, the headline finding, and the design that delivers it. No hedging.
+   - **Declarations** — preregistration status + URL (from config); data and code availability; not under review elsewhere; conflicts of interest; IRB approval if applicable; word count; prior presentations or earlier versions.
+4. **Sign-off:** author name(s) and affiliation(s), one line.
+5. **Save** to `submission/cover-letter.md` (Markdown; convert to whatever the portal accepts at submission).
+6. **Cross-check:** editor correct and current; journal name spelled correctly throughout; within the journal's word limit; declarations cover everything the portal will ask.
 
 ## Outputs
 
 - `submission/cover-letter.md`.
-- Summary block: word count, editor addressed, declarations covered — plus a reminder to set `paper.status: "submitted"` in `.mstack/config.yaml` once the portal confirms.
+- Summary block: word count, editor addressed, declarations covered; remind the user to set `paper.status: "submitted"` once the portal confirms.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Sycophancy.** Editors do not need to be told their journal is excellent.
-- **Generic.** "This paper would be of interest to your readership" with no specific recent paper cited is generic and noticeable.
-- **Five paragraphs.** Three. Tight.
-- **Repeating the abstract.** The cover letter does what the abstract can't: situates the paper for *this* editor, *this* journal.
+- **Sycophancy.** Editors do not need to hear their journal is excellent.
+- **Generic fit.** "Of interest to your readership" with no specific paper cited is noticeable.
+- **Five paragraphs.** Three.
+- **Repeating the abstract.** The letter situates the paper for this editor; the abstract cannot.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:journal-fit`.
-- After: submit. On decision: `/mstack:r-and-r` if R&R; `/mstack:journal-fit` again if rejected.
+Submit. On decision: `/mstack:r-and-r` for an R&R; `/mstack:journal-fit` again after a rejection.

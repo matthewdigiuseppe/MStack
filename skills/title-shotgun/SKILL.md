@@ -1,6 +1,6 @@
 ---
 name: title-shotgun
-description: Generates 8-12 title candidates across forms (declarative, question, colon, anomaly, mechanism), scores them on hook x precision x searchability, and pairs the winner with the abstract framing. Use late in writing when the user asks for title ideas or a better title.
+description: Generates 8-12 title candidates across forms (declarative, question, colon, anomaly, mechanism), scores hook x precision x searchability, and pairs the winner with the abstract framing. Use late in writing when the user asks for title ideas or a better title.
 allowed-tools:
   - Bash(date *)
   - Read
@@ -10,54 +10,42 @@ allowed-tools:
 
 # /mstack:title-shotgun
 
-**Stage:** write
-**Voice:** writer
+**Stage:** write · **Voice:** writer
 
-## When to invoke
-
-After `/mstack:abstract-shotgun` settles a framing. The title and abstract are read together by editors and search engines; pair them deliberately.
+After `/mstack:abstract-shotgun` settles a framing; editors and search engines read title and abstract together, so pair them deliberately.
 
 ## Procedure
 
-1. **Load.** `paper/sections/abstract.tex`, `.mstack/config.yaml` (target journals — different journals favor different title styles).
-
-2. **Generate 8–12 candidates** mixing forms:
+1. **Load** `paper/sections/abstract.tex` and `.mstack/config.yaml` (journals favor different title styles).
+2. **Generate 8–12 candidates** across forms:
 
    | Form | Example |
    |---|---|
    | Declarative | "Trade Exposure Raises Protectionist Voting" |
    | Question | "Does Trade Exposure Raise Protectionist Voting?" |
-   | Colon construction (general:specific) | "Threats to Trade: How Import Competition Reshapes Voting in Three Democracies" |
-   | Anomaly framing | "When the Losers Win: Compensation and Backlash in the Globalization Era" |
-   | Mechanism framing | "Compensation Without Trust: Why Aid to the Trade-Exposed Doesn't Move Votes" |
-   | Quote framing | "'Bring the Jobs Back': Industrial Decline and Electoral Realignment" |
+   | Colon (general: specific) | "Threats to Trade: How Import Competition Reshapes Voting in Three Democracies" |
+   | Anomaly | "When the Losers Win: Compensation and Backlash in the Globalization Era" |
+   | Mechanism | "Compensation Without Trust: Why Aid to the Trade-Exposed Doesn't Move Votes" |
+   | Quote | "'Bring the Jobs Back': Industrial Decline and Electoral Realignment" |
    | Number-led | "Three Decades of Trade Shocks and the New Politics of Protection" |
-   | Single-noun-phrase | "The Protectionist Turn" |
+   | Single noun phrase | "The Protectionist Turn" |
 
-3. **Score each candidate on three dimensions** (1–5):
-
-   - **Hook** — would a reader stop scrolling?
-   - **Precision** — does the title accurately convey the claim?
-   - **Searchability** — would the right reader find this via a keyword search?
-
-4. **Filter.** Drop any title with a 1 in any dimension. Compute `hook × precision × searchability`. Surface the top 3.
-
-5. **Recommend one.** Tie hook-strength to the chosen abstract framing — a finding-first abstract pairs with a declarative title; a puzzle-first abstract pairs with a question or anomaly title.
-
-6. **Save** options + scores + recommendation to `.mstack/title-shotgun-<YYYY-MM-DD>.md`.
+3. **Score 1–5** on hook (would a reader stop scrolling?), precision (does it convey the claim?), searchability (would the right reader find it by keyword?).
+4. **Filter:** drop any title with a 1 in any dimension; rank by `hook × precision × searchability`; surface the top 3.
+5. **Recommend one**, paired with the abstract framing: finding-first pairs with declarative, puzzle-first with a question or anomaly title.
+6. **Save** to `.mstack/title-shotgun-<YYYY-MM-DD>.md`.
 
 ## Outputs
 
 - `.mstack/title-shotgun-<date>.md` — candidates, scores, recommendation.
 - Summary block: top 3 with scores + recommendation.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Clever-but-vague.** A title that takes two readings to parse fails on hook + precision.
-- **Variables in the title.** "Effect of X on Y in Z" is a placeholder, not a title.
-- **Sub-titles longer than titles.** Reverse the colon if so.
+- **Clever but vague.** Two readings to parse fails hook and precision.
+- **Variables in the title.** "Effect of X on Y in Z" is a placeholder.
+- **Subtitle longer than title.** Reverse the colon.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:abstract-shotgun` (the abstract framing constrains good title choices).
-- After: `/mstack:journal-fit` to confirm the title-abstract pair fits the target journal's style.
+`/mstack:journal-fit` to confirm the pair suits the target journal's style.

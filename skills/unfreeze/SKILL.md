@@ -10,16 +10,14 @@ allowed-tools:
 
 # /mstack:unfreeze
 
-**Stage:** power
-**Voice:** safety
+**Stage:** power · **Voice:** safety
 
 ## Procedure
 
 1. Read `.mstack/safety.yaml`.
-2. Clear `freeze.path` (remove the `freeze:` block or empty its `path`). The MStack guard hook stops denying outside writes as soon as the file no longer sets a path.
-3. Print confirmation that writes are allowed everywhere again, plus the current state of `careful` (which is unchanged by `/mstack:unfreeze`).
+2. Remove the `freeze:` block (or empty its `path`); the guard hook stops denying outside writes as soon as no path is set.
+3. Confirm writes are allowed everywhere again and report the `careful` state, which this skill does not change.
 
 ## Outputs
 
-- `.mstack/safety.yaml` updated.
-- Summary: lock cleared; `careful` state unchanged.
+- `.mstack/safety.yaml` updated; summary: lock cleared, `careful` unchanged.

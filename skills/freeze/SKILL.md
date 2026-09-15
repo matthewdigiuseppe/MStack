@@ -11,24 +11,16 @@ allowed-tools:
 
 # /mstack:freeze
 
-**Stage:** power
-**Voice:** safety
+**Stage:** power · **Voice:** safety
 
-## Argument
+`$ARGUMENTS` is the directory writes stay inside, relative to the paper folder (`submission`, `paper/sections`). Without an argument do **not** lock: print the current state from `.mstack/safety.yaml` and ask which directory; a lock on the whole folder is a no-op that gives false comfort.
 
-`$ARGUMENTS` — the directory writes are allowed within (relative to the paper folder, e.g. `submission` or `paper/sections`). All writes outside it are denied until `/mstack:unfreeze`.
-
-If no argument is given, do **not** set a lock. Print the current freeze state from `.mstack/safety.yaml` and ask which directory to lock to — a lock on the whole paper folder would be a no-op and give false comfort.
-
-## How it's enforced
-
-MStack's `PreToolUse` hook (`hooks/mstack-guard.py`) reads `.mstack/safety.yaml` before every `Write`, `Edit`, and `Bash` call. While `freeze.path` is set, writes outside that directory are **denied by the hook itself** — including in later sessions that never loaded this skill. `.mstack/` stays writable so the lock can be cleared, and `data/raw/` stays read-only regardless of the freeze.
+Enforcement is the `PreToolUse` hook (`hooks/mstack-guard.py`): while `freeze.path` is set, writes outside it are denied by the hook itself, including in later sessions that never loaded this skill. `.mstack/` stays writable so the lock can be cleared; `data/raw/` stays read-only regardless.
 
 ## Procedure
 
-1. **Read or create `.mstack/safety.yaml`.**
-
-2. **Set the lock** (the hook parses this exact shape):
+1. Read or create `.mstack/safety.yaml`.
+2. Set the lock in exactly this shape:
 
    ```yaml
    freeze:
@@ -36,23 +28,17 @@ MStack's `PreToolUse` hook (`hooks/mstack-guard.py`) reads `.mstack/safety.yaml`
      set_at: "YYYY-MM-DD HH:MM"
    ```
 
-3. **Behavior while the lock is set:**
-   - `Write`/`Edit` outside `freeze.path` (and outside `.mstack/`): denied by the hook.
-   - Mutating `Bash` commands (`rm`, `mv`, `cp`, redirects, `sed -i`, `git reset/clean/checkout --`) whose targets resolve outside the lock: denied; when the hook can't resolve the targets, it asks for confirmation instead.
-   - Reads, greps, and non-mutating commands are unaffected.
-
-4. **Print the lock state** to the user with the absolute path of the lock target.
+3. Tell the user what the hook now does: `Write` / `Edit` outside the path (and outside `.mstack/`) denied; mutating Bash (`rm`, `mv`, `cp`, redirects, `sed -i`, `git reset/clean/checkout --`) with targets outside the lock denied, and asked about when the targets cannot be resolved; reads, greps, and non-mutating commands unaffected.
+4. Print the lock state with the absolute path of the target.
 
 ## Outputs
 
-- `.mstack/safety.yaml` updated.
-- Summary: lock target.
+- `.mstack/safety.yaml` updated; summary with the lock target.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Quietly working around the lock.** If a step requires a write outside, surface it and ask — don't restructure the work to dodge the hook.
+- **Working around the lock.** If a step needs a write outside, surface it and ask; do not restructure the work to dodge the hook.
 
-## When to call other skills
+## Next
 
-- Pair with `/mstack:careful` to make `/mstack:guard`.
-- Use `/mstack:unfreeze` to clear.
+`/mstack:unfreeze` clears it; with `/mstack:careful` it is `/mstack:guard`.

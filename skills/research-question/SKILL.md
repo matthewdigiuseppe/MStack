@@ -1,6 +1,6 @@
 ---
 name: research-question
-description: Interrogates a candidate research idea with six forcing questions — contribution, audience, identification, falsifiability, feasibility, scoop risk — and issues a green/yellow/red verdict. Use when the user pitches a new paper idea, asks whether a project is worth pursuing, or wants to pressure-test a research question before committing.
+description: Interrogates a paper idea with six forcing questions — contribution, audience, identification, falsifiability, feasibility, scoop risk — and issues a green/yellow/red verdict. Use when the user pitches a new paper, asks whether a project is worth pursuing, or wants a research question pressure-tested before committing.
 allowed-tools:
   - Read
   - Write
@@ -9,58 +9,40 @@ allowed-tools:
 
 # /mstack:research-question
 
-**Stage:** ideate
-**Voice:** advisor
+**Stage:** ideate · **Voice:** advisor
 
-## When to invoke
-
-You have a candidate research idea and you're about to invest weeks. Before you do, this skill forces the questions that, if asked at month 6, become reasons to abandon the project.
-
-This is an interrogation, not a brainstorm. Do not leap to encouragement.
+An interrogation, not a brainstorm: these are the questions that, asked at month six, become reasons to abandon a project. Do not encourage before the answers are in.
 
 ## Procedure
 
-Ask each question and wait for the user's answer before moving on — one at a time in a live conversation. Offer upfront that the user may instead answer all six in a single message, and in an asynchronous context (web/mobile, or a user who is clearly batching), present all six together rather than forcing six round-trips. After all six answers, write them to `.mstack/research-question.md` with a verdict.
+Ask the six questions and wait for answers. In a live session ask one at a time, offering the option to answer all six in one message; in an asynchronous context (web/mobile, or a user who is clearly batching) present all six together rather than forcing six round-trips.
 
-### The six questions
+1. **Contribution in one sentence.** "If this paper succeeds, what one sentence does it add to the literature?" Reject "contributes to our understanding of X"; push for a specific, falsifiable claim.
+2. **Audience and venue.** "Who reads this, and which journal or community is it pitched to?" "It could go anywhere" is a red flag: papers that fit everywhere fit nowhere.
+3. **Identification.** "How do you separate your effect from the obvious confounders?" If observational and the answer is "controls," press for a placebo, instrument, discontinuity, or quasi-experiment. "I'll figure it out" means defer the project until the design is concrete.
+4. **Falsifiability.** "What pattern in the data would make you abandon the hypothesis?" No answer means the hypothesis will be unfalsifiable on the page too.
+5. **Feasibility.** "What is the longest pole (data access, computation, fieldwork, IRB), how long, and what is plan B?" Ask for a concrete timeline.
+6. **Scoop risk.** "Has anyone done this in the last 3 years? Is anyone visibly working on it (working papers, conference programs, grant abstracts)?" Evidence, not "I haven't seen it."
 
-1. **Contribution in one sentence.** "If this paper succeeds, what one sentence does it add to the literature that wasn't there before?" — Reject vague answers ("contributes to our understanding of X"). Push for a specific, falsifiable claim.
+**Verdict**, written with the answers and date to `.mstack/research-question.md`:
 
-2. **Audience and venue.** "Who reads this paper, and what journal/community is it pitched to?" — If the answer is "it could go anywhere," that is a red flag. Papers that fit everywhere fit nowhere.
+- **Green** — all six substantive. Proceed to `/mstack:lit-map`.
+- **Yellow** — identification or scoop risk weak. Address the weak link explicitly, then proceed.
+- **Red** — two or more answers vague or unsubstantiated. Defer until the gaps close, or run `/mstack:idea-shotgun` for a different angle on the same data.
 
-3. **Identification strategy.** "How do you separate your effect from the obvious confounders?" — If the design is observational and the answer is "control variables," press hard: name a placebo test, an instrument, a discontinuity, or a quasi-experiment. If the answer is "I'll figure it out," recommend deferring the project until the design is concrete.
-
-4. **Falsifiability.** "What pattern in the data would make you abandon the hypothesis?" — If they can't name one, the hypothesis is unfalsifiable in their head and will be unfalsifiable on the page.
-
-5. **Feasibility.** "What is the longest pole — data access, computation, fieldwork, IRB? How long? What's plan B if it fails?" — Ask for a concrete timeline.
-
-6. **Scoop risk.** "Has someone else done this in the last 3 years? Is someone visibly working on it now (working papers, conference programs, NSF abstracts)?" — Push for evidence, not "I haven't seen it."
-
-### Verdict
-
-After the six answers, write a verdict in `.mstack/research-question.md`:
-
-- **Green light** — All six have substantive answers. Proceed to `/mstack:lit-map`.
-- **Yellow light** — Identification or scoop risk are weak. Proceed only after addressing the weak link explicitly.
-- **Red light** — Two or more answers are vague or unsubstantiated. Recommend either:
-  - Deferring the project until the gaps close, OR
-  - `/mstack:idea-shotgun` to find a different angle on the same data/question.
-
-The verdict is the skill's job. Do not soften it; if the answers don't justify the project, say so.
+Do not soften the verdict; if the answers do not justify the project, say so.
 
 ## Outputs
 
-- `.mstack/research-question.md` — the six questions, the user's answers, and the verdict, with date.
-- A summary block printed to the user with the verdict and the next-step suggestion.
+- `.mstack/research-question.md` — questions, answers, verdict, date.
+- Summary block: verdict + next step.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Encouragement before interrogation.** Don't tell the user the idea sounds promising before they've answered the questions.
-- **Helping the user find the answer.** Your job is to ask. If they can't answer, that is the signal.
+- **Encouragement before interrogation.**
+- **Answering for the user.** If they cannot answer, that is the signal.
 - **Skipping questions.** All six, in order.
 
-## When to call other skills
+## Next
 
-- After green light: `/mstack:lit-map` (next stage in the workflow).
-- After yellow light: address the weak link, then re-run.
-- After red light: `/mstack:idea-shotgun` for divergent angles, or `/mstack:scope-challenge` to test whether the project is too big.
+Green → `/mstack:lit-map`. Yellow → fix the weak link, re-run. Red → `/mstack:idea-shotgun`, or `/mstack:scope-challenge` if the project may simply be too big.

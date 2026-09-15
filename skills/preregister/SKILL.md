@@ -1,6 +1,6 @@
 ---
 name: preregister
-description: Drafts a complete OSF/AsPredicted preregistration — hypotheses, sample, exclusions with thresholds, measures, the exact primary specification, robustness, deviations policy — and refuses to mark it ready until every field is specific. Use before fielding or before touching a fresh sample, or when the user mentions preregistration, OSF, or AsPredicted.
+description: Drafts a complete OSF/AsPredicted preregistration — hypotheses, sample, thresholded exclusions, measures, exact primary specification, robustness, deviations policy — and refuses to call it ready until every field is specific. Use before fielding or touching a fresh sample, or when the user mentions preregistration, OSF, or AsPredicted.
 allowed-tools:
   - Read
   - Write
@@ -10,81 +10,41 @@ allowed-tools:
 
 # /mstack:preregister
 
-**Stage:** design
-**Voice:** preregistration-clerk
+**Stage:** design · **Voice:** preregistration-clerk
 
-## When to invoke
-
-Before fielding a survey, before running a secondary-data analysis on a sample you haven't touched, or before any design where you want to credibly distinguish confirmatory from exploratory analysis.
+Before fielding a survey, before analyzing a sample you have not touched, or whenever confirmatory must be credibly separable from exploratory. Expects `/mstack:identification-review` and `/mstack:power-analysis` to have run, plus `/mstack:survey-build` if survey-based.
 
 ## Procedure
 
-1. **Load context.**
-   - `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/identification-review-*.md`.
-   - `.mstack/survey-design.md` if a survey is involved.
-   - `paper/sections/theory.tex` and `methods.tex` if drafted.
-
-2. **Pick a registry.** Default to OSF; AsPredicted if the design is small (≤ 9-section format). Note the choice in the document header.
-
-3. **Draft `prereg/osf-prereg.md`** — start from the bundled skeleton at `${CLAUDE_PLUGIN_ROOT}/skills/preregister/assets/prereg-template.md` — with these sections, all required:
-
-   ### 1. Hypotheses
-   List H1, H2, … with direction and effect size sign. State which is primary; secondaries are explicitly secondary.
-
-   ### 2. Sample
-   - Population.
-   - Recruitment source (Prolific, MTurk, panel name, observational frame).
-   - Target N. Justification = `/mstack:power-analysis` output.
-   - Stopping rule: time-bound, N-bound, or both.
-
-   ### 3. Exclusions
-   List every exclusion rule with a threshold, decided **before** seeing data. From `survey-design.md` probe manifest if applicable.
-
-   ### 4. Measures
-   - Independent variable(s) — definition, source, scale.
-   - Dependent variable(s) — definition, source, scale, scoring rule.
-   - Covariates — what is controlled for, why.
-
-   ### 5. Primary analysis
-   The one specification that tests H1. State equation, sample, SE clustering, software, and the rejection rule (e.g., two-sided test at α = 0.05).
-
-   ### 6. Secondary analyses
-   Pre-specified secondaries and any planned heterogeneity / moderation tests.
-
-   ### 7. Robustness
-   List the robustness checks committed to in advance (e.g., alternative samples, alternative operationalizations, alternative SE structures).
-
-   ### 8. Deviations policy
-   Any deviation from the prereg will be reported in the paper as a deviation, with rationale. Exploratory analyses will be labeled exploratory.
-
-   ### 9. Data and code availability
-   Where data and code will be posted upon acceptance.
-
-4. **Pre-flight check.** Refuse to mark the prereg as ready until:
-   - [ ] All hypotheses have a sign.
-   - [ ] Primary analysis is specific enough that two researchers would code it identically.
-   - [ ] Exclusions have thresholds.
-   - [ ] Power analysis exists in `.mstack/power-analysis.md`.
-   - [ ] Stopping rule is concrete.
-
-5. **Update `.mstack/config.yaml`:** set `design.prereg: true` and stub the URL field (user fills in after registry submission).
-
-6. **Hand-off.** Print the next steps to the user: copy the rendered Markdown into OSF / AsPredicted, paste the resulting URL into `.mstack/config.yaml`, then proceed to fielding / analysis.
+1. **Load** `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/hypotheses.md`, `.mstack/identification-review-*.md`; `.mstack/survey-design.md` if a survey is involved; `paper/sections/theory.tex` and `methods.tex` if drafted.
+2. **Registry.** Default OSF; AsPredicted for small designs (its 9-section format). Note the choice in the header.
+3. **Draft `prereg/osf-prereg.md`** from `${CLAUDE_PLUGIN_ROOT}/skills/preregister/assets/prereg-template.md`. All nine sections are required:
+   1. **Hypotheses** — H1, H2, … with direction and effect-size sign; one primary, the rest explicitly secondary.
+   2. **Sample** — population; recruitment source (Prolific, MTurk, panel, observational frame); target N justified by `/mstack:power-analysis`; stopping rule (time-bound, N-bound, or both).
+   3. **Exclusions** — every rule with a threshold, decided before seeing data; from the survey probe manifest if applicable.
+   4. **Measures** — IV(s) and DV(s) with definition, source, scale, scoring rule; covariates and why.
+   5. **Primary analysis** — the one specification testing H1: equation, sample, SE clustering, software, rejection rule (e.g. two-sided test at α = 0.05).
+   6. **Secondary analyses** — pre-specified secondaries and any heterogeneity / moderation tests.
+   7. **Robustness** — checks committed to in advance (alternative samples, operationalizations, SE structures).
+   8. **Deviations policy** — deviations reported as deviations with rationale; unlisted analyses labeled exploratory.
+   9. **Data and code availability** — where they will be posted on acceptance.
+4. **Pre-flight.** Refuse to mark the prereg ready until: every hypothesis has a sign; the primary analysis is specific enough that two researchers would code it identically; exclusions have thresholds; `.mstack/power-analysis.md` exists; the stopping rule is concrete.
+5. **Config.** Set `design.prereg: true` in `.mstack/config.yaml` and stub `prereg_url` for the user to fill after registration.
+6. **Hand-off.** Tell the user: copy the Markdown into OSF / AsPredicted, paste the resulting URL into `.mstack/config.yaml`, then field / analyze.
 
 ## Outputs
 
-- `prereg/osf-prereg.md` — the preregistration document.
-- `.mstack/config.yaml` — `design.prereg` flipped to true; URL field stubbed.
-- A summary block reminding the user: register before fielding, paste the URL back into config.
+- `prereg/osf-prereg.md` — the preregistration.
+- `.mstack/config.yaml` — `design.prereg: true`, URL stubbed.
+- Summary block: register before fielding; paste the URL back.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
 - **Vague primary analysis.** "We will run a regression" is not a specification.
-- **No stopping rule.** "We'll stop when we have enough" guarantees a garden of forking paths.
-- **Exclusions without thresholds.** "Exclude inattentive respondents" is not a rule; "exclude respondents who fail ≥ 2 of 3 attention checks" is.
-- **Hidden moderation tests.** Heterogeneity analyses must be pre-specified or labeled exploratory in the paper.
+- **No stopping rule.** "When we have enough" guarantees a garden of forking paths.
+- **Exclusions without thresholds.** "Inattentive respondents" is not a rule; "fails ≥ 2 of 3 attention checks" is.
+- **Hidden moderation tests.** Pre-specify or label exploratory.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:identification-review`, `/mstack:power-analysis`, `/mstack:survey-build` (if survey-based).
-- After: proceed to fielding / `/mstack:data-acquire`. Do not run `/mstack:analyze` until preregistered if you intend the analysis to be confirmatory.
+Field / `/mstack:data-acquire`. If the analysis is meant to be confirmatory, do not run `/mstack:analyze` before registering.

@@ -1,6 +1,6 @@
 ---
 name: data-acquire
-description: Downloads and documents every raw data source with vintage, license, SHA-256 manifest, and a PROVENANCE.md log; restricted data gets a stub plus re-acquire script. Use at the start of empirical work, whenever the user pulls a dataset (V-Dem, WDI, COW, survey exports), or before any cleaning — /mstack:data-clean refuses to run without it.
+description: Downloads and documents every raw data source with vintage, license, SHA-256 manifest, and a PROVENANCE.md log; restricted data gets a stub plus re-acquire script. Use at the start of empirical work, whenever the user pulls a dataset (V-Dem, WDI, COW, survey exports), or before any cleaning.
 allowed-tools:
   - Read
   - Write
@@ -12,31 +12,16 @@ allowed-tools:
 
 # /mstack:data-acquire
 
-**Stage:** build
-**Voice:** data-engineer
+**Stage:** build · **Voice:** data-engineer
 
-## When to invoke
-
-Start of empirical work. Before `/mstack:data-clean`.
+Start of empirical work, before `/mstack:data-clean`.
 
 ## Procedure
 
-1. **List the sources** the project needs. For each:
-   - Name + URL or DOI of the canonical source.
-   - Vintage / version (e.g., V-Dem v14, WDI 2024).
-   - License (open / restricted / proprietary).
-   - Format (CSV, Stata, SPSS, API, scrape).
-   - Granularity (country-year, individual, dyad-year).
-
-2. **Acquire each source** to `data/raw/<source-shortname>/`:
-   - For public data: download via `curl` / `wget` / API, save with the version in the filename.
-   - For DOI'd data: download from the archive (Dataverse, OSF), keep the DOI.
-   - For scraped data: write a fetch script in `code/00-fetch-<source>.R` and save the output, plus the date of fetch.
-   - For restricted data: do **not** put it in the repo. Save a stub README in `data/raw/<source>/README.md` describing how to acquire it.
-
-3. **Hash each file** for integrity verification, with `sha256sum` (Linux) or `shasum -a 256` (macOS): e.g. `sha256sum data/raw/<source>/* > data/raw/<source>/SHA256SUMS`.
-
-4. **Write `data/raw/PROVENANCE.md`** with one entry per source:
+1. **List the sources.** For each: name + canonical URL or DOI; vintage / version (V-Dem v14, WDI 2024); license (open / restricted / proprietary); format (CSV, Stata, SPSS, API, scrape); granularity (country-year, individual, dyad-year).
+2. **Acquire** to `data/raw/<source-shortname>/`. Public: download via curl / wget / API with the version in the filename. DOI'd: from the archive (Dataverse, OSF), keeping the DOI. Scraped: a fetch script at `code/00-fetch-<source>.R` plus the output and fetch date. Restricted: **not** in the repo; a stub `data/raw/<source>/README.md` describing how to acquire it.
+3. **Hash** each source: `sha256sum data/raw/<source>/* > data/raw/<source>/SHA256SUMS` (`shasum -a 256` on macOS).
+4. **Write `data/raw/PROVENANCE.md`**, one entry per source:
 
    ```
    ### <source-shortname>
@@ -49,29 +34,25 @@ Start of empirical work. Before `/mstack:data-clean`.
    - Files: <list of files in data/raw/<source>/>
    - SHA256 manifest: data/raw/<source>/SHA256SUMS
    - Restrictions: <none | description>
-   - Notes: <e.g., "imputed by source for missing 2023 values">
+   - Notes: <e.g. "source imputes missing 2023 values">
    ```
 
-5. **Sanity check.** For each source:
-   - Open the file; confirm row count and column count match what the source documents.
-   - Note any column-name aliases the source uses (`country` vs. `cname` vs. `country_text_id`).
-
-6. **Update `.mstack/config.yaml`**: append to the `decisions:` list (`- "<date>: acquired raw data from [sources]"`) and set `paper.status: "building"`.
+5. **Sanity check** each source: row and column counts match what the source documents; note column-name aliases (`country` vs. `cname` vs. `country_text_id`).
+6. **Config.** Append to `decisions:` in `.mstack/config.yaml` (`- "<date>: acquired raw data from [sources]"`) and set `paper.status: "building"`.
 
 ## Outputs
 
-- `data/raw/<source>/...` — raw data, untouched after this skill runs.
-- `data/raw/<source>/SHA256SUMS` — integrity manifest.
-- `data/raw/PROVENANCE.md` — log indexed by source.
-- `code/00-fetch-<source>.R` — fetch scripts for any non-static source.
-- Summary block: count of sources acquired, restrictions to flag, suggested next step (`/mstack:data-clean`).
+- `data/raw/<source>/...` — untouched after this skill runs, with `SHA256SUMS` per source.
+- `data/raw/PROVENANCE.md` — the log, indexed by source.
+- `code/00-fetch-<source>.R` for any non-static source.
+- Summary block: sources acquired, restrictions to flag, next step.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Editing files in `data/raw/` after this skill.** Raw is read-only — and MStack's guard hook enforces it: edits to existing raw files are denied at the tool layer. Any fix is a recode in `code/01-clean.R`.
-- **Undocumented sources.** Every file in `data/raw/` has a `PROVENANCE.md` entry.
-- **Bundling restricted data.** Stub + acquire-script only.
+- **Editing `data/raw/` afterwards.** Raw is read-only and the guard hook denies edits to existing raw files; any fix is a recode in `code/01-clean.R`.
+- **Undocumented sources.** Every file in `data/raw/` has a PROVENANCE entry.
+- **Bundling restricted data.** Stub + acquire script only.
 
-## When to call other skills
+## Next
 
-- After: `/mstack:data-clean`.
+`/mstack:data-clean`.
