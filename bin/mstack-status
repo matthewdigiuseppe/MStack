@@ -289,7 +289,7 @@ def main(argv=None):
         return 1
     cfg = read_config(project)
     rows, present = inventory(project, cfg)
-    stale = stale_verdicts(project)
+    stale = stale_verdicts(project)  # stale artifacts, verdict files and upstream memos alike
     pdfs = [f for f in matches(project, "lit/pdf/*.pdf") if content_state(f) == "present"]
     index = matches(project, "lit/index.md")
     if pdfs and (not index or mtime(pdfs[-1]) > mtime(index[-1]) + 1):
@@ -322,7 +322,7 @@ def main(argv=None):
         print(f"{r['stage']:8} {r['artifact']:46} {r['state']:9} {r['date']:11} {r['note']}")
     print()
     if stale:
-        print("STALE (input changed after the verdict was written):")
+        print("STALE (an input changed after this file was written):")
         for s in stale:
             if s.get("kind") == "unconverted-pdfs":
                 print(f"  - {s['note']} (newest PDF {s['input_date']})")

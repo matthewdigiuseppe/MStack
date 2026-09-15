@@ -32,9 +32,11 @@ Opening a session, returning after a gap, "where were we?", "what's next?". Read
 
 A printed report, in this order, and nothing written to the paper folder:
 
-1. **Bottom line, four sentences at most:** the stage and whether it matches `paper.status`; the stale verdicts; the one next skill and why.
-2. **The script's per-stage table, once**, with any corrections from step 2 noted beside the rows they change. Do not paste the raw script output and then re-summarize it; one table is the inventory.
-3. **Only what changes the next step:** thin files that turned out to be placeholders, a mismatch to correct. Observations that do not change the recommendation stay out.
+1. **Bottom line, four short sentences (under 80 words):** the stage and whether it matches `paper.status`; what is stale; the one next skill and why.
+2. **One per-stage table**, the script's rows with your spot-check corrections already applied (state, date, verdict or a short note). One table is the inventory; do not paste raw script output and then re-summarize it.
+3. **Only what changes the next step:** a placeholder you found behind a `present` or `thin` label, a mismatch to correct. Observations that do not change the recommendation stay out.
+
+Write for the author, not about the process: no "the script says", no state-versus-correction columns, no mention of which heuristic decided what. Report the corrected state and, where you overrode the script, one short note in the row.
 
 With consent only: `paper.status` corrected in `.mstack/config.yaml`.
 
