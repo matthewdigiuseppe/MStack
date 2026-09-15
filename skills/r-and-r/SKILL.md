@@ -1,81 +1,50 @@
 ---
 name: r-and-r
-description: Builds the response-to-reviewers document — every comment quoted verbatim, answered, and mapped to a located manuscript change, plus an editor summary and change log. Use when the user has a revise-and-resubmit decision letter or referee reports to answer.
+description: Builds the response-to-reviewers document — every comment quoted verbatim, answered, and mapped to a located manuscript change, plus editor summary and change log. Use when the user has a revise-and-resubmit decision letter or referee reports to answer, or pastes reviewer comments and asks how to respond.
 argument-hint: "[r1|r2|r3]"
 allowed-tools:
   - Read
   - Write
   - Edit
   - Bash(date *)
+  - Bash(git log *)
   - Grep
 ---
 
 # /mstack:r-and-r
 
-**Stage:** submit (R&R)
-**Voice:** editor (calibrated as the author addressing the editor and reviewers)
+**Stage:** submit (R&R) · **Voice:** the author addressing editor and reviewers
 
-## When to invoke
+Decision letter in hand, revision done: write the response that gets the paper across the line, not the one that argues with the reviewer.
 
-You have a decision letter from the journal. The paper has been revised. Now you need to write the response that gets it across the line — not the response that argues with the reviewer.
-
-## Argument
-
-`$ARGUMENTS` (optional) — round number. Default `r1`. Use `r2`, `r3` for subsequent rounds.
+`$ARGUMENTS` is the round (`r1` default; `r2`, `r3` for later rounds).
 
 ## Procedure
 
-1. **Load the decision letter.**
-   - Ask the user to paste the editor's letter and the reviewer reports into `submission/response-to-reviewers/r<N>-decision.md` if not already there.
-   - Read that file. If the file is empty, stop and ask the user for the letter.
-
-2. **Load the manuscript and the diff.**
-   - Read current `paper/main.tex` + `paper/sections/`.
-   - If git is in use, run `git log --since="<date of submission>" --stat -- paper/` to know what actually changed.
-   - Read `output/tables/` and `output/figures/` — these may have changed.
-
-3. **Parse the comments.** Build a structured list:
-   - Editor comments (top-level, then specific).
-   - For each reviewer: comments numbered as the reviewer numbered them.
-   - Tag each comment as `Major`, `Minor`, or `Editor`.
-
-4. **For each comment, draft a response.** Each response has three parts, in order:
-
-   1. **Quote the comment** verbatim (in italics or a blockquote). This forces alignment between what the reviewer said and what you address.
-   2. **Respond.** Concede where conceding is right; defend where defending is right; do *not* concede the contribution to placate. Use "we appreciate / we agree / we have addressed this by …" sparingly — the structure is enough; you don't need to thank every comment.
-   3. **Point to the change.** Cite the section, page (or paragraph), and quote the relevant new text. If no change was made, say so explicitly and explain why.
-
-5. **Editor opener.** A short cover paragraph at the top:
-   - Thank the editor and reviewers (briefly, once).
-   - Summarize the most consequential changes (3 bullets).
-   - Note the structure of the response document.
-
-6. **Change log.** A table at the bottom: `Comment ID | Change made | Location`. Lets the editor scan.
-
-7. **Cross-checks before finalizing.**
-   - Every reviewer comment has a response.
-   - Every response that claims a change cites a specific location.
-   - The contribution sentence in the abstract / intro has not weakened relative to the prior version.
-   - No new claims that weren't in the decision letter (don't pick fights).
-
-8. **Save.**
-   - `submission/response-to-reviewers/r<N>-response.md` — the response document.
-   - Append to the `decisions:` list in `.mstack/config.yaml` (`- "<date>: r<N> <decision> — response drafted"`) and set `paper.status: "r-and-r"`.
+1. **Decision letter.** Read `submission/response-to-reviewers/r<N>-decision.md`; if absent or empty, ask the user to paste the editor's letter and the reviewer reports there and stop until they do.
+2. **Manuscript and diff.** Read `paper/main.tex` + `paper/sections/`, and `output/tables/` and `output/figures/` (they may have changed). If git is in use, `git log --since="<submission date>" --stat -- paper/` shows what actually changed.
+3. **Parse the comments** into a structured list: editor comments (top-level, then specific); each reviewer's comments numbered as the reviewer numbered them; tag each `Major`, `Minor`, or `Editor`, and note where reviewers contradict each other (resolve those by naming the conflict and following the editor's steer, or asking the editor). Triage: comments that change the headline get new analysis; comments about clarity get rewritten text; comments that misread the paper get the misreading corrected in the manuscript, not only in the response, since the next reader will misread it the same way.
+4. **Respond to each comment** in three parts, in this order:
+   1. **Quote the comment verbatim** (blockquote), so response and comment stay aligned.
+   2. **Respond.** Concede where conceding is right, defend where defending is right, never concede the contribution to placate. Keep "we appreciate / we agree" sparse; the structure is enough.
+   3. **Point to the change** — section, page or paragraph, and the new text quoted. If nothing changed, say so and why.
+5. **Editor opener:** thank editor and reviewers once, briefly; the three most consequential changes; the structure of the document.
+6. **Change log** table at the end: `Comment ID | Change made | Location`.
+7. **Cross-checks:** every comment has a response; every claimed change cites a location; new analyses run through `/mstack:results-audit` and appear in the appendix with a pointer, not as loose numbers in the response; the contribution sentence in abstract / intro has not weakened relative to the prior version; no new claims beyond the letter (don't pick fights); the tone is the same for the reviewer you agree with and the one you do not.
+8. **Save** `submission/response-to-reviewers/r<N>-response.md`; append `- "<date>: r<N> <decision> — response drafted"` to `decisions:` in `.mstack/config.yaml` and set `paper.status: "r-and-r"`.
 
 ## Outputs
 
-- `submission/response-to-reviewers/r<N>-decision.md` — the original letter (created if missing).
-- `submission/response-to-reviewers/r<N>-response.md` — the drafted response.
-- A summary block to the user: count of responses, the most consequential changes, and remaining open items (any reviewer comment without a corresponding manuscript change).
+- `submission/response-to-reviewers/r<N>-decision.md` (created if missing) and `r<N>-response.md`.
+- Summary block: response count, most consequential changes, open items (comments without a manuscript change).
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Conceding the contribution to placate R2.** A response that erodes the headline is a worse response than one that defends it well.
-- **Argumentative tone.** Reviewers respond to deferential confidence, not to combat.
-- **Hand-waving.** "We have addressed this throughout the manuscript" is not a response. Cite the page.
-- **Rewriting comments.** Quote them verbatim. The reviewer's words are the contract.
+- **Conceding the contribution to placate R2.** Eroding the headline is worse than defending it well.
+- **Combat.** Reviewers respond to deferential confidence.
+- **Hand-waving.** "Addressed throughout the manuscript" is not a response; cite the page.
+- **Rewriting comments.** Verbatim; the reviewer's words are the contract.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:results-audit` if any results changed during revision; `/mstack:referee-mock editor` to stress-test the response.
-- After: spot-check by running `/mstack:coauthor-review` on the revised manuscript.
+`/mstack:results-audit` if any results changed; `/mstack:referee-mock editor` to stress-test the response; `/mstack:coauthor-review` on the revised manuscript.

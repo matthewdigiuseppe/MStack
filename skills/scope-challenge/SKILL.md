@@ -1,58 +1,47 @@
 ---
 name: scope-challenge
-description: Adversarial scope check — is this a paper, a footnote, or three papers? Four challenges force the contribution into one sentence and one table. Use when a project is sprawling, sections keep multiplying, the user cannot name the headline result, or they ask whether to split a paper.
+description: Adversarial scope check — is this a paper, a footnote, or three papers? Four challenges force the contribution into one sentence and one table. Use when a project is sprawling, sections keep multiplying, the user cannot name the headline result, or asks whether to split a paper.
 allowed-tools:
   - Bash(date *)
   - Read
   - Write
+  - Grep
+  - Glob
 ---
 
 # /mstack:scope-challenge
 
-**Stage:** ideate
-**Voice:** adversarial-advisor
+**Stage:** ideate · **Voice:** adversarial-advisor
 
-## When to invoke
-
-The project is growing. You have three figures that are each interesting and you can't tell which is the headline. You've added a new section every week for a month. You suspect this is two papers, or a book chapter, or an unfinishable thing.
+For the project that keeps growing: three interesting figures and no headline, a new section every week, a suspicion that this is two papers or an unfinishable one.
 
 ## Procedure
 
-Read `.mstack/research-question.md`, `.mstack/lit-map.md`, and any draft sections that exist. Then run the four challenges, in order. Write the results to `.mstack/scope-challenge-<YYYY-MM-DD>.md`.
+Read `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/theory.md` if it exists, and every draft section in `paper/sections/`. Run the four challenges in order, one at a time in a live session and all four at once when the user is not in a live back-and-forth; write the results to `.mstack/scope-challenge-<YYYY-MM-DD>.md`.
 
-### Challenge 1: One sentence
-"State the paper's contribution in one sentence with no clauses." If the user can't, the scope is wrong. Push until they can.
+1. **One sentence.** "State the contribution in one sentence with no clauses." If the user cannot, the scope is wrong; push until they can.
+2. **One table.** "Which single table is the paper? Which figure is the cover?" Political science papers are built around 1–2 tables and 1–2 figures; four "essential" tables means two belong in another paper or an appendix.
+3. **Cleavage test.** "If you had to split this into two papers, where is the cut?" Finding the cut usually reveals one paper and one sketch. The sketch is for later.
+4. **3-month ship.** "What would you cut to submit in 3 months?" That list is usually what should already be cut. Build the minimum viable paper.
 
-### Challenge 2: One table
-"Which single table is the paper? Which figure is the cover?" Papers in IPE / political science journals are built around 1–2 tables and 1–2 figures. If the user names four "essential" tables, two of them belong in another paper or an appendix.
+**Verdict:**
 
-### Challenge 3: Cleavage test
-"If you had to split this into two papers, where would the cut go?" The exercise of finding the cut often reveals that one is a paper and one is a sketch. The sketch is for later.
+- **Tight** — survives all four. Continue as is.
+- **Sprawl** — one or more fail. Recommend a specific cut: a section, a table, an analysis branch.
+- **Multi-paper** — the cleavage test reveals two contributions. Recommend the split and which half is paper one.
 
-### Challenge 4: 3-month ship
-"What would you cut if you had to submit in 3 months?" The list of cuts is usually a list of things that should already be cut. Build the minimum viable paper.
-
-### Verdict
-
-Write a short summary:
-
-- **Tight** — the project survives all four challenges. Continue as is.
-- **Sprawl** — one or more challenges fail. Recommend a specific cut: a section, a table, an analysis branch.
-- **Multi-paper** — the cleavage test reveals two distinct contributions. Recommend splitting and which half is paper one.
-
-The verdict is opinionated by design. Soft verdicts produce sprawling papers.
+Soft verdicts produce sprawling papers; be opinionated.
 
 ## Outputs
 
 - `.mstack/scope-challenge-<date>.md` — challenges, answers, verdict.
 - Summary block: verdict + the single most important cut.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Affirming a 60-page draft.** If the user describes a project that doesn't fit a journal article, say so.
-- **"Both papers are great."** Pick one. The other is for next year.
+- **Affirming a 60-page draft.** If it does not fit a journal article, say so.
+- **"Both papers are great."** Pick one; the other is next year's.
 
-## When to call other skills
+## Next
 
-- After `Sprawl` verdict: re-run `/mstack:research-question` for the trimmed project.
-- After `Multi-paper` verdict: `mstack-init` a new sibling folder for the second paper.
+Sprawl → re-run `/mstack:research-question` on the trimmed project. Multi-paper → `/mstack:mstack-init` a sibling folder for paper two.

@@ -1,6 +1,6 @@
 ---
 name: power-analysis
-description: Computes target N and minimum detectable effect in R, defaulting to DeclareDesign simulation with a sensitivity curve. Use after a design is chosen and before fielding or preregistration, or whenever the user asks about sample size, statistical power, or MDE.
+description: Computes target N and the minimum detectable effect in R by declaring and diagnosing the design in DeclareDesign — power, bias, coverage, Type S and exaggeration ratios over a grid of N and effect sizes, with the penalties for interactions, clustering, attrition, and conjoint profiles built in — and reports a sensitivity curve. Use after a design is chosen and before fielding or preregistration, or whenever the user asks about sample size, statistical power, or MDE.
 allowed-tools:
   - Read
   - Write
@@ -10,59 +10,43 @@ allowed-tools:
 
 # /mstack:power-analysis
 
-**Stage:** design
-**Voice:** methodologist
+**Stage:** design · **Voice:** methodologist
 
-## When to invoke
-
-After `/mstack:design-research` chooses a design. Before fielding. The prereg's "Sample" section pulls its target N from this skill's output.
+After `/mstack:design-research`, before fielding. The prereg's Sample section takes its target N from this report, and the SESOI in `hypotheses.md` is the effect the study must be able to detect, not the effect the literature reports.
 
 ## Procedure
 
-1. **Load.** `.mstack/hypotheses.md`, `.mstack/design-research.md`, `.mstack/lit-map.md` (look up effect sizes from comparable studies).
-
-2. **Decide the inputs.**
-   - **Effect-size target.** Either:
-     - Smallest effect of substantive interest (SESOI), or
-     - Median effect from comparable studies in `lit-map.md`.
-     Be honest: published effects are inflated; aim conservative.
-   - **α** (typically 0.05, two-sided).
-   - **Power** (typically 0.80; for high-stakes preregistered work, 0.90).
-   - **Design constants** — clustering, ICC, attrition rate, blocking.
-
-3. **Write `code/00-power.R`.** Start from the bundled template — copy `${CLAUDE_PLUGIN_ROOT}/skills/power-analysis/assets/00-power-template.R` → `code/00-power.R`, then adapt the PARAMETERS block and the declared design to the actual study. It:
-   - **Defaults to `DeclareDesign`** (https://declaredesign.org/r/declaredesign/) — declare the model, inquiry, data strategy, and answer strategy, then `diagnose_design()` over a grid of N and effect sizes. This is the default because it generalizes across experimental, survey, FE, panel, hierarchical, and conjoint designs, and forces the design assumptions to be made explicit.
-   - Use `pwr` only as a quick analytic sanity check for textbook cases (two-sample t-test, single-level proportion). Use `Superpower` only for factorial ANOVA designs where DeclareDesign would be overkill. Note the fallback choice and its justification in the script header.
-   - For experiments / surveys: report N for power = 0.80 *and* MDE at the user's planned N.
-   - For observational with FE: simulate to find effective N for identification.
-   - Saves a sensitivity curve (power vs. effect size; MDE vs. N) to `output/figures/power-sensitivity.pdf`.
-
-4. **Run** `Rscript code/00-power.R`. Capture results.
-
-5. **Write the report** to `.mstack/power-analysis.md`:
-   - Inputs (with sources / justifications).
-   - Method (analytic vs. simulation; software; replicable seed).
-   - Results table: target N, MDE at planned N, power at expected effect, ICC/attrition assumed.
-   - Sensitivity curve description and pointer to the figure.
-   - **Verdict** — at the planned N, can the design detect the effect of substantive interest? If no, recommend either a larger N or a redesign.
-
-6. **Update `.mstack/config.yaml`** stats section if useful.
+1. **Load** `.mstack/hypotheses.md` (estimand, SESOI, moderators), `.mstack/design-research.md` (data and answer strategy), `.mstack/lit-map.md` (comparable effect sizes and their designs).
+2. **Inputs, each with a source written down.**
+   - **Effect-size target:** the SESOI from `hypotheses.md`; benchmark against the literature's estimates discounted for publication bias (a published median overstates the true effect; use the lower end or a replication estimate).
+   - **α** (0.05 two-sided unless preregistered otherwise) and **power** (0.80; 0.90 for a preregistered primary).
+   - **Design constants:** ICC and cluster size for clustered assignment (design effect 1 + (m − 1) ICC), attrition rate (inflate N accordingly), blocking gains, compliance rate for encouragement designs (the CACE needs N scaled by 1/compliance²), the share of units with within-variation for fixed-effects designs.
+   - **Interactions and heterogeneity:** an interaction of the same size as the main effect needs about four times the N, and a half-size interaction about sixteen times (Gelman 2018); state the N for every moderation hypothesis separately.
+   - **Conjoints:** power in profiles and attribute levels, not respondents alone (Schuessler & Freitag 2020).
+3. **Write `code/00-power.R`** by copying `${CLAUDE_PLUGIN_ROOT}/skills/power-analysis/assets/00-power-template.R` and adapting the PARAMETERS block and the declared design. It uses **DeclareDesign** (declare the model, inquiry, data strategy, and answer strategy that `design-research.md` chose; `diagnose_design()` over a grid of N and effect sizes) because the same skeleton generalizes across experimental, survey, FE, panel, hierarchical, and conjoint designs and forces every assumption into code. Diagnose power, bias, RMSE, coverage, and the Type S (wrong sign) and exaggeration (Type M) ratios at the planned N (Gelman & Carlin 2014): an underpowered study that "finds" the effect overstates it. `pwr` only as an analytic sanity check for textbook two-sample cases; `Superpower` only for factorial ANOVA; document any fallback in the script header. Experiments and surveys: report N for the target power at the SESOI and the MDE at the planned N. Observational with fixed effects: simulate the within-unit variation that identifies the effect and report the effective N. Save the sensitivity curve (power against effect size and N) to `output/figures/power-sensitivity.pdf`.
+4. **Run** `Rscript code/00-power.R` and capture the results.
+5. **Report** to `.mstack/power-analysis.md`, with these sections:
+   - **Inputs**, each with its source or justification.
+   - **Method** — declared design, simulations, software, replicable seed.
+   - **Results table** — target N at the SESOI, MDE at the planned N, power at the literature's effect, Type S and exaggeration ratios at the planned N, ICC / attrition / compliance assumed; a separate row for each moderation hypothesis.
+   - **Sensitivity curve** — description and pointer to the figure.
+   - **Inconclusive region** — the effect sizes the planned N cannot distinguish from zero, so the preregistration can say what a null will mean.
+   - **Verdict** — can the planned N detect the SESOI at the target power? If not, a larger N, a more precise design (blocking, covariate adjustment, repeated measures), or a redesign.
+6. Update the `stats` section of `.mstack/config.yaml` if useful.
 
 ## Outputs
 
-- `code/00-power.R` — reproducible power calculation.
-- `output/figures/power-sensitivity.pdf` — sensitivity curve.
-- `.mstack/power-analysis.md` — report.
-- Summary block: target N, MDE at planned N, verdict.
+- `code/00-power.R`, `output/figures/power-sensitivity.pdf`, `.mstack/power-analysis.md`.
+- Summary block: target N at the SESOI, MDE at planned N, exaggeration ratio at planned N, verdict.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Power calc on the wrong effect size.** Using the published median effect from a literature with publication bias inflates expected effect and underpowers the study.
-- **Black-box defaults.** Justify ICC, attrition, clustering — every assumption changes the answer.
-- **Skipping the sensitivity curve.** A single number for power is not informative; the curve is.
-- **Reaching for `pwr` first.** Default to DeclareDesign so the model, inquiry, data strategy, and answer strategy are explicit. Falling back to `pwr` is allowed only when the design is genuinely a textbook two-sample case and the script header documents why.
+- **The wrong effect size.** A published median from a biased literature underpowers the study; the SESOI is the target.
+- **Black-box defaults.** Justify ICC, attrition, clustering, compliance; each changes the answer.
+- **A single number.** The curve and the inconclusive region are the result.
+- **Main-effect power for an interaction hypothesis.** State the N the moderation claim needs.
+- **Reaching for `pwr` first.** DeclareDesign unless the case is genuinely textbook, with the reason in the header.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:design-research`, `/mstack:lit-map` (for effect-size benchmarks).
-- After: `/mstack:preregister` (which quotes this report verbatim).
+`/mstack:preregister`, which quotes this report.

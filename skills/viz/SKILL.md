@@ -1,6 +1,6 @@
 ---
 name: viz
-description: Publication-quality ggplot figures — one claim per figure, claim-stating titles, colorblind-safe palette, PDF+PNG+underlying CSV — via a bundled theme. Use when the user asks for figures, plots, coefficient or marginal-effects charts, or slide-ready graphics from results.
+description: Publication-quality ggplot figures matched to the claim each makes — coefficient plots, marginal effects with moderator support, event studies and RD plots that show the design's credibility, specification curves and sensitivity plots, small multiples of the variation the design uses — with claim-stating titles, a colorblind-safe palette, and PDF+PNG+underlying CSV via a bundled theme. Use when the user asks for figures, plots, coefficient or marginal-effects charts, event-study or RD plots, or slide-ready graphics from results.
 allowed-tools:
   - Read
   - Write
@@ -11,63 +11,33 @@ allowed-tools:
 
 # /mstack:viz
 
-**Stage:** analyze
-**Voice:** figure-designer (anchored to `r-coding-skills`)
+**Stage:** analyze · **Voice:** figure-designer
 
-## When to invoke
-
-After `/mstack:analyze` and `/mstack:robustness` produce stable results. Before `/mstack:draft-section results`. Figures lock the visual argument; once stable, the prose can describe them.
+After `/mstack:analyze` and `/mstack:robustness`, before `/mstack:draft-section results`: figures lock the visual argument, then the prose describes them. A paper's figures should let a reader who skips the tables see the effect, believe the design, and judge the robustness.
 
 ## Procedure
 
-1. **Load.** `output/models/`, `data/clean/analytic.rds`. If `target_journals` in `.mstack/config.yaml` is set, match that journal's figure conventions (column width, color policy) — ask the user for the artwork specs when unknown rather than guessing them.
-
-2. **Decide the figure set.** A typical IPE / political science paper has 1–3 figures. Each is a claim:
-
-   | Figure type | Claim it makes |
-   |---|---|
-   | Coefficient plot | "Here are the estimated effects with CIs." |
-   | Marginal effects / predicted probability | "Here is what the model implies at substantively interesting values." |
-   | Heterogeneity plot | "The effect varies across S as theory predicts." |
-   | Specification curve | "Findings are robust across reasonable design choices." |
-   | Map | "Spatial / contextual variation is X." |
-   | Density / distribution | "Here is the relevant variation in the data." |
-
-   Pick the figures that carry the headline. Skip figures that just decorate.
-
-3. **Write `code/03-figures.R`.** First copy the bundled theme — `${CLAUDE_PLUGIN_ROOT}/skills/viz/assets/theme_mstack.R` → `code/theme_mstack.R`, once per paper, so the replication package is self-contained — and `source()` it: it provides `theme_mstack()`, Okabe–Ito color scales, and `save_figure()` (PDF + PNG + underlying CSV in one call). Conventions:
-   - One ggplot object per figure, named `fig_<n>_<descriptor>`.
-   - **Title states the claim**, not the variables (e.g., `"Trade exposure raises protectionist vote share"`, not `"Effect of trade on voting"`).
-   - **Subtitle / caption** carries the methodological detail.
-   - Colorblind-safe palette (`viridisLite::viridis()` or Okabe–Ito).
-   - No chart-junk: no shadows, no 3D, no gradient fills, no excess gridlines.
-   - Theme: `theme_minimal()` or a custom journal-style theme; consistent across figures.
-   - Save each figure to **both** `output/figures/<name>.pdf` (vector, for the paper) and `output/figures/<name>.png` (raster, for slides / web). Use `ggsave(..., width = X, height = Y, units = "in")` with explicit dimensions; never `dev.off()` without dimensions.
-   - Save underlying figure data to `output/figures/<name>-data.csv` so the figure is replicable from CSV alone.
-
-4. **Run** `Rscript code/03-figures.R`. Capture stdout/stderr.
-
-5. **Sanity check.**
-   - Each figure renders.
-   - Axis labels are human-readable (not variable names).
-   - Legends are present where needed and absent where redundant.
-   - Aspect ratio is sensible (no squished or stretched plots).
+1. **Load** `output/models/`, `output/models/robustness.rds`, `data/clean/analytic.rds`, `.mstack/config.yaml` (`design.type`, `target_journals`), and `${CLAUDE_PLUGIN_ROOT}/references/figure-conventions.md`. If a target journal is set, match its figure conventions (column width, color policy); ask the user for the artwork specs rather than guessing.
+2. **Decide the figure set** from the figure-by-claim table in the reference. Every paper gets at least: one figure showing the variation the design uses (treatment by unit over time, or the distribution across groups), one figure showing the design's credibility (event study with the pre-period, RD plot with binned means and the bandwidth, balance plot, first stage), the effect figure (coefficient plot, or predicted values at substantively chosen values with the moderator's support shown), and the robustness figure (specification curve; sensitivity contour or breakdown). Keep the figures that carry the headline; skip decoration.
+3. **Write `code/03-figures.R`** (R conventions: `r-coding-skills` if installed, else `${CLAUDE_PLUGIN_ROOT}/references/r-conventions.md`). Copy `${CLAUDE_PLUGIN_ROOT}/skills/viz/assets/theme_mstack.R` to `code/theme_mstack.R` once per paper (so the replication package is self-contained) and `source()` it for `theme_mstack()`, Okabe–Ito scales, and `save_figure()` (PDF + PNG + CSV in one call). Conventions: one ggplot object per figure named `fig_<n>_<descriptor>`, built from the saved model objects with `marginaleffects` for predictions and intervals; **the title states the claim** ("Trade exposure raises protectionist vote share", not "Effect of trade on voting"); subtitle carries the estimand and sample; caption carries the model, standard errors, and N; the same color means the same thing in every figure; at most five series; direct labels where possible; a zero line where zero means no effect; axes in substantive units; explicit `width` / `height` / `units` on every save; `output/figures/<name>.pdf` (vector, paper), `.png` (raster, slides), `<name>-data.csv` (rebuildable from CSV alone).
+4. **Run** `Rscript code/03-figures.R` and capture output.
+5. **Check** against the "what referees fault" list in the reference: every figure renders; intervals come from the same standard-error choice as the tables; event studies show the reference period and the full pre-period; marginal effects stay inside the moderator's support; axis labels are human-readable; legends present where needed and absent where redundant; sensible aspect ratio and print size.
 
 ## Outputs
 
-- `code/03-figures.R`.
-- `output/figures/<name>.pdf`, `<name>.png`, `<name>-data.csv` per figure.
-- Summary block: count of figures, the headline claim each carries.
+- `code/03-figures.R`, `code/theme_mstack.R`.
+- `output/figures/<name>.pdf`, `.png`, `-data.csv` per figure.
+- Summary block: figure count, the claim each carries, and which figures show variation, credibility, effect, and robustness.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Default ggplot.** No figure ships with `theme_grey()`.
+- **Default ggplot.** Nothing ships with `theme_grey()`.
 - **Variables as titles.** Titles state claims.
-- **No CSV.** A figure that can't be rebuilt from a CSV is brittle.
-- **Stars on coefficient plots.** Show CIs, let the reader decide.
-- **More than 5 colors.** If you need a sixth, use a panel.
+- **An effect figure with no credibility figure.** Show the design, not only the estimate.
+- **No CSV.** A figure that cannot be rebuilt from a CSV is brittle.
+- **Stars on coefficient plots.** Show intervals; let the reader decide.
+- **Dual axes, 3D, pies, gradients, more than five colors.**
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:analyze`, `/mstack:robustness`.
-- After: `/mstack:draft-section results` references the figures by their claim-titles.
+`/mstack:draft-section results` references figures by their claim titles.

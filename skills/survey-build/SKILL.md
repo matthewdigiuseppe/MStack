@@ -1,6 +1,6 @@
 ---
 name: survey-build
-description: Designs a Qualtrics survey instrument — blocks, question table, randomization, embedded data — with layered AI-agent/bot defenses and a probe manifest baked in. Use whenever the user is designing or programming a survey, survey experiment, or panel study, even if they do not mention bot protection.
+description: Designs a survey instrument or survey experiment — question wording and order, pretreatment measures, attention and manipulation checks placed correctly, vignette information equivalence, conjoint attributes and tasks, randomization mechanics, embedded data, quotas and weights — with layered AI-agent/bot defenses and a probe manifest baked in. Use whenever the user is designing or programming a survey, survey experiment, conjoint, or panel study, even if they do not mention bot protection.
 allowed-tools:
   - Read
   - Write
@@ -12,65 +12,38 @@ allowed-tools:
 
 # /mstack:survey-build
 
-**Stage:** design
-**Voice:** survey-designer
+**Stage:** design · **Voice:** survey-designer
 
-## When to invoke
-
-You're designing a new survey instrument — a survey experiment, a panel, or a benchmark study comparing humans and AI agents. Run **before** programming the Qualtrics flow, not after.
+For a new instrument (survey experiment, panel, conjoint, or a human-vs-agent benchmark study). Run before programming the survey platform's flow, not after.
 
 ## Procedure
 
-1. **Establish the science target.**
-   - Read `.mstack/config.yaml` for paper context.
-   - Ask (or read prior context for) the four design questions:
-     - Population and sample frame.
-     - Treatment(s) — what is randomized, when, by whom.
-     - Outcome(s) — primary, secondary, manipulation checks.
-     - Inference unit — individual, dyad, time-series.
-   - Record the answers in `.mstack/survey-design.md`.
-
-2. **Layer in the bot/agent defenses.**
-   - Use the **agent-disclosure** skill if the user has it installed; otherwise follow `${CLAUDE_PLUGIN_ROOT}/references/survey-bot-defenses.md`. Either way, layer in:
-     - Attention checks calibrated to expected human reading time.
-     - Behavioral probes (timing distributions, paste-detection, mouse-tracking opt-ins).
-     - Instructional manipulation checks.
-     - Open-ended response quality checks.
-     - Exclusion rules with thresholds.
-   - This is non-optional. Every MStack survey ships with a probe manifest.
-
-3. **Draft the instrument.** Produce, in `.mstack/survey-design.md`:
-   - **Block plan** with conditional logic.
-   - **Question table** — for each question: ID, type, wording, response options, required y/n, randomization rules, branching.
-   - **Embedded data fields** — treatment assignment, condition labels, timing variables, IP-region (if collected).
-   - **Probe manifest** (from agent-disclosure): each probe with its trigger condition, scoring rule, and exclusion threshold.
-   - **Webhooks/quotas** — if balancing on demographics, document quota logic.
-
-4. **Hand off to Qualtrics.**
-   - If the user has a Qualtrics MCP connected, offer to programmatically create the survey, blocks, and questions.
-   - Otherwise produce a copy-paste-ready spec the user can build manually.
-   - Either way, save the spec to `.mstack/survey-design.md` so the design is reproducible.
-
-5. **Pre-flight checklist** — refuse to mark "ready to field" until:
-   - [ ] Probe manifest is present and every probe has a threshold.
-   - [ ] Attention checks placed at expected fail rates ≤ 10% for engaged humans.
-   - [ ] Open-ended questions have a defined quality-check protocol.
-   - [ ] Treatment randomization is documented and reproducible.
-   - [ ] Power analysis (`/mstack:power-analysis`) supports the proposed N.
-   - [ ] Preregistration (`/mstack:preregister`) has been run or explicitly waived. The sequence is deliberate — draft the spec here, then `/mstack:power-analysis`, then `/mstack:preregister` (which copies the probe thresholds into its exclusions), then return here to mark ready-to-field.
+1. **Science target.** Read `.mstack/config.yaml`, `.mstack/hypotheses.md` (estimands, moderators), `.mstack/design-research.md`, and `${CLAUDE_PLUGIN_ROOT}/references/survey-design-conventions.md`; take what those already answer, then ask the rest of the design questions in one message: population and sample frame; treatment(s), what is randomized, when, by whom, and the assignment scheme; outcomes (primary, secondary, manipulation checks) and how each is scored; inference unit; moderators to be measured pre-treatment. Record the answers in `.mstack/survey-design.md`.
+2. **Bot/agent defenses**, non-optional. Use the `agent-disclosure` skill if the user has it installed, else `${CLAUDE_PLUGIN_ROOT}/references/survey-bot-defenses.md`. Either way layer: attention checks calibrated to human reading time; behavioral probes (timing distributions, paste detection, mouse-tracking opt-ins); instructional manipulation checks; open-ended quality checks; exclusion rules with thresholds. Every MStack survey ships a probe manifest.
+3. **Instrument**, in `.mstack/survey-design.md`, with these sections:
+   - **Block plan** with conditional logic, in this order: consent; screeners and pre-treatment attention checks; pre-treatment covariates and moderators; prior exposure to the treatment (pretreatment); the treatment; the primary outcome immediately after; secondary outcomes; manipulation check; open-ended item; demographics; disclosure item and debrief.
+   - **Question table** — per question: ID, type, exact wording, response options with labels, required y/n, randomization rules, branching, and the construct it measures; wording rules from the conventions file (single-barreled, balanced, no agree/disagree batteries, fully labeled scales).
+   - **Experimental design** — for vignettes, the arms with information equivalence argued and pretested; for conjoints, attributes and levels, restrictions, number of tasks, forced choice plus rating, attribute-order randomization; for sensitive-item designs, the control and treatment lists.
+   - **Embedded data** — assignment, condition labels, timing per page, device, referrer, quota cell, IP region if collected, the probe outcomes.
+   - **Probe manifest** — each probe with its trigger condition, scoring rule, and exclusion threshold.
+   - **Sampling** — provider, quotas or weights, incentives, screeners, recruitment dates, IRB number, consent and debrief text.
+   - **Pilot plan** — 50–100 completes to calibrate timing, attention-check fail rates, and floor or ceiling effects, with what would change the instrument.
+4. **Hand off to the platform.** If a Qualtrics MCP is connected, offer to create the survey, blocks, and questions; otherwise produce a copy-paste-ready spec. Either way `.mstack/survey-design.md` is the reproducible record.
+5. **Pre-flight.** Refuse to mark "ready to field" until: probe manifest present with a threshold on every probe; attention checks pre-treatment or not used as post-treatment exclusions, at ≤ 10% expected fail rate for engaged humans; the manipulation check is not an exclusion criterion; open-ended quality protocol defined; randomization documented, reproducible, and written to embedded data; vignette information equivalence pretested; the pilot has run or is scheduled; `/mstack:power-analysis` supports the N in profiles and respondents; `/mstack:preregister` run or explicitly waived. The sequence is deliberate: spec here → power → prereg (which copies the probe thresholds into its exclusions) → pilot → back here to mark ready.
 
 ## Outputs
 
-- `.mstack/survey-design.md` — full instrument spec + probe manifest.
-- (Optional, if Qualtrics MCP available) the actual survey + library blocks created in Qualtrics.
+- `.mstack/survey-design.md` — instrument spec, experimental design, probe manifest, sampling and pilot plans.
+- Optional: the survey and library blocks built in Qualtrics via MCP.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **No bot defenses.** If a user wants to skip the bot/agent defenses, refuse and explain why — agent contamination is now the default failure mode of online survey research.
-- **Single attention check.** One check is not a defense; it's theater.
-- **Ad-hoc exclusions.** Every exclusion rule must be pre-specified with a threshold.
+- **No bot defenses.** Refuse and explain: agent contamination is now the default failure mode of online survey research.
+- **One attention check.** Theater, not defense.
+- **Post-treatment exclusions.** Dropping respondents on a manipulation check or a post-treatment attention check selects on a consequence of treatment.
+- **Compound vignettes.** An arm that changes what respondents infer about other attributes is two treatments.
+- **Ad-hoc exclusions.** Every rule pre-specified with a threshold.
 
-## When to call other skills
+## Next
 
-- Before fielding: `/mstack:preregister`, `/mstack:power-analysis`.
-- After fielding: `/mstack:data-acquire` (provenance log), then `/mstack:data-clean` (with the survey design as ground truth).
+`/mstack:power-analysis` and `/mstack:preregister` before fielding; `/mstack:data-acquire` then `/mstack:data-clean` (survey design as ground truth) after.

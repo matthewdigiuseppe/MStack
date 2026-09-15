@@ -17,7 +17,7 @@ Three claims:
 ## What MStack is not
 
 - **Not a writing assistant.** Drafting is one stage. Most of MStack is upstream of it.
-- **Not a stats package.** It defers to R conventions (the user's `r-coding-skills` skill, or MStack's bundled `references/r-conventions.md` fallback); it doesn't replace them.
+- **Not a stats package.** It defers to R conventions (the user's `r-coding-skills` skill, or MStack's bundled `references/r-conventions.md` fallback); it doesn't replace them. It does carry the methodological standards a reviewer will hold the paper to (`references/identification-threats.md`, `estimation-conventions.md`, `robustness-protocols.md`, and the rest of the reference library) so that the skills argue from the discipline's canon rather than from a generic checklist.
 - **Not a coauthor.** It simulates one (`/mstack:coauthor-review`) but is not credited.
 - **Not domain-locked.** Built for political science / IPE, but the spine — ideate → map → design → build → analyze → write → submit → reflect — generalizes to most quantitative social science.
 
@@ -56,3 +56,10 @@ Every skill carries a **stage** and a **voice**. Stage tells you when to use it.
 | Desk reject for identifying info in a double-blind manuscript | `/mstack:submission-pack` (anonymization sweep + format checks) |
 | Losing track of where the project stands between sessions | `/mstack:paper-status` (reads `.mstack/`, recommends the next skill) |
 | Same lesson learned six times across six papers | `/mstack:retro` + `/mstack:learn` (writes to `.mstack/learnings.jsonl`) |
+| A hypothesis with no estimand, so nothing could falsify it | `/mstack:hypothesis-design` (estimand, smallest effect of interest, decision rule) |
+| A theory never compared with the reverse-causal story | `/mstack:theory-build` (rival mechanisms with separating implications) |
+| Two-way fixed effects under staggered adoption; logit coefficients compared across models; an interaction read off its coefficient | `/mstack:analyze` + `/mstack:results-audit` (via `references/estimation-conventions.md`) |
+| A preregistration that constrains nothing | `/mstack:preregister` (the two-researchers test) |
+| Data merged on country names; a lag across a panel gap; Polity's −66/−77/−88 treated as scores | `/mstack:data-clean` + `/mstack:results-audit` (via `references/polisci-data-sources.md` and `audit-catalog.md`) |
+| A null reported as "no effect" | `/mstack:draft-section` (nulls read against the SESOI) |
+| Robustness that never asks how strong a confounder would have to be | `/mstack:robustness` (the sensitivity sentence) |

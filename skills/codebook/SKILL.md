@@ -11,55 +11,28 @@ allowed-tools:
 
 # /mstack:codebook
 
-**Stage:** build
-**Voice:** data-engineer
+**Stage:** build · **Voice:** data-engineer
 
-## When to invoke
-
-After `/mstack:data-clean` writes `data/clean/analytic.rds` and the script runs without errors. Re-run when the analytic dataset changes.
+After `/mstack:data-clean` runs without errors; re-run whenever `data/clean/analytic.rds` changes.
 
 ## Procedure
 
-1. **Load.** `data/clean/analytic.rds`. Read `code/01-clean.R` to know what the variables are supposed to mean.
-
-2. **Generate the codebook** via R. Copy the bundled generator — `${CLAUDE_PLUGIN_ROOT}/skills/codebook/scripts/00-codebook.R` → `code/00-codebook.R` — and edit its PARAMETERS block (`KEY_COLS`, `UNIT`). It is idempotent — safe to re-run — and reports:
-
-   For each variable:
-   - **Name.**
-   - **Label** (from `01-clean.R` comments or attr; if missing, flag).
-   - **Type** (numeric, factor, logical, date, character).
-   - **Range** (min/max for numeric, levels for factor).
-   - **Mean / SD / Median / IQR** (numeric).
-   - **Modal value + frequency** (factor / categorical).
-   - **Missingness** (count + share).
-   - **Source** (from `data/raw/PROVENANCE.md`).
-
-3. **Flag suspicious patterns** for the user:
-   - Variables with > 30% missingness — flag for either documented imputation or exclusion.
-   - Numeric variables with mass at the extreme (e.g., all values at the cap of a winsorized scale).
-   - Apparent duplicates: pairs of variables with > 0.99 correlation.
-   - Near-constant variables (< 5% variation).
-   - Date variables with implausible values (future dates, pre-data-source dates).
-   - Unit-of-analysis ambiguities (rows that should be unique by `id` but aren't).
-
-4. **Write `data/codebook.md`** with:
-   - Header: dataset name, N, K, unit of analysis, generation date, source script.
-   - Per-variable table.
-   - Flag block at the bottom listing every suspicious pattern with a recommended action.
-
-5. **If flags exist:** print them to the user with a recommendation. Do **not** silently accept them.
+1. **Load** `code/01-clean.R` to know what the variables are meant to be.
+2. **Generate.** Copy `${CLAUDE_PLUGIN_ROOT}/skills/codebook/scripts/00-codebook.R` to `code/00-codebook.R`, set `KEY_COLS` and `UNIT` in its PARAMETERS block, and run `Rscript code/00-codebook.R`. It is idempotent and reports per variable: name; label (from `01-clean.R` comments or attr, flagged if missing); type; range or levels; mean / SD / median / IQR, or mode + frequency; missingness (count + share); source (from `data/raw/PROVENANCE.md`).
+3. **Flags** it raises, plus any you notice: > 30% missing (document imputation or exclude); mass at an extreme (a winsorized cap); pairs with |r| > 0.99 (apparent duplicates); near-constants (< 5% variation); implausible dates (future, pre-source); rows not unique on the key; values that look like sentinel or missing codes left in an integer column (−66/−77/−88, −9, 99/999), which `${CLAUDE_PLUGIN_ROOT}/references/polisci-data-sources.md` lists by source. For each variable, note which raw source and PROVENANCE entry it came from.
+4. `data/codebook.md` carries a header (dataset, N, K, unit, generation date, source script), the per-variable table, and a flag block with a recommended action per flag.
+5. **Print the flags** with recommendations. Never accept them silently.
 
 ## Outputs
 
-- `code/00-codebook.R` — idempotent generation script.
-- `data/codebook.md` — the codebook.
-- Summary block: variable count, missingness extremes, suspicious-pattern flag count + verdict.
+- `code/00-codebook.R` — idempotent generator; `data/codebook.md`.
+- Summary block: variable count, missingness extremes, flag count + verdict.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Codebook without flags.** Even clean datasets have something worth surfacing.
-- **Manually maintained codebook.** It rots. Generate from the data.
+- **A codebook without flags.** Even clean data has something worth surfacing.
+- **A hand-maintained codebook.** It rots; generate it.
 
-## When to call other skills
+## Next
 
-- After: `/mstack:analyze`. If flags are unaddressed, suggest fixing `01-clean.R` first.
+`/mstack:analyze`; if flags are unaddressed, fix `01-clean.R` first.

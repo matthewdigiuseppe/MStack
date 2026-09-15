@@ -11,25 +11,20 @@ allowed-tools:
 
 # /mstack:guard
 
-**Stage:** power
-**Voice:** safety
+**Stage:** power · **Voice:** safety
 
-## Argument
-
-`$ARGUMENTS` — directory to freeze writes to (forwarded to `/mstack:freeze`). If omitted, ask which directory to lock to, as `/mstack:freeze` does.
+`$ARGUMENTS` is the directory to freeze writes to (as in `/mstack:freeze`); if omitted, ask which.
 
 ## Procedure
 
-1. Run the equivalent of `/mstack:careful` (set `careful: true` in `.mstack/safety.yaml`).
-2. Run the equivalent of `/mstack:freeze` with the supplied path.
-3. Print the combined state. Both flags are enforced by MStack's `PreToolUse` hook (`hooks/mstack-guard.py`), not just by convention: destructive commands prompt for confirmation, and writes outside the freeze path are denied.
+1. Set `careful: true` in `.mstack/safety.yaml` (as `/mstack:careful` does).
+2. Set `freeze.path` to the supplied directory (as `/mstack:freeze` does).
+3. Print the combined state. Both are enforced by the `PreToolUse` hook (`hooks/mstack-guard.py`): destructive commands prompt for confirmation, writes outside the freeze path are denied.
 
 ## Outputs
 
-- `.mstack/safety.yaml` with both `careful: true` and `freeze.path` set.
-- Summary: both flags + the freeze target.
+- `.mstack/safety.yaml` with both `careful: true` and `freeze.path`; summary of both flags + the freeze target.
 
-## When to call other skills
+## Next
 
-- `/mstack:unfreeze` to remove just the freeze (careful stays on).
-- `/mstack:careful off` to remove just careful (freeze stays on).
+`/mstack:unfreeze` removes just the freeze (careful stays on); `/mstack:careful off` removes just careful (freeze stays on).

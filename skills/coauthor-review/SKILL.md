@@ -11,60 +11,41 @@ allowed-tools:
 
 # /mstack:coauthor-review
 
-**Stage:** write
-**Voice:** coauthor
+**Stage:** write · **Voice:** coauthor
 
-## When to invoke
+On a complete draft, one round before `/mstack:referee-mock`. The coauthor catches structural and clarity problems a referee glosses past and the author is too close to see.
 
-You have a complete draft, ideally one round before `/mstack:referee-mock`. The coauthor catches structural and clarity issues that a referee would gloss past or that you'd internalize too deeply to see.
+`$ARGUMENTS` picks the persona (default `skeptical-methodologist`; unrecognized → default):
 
-## Argument
-
-`$ARGUMENTS` (optional) — coauthor persona. One of:
-
-- `skeptical-methodologist` (default) — challenges design and inference, line by line.
-- `big-picture-theorist` — challenges the framing, contribution, and engagement with theory.
-- `junior-reader` — reads as a graduate student new to the area; flags every "wait, what?".
-
-If unrecognized, default to `skeptical-methodologist`.
+| Persona | Presses on |
+|---|---|
+| `skeptical-methodologist` | Identification, sample, SEs, robustness, overclaiming in `results` and `discussion`, line by line |
+| `big-picture-theorist` | The mechanism, scope conditions, engagement with canonical work, contribution clarity |
+| `junior-reader` | A graduate student new to the area: where the reader gets lost, jargon, unexplained acronyms, buried claims, roadmap clarity |
 
 ## Procedure
 
-1. **Load.** `paper/main.tex` and every `paper/sections/*.tex`. Read prior `/mstack:coauthor-review` outputs in `.mstack/referee-cache/` so you can reference what changed since.
-
-2. **Read end-to-end.** Resist the urge to summarize. The first read is for impressions, not corrections.
-
-3. **Three structural notes** (always):
-   - **The biggest hole.** One paragraph: where the argument is weakest. Quote the specific section.
-   - **The biggest distraction.** One paragraph: what to cut. Often a section the user is proudest of.
-   - **The biggest opportunity.** One paragraph: a missing argument, framing, or analysis that would land the paper better. Specific.
-
-4. **One structural suggestion.** A concrete reordering, restructuring, or refocusing. Don't propose ten changes; propose one that changes the most.
-
-5. **Three to five line edits.** Quote the line, give the alternative, explain in five words why.
-
-6. **Persona-specific bias:**
-
-   | Persona | Where to press |
-   |---|---|
-   | `skeptical-methodologist` | Identification, sample, SE, robustness, overclaiming in `results` and `discussion`. |
-   | `big-picture-theorist` | Theory section's mechanism, scope conditions, engagement with canonical work, contribution clarity. |
-   | `junior-reader` | Where the reader gets lost. Jargon. Unexplained acronyms. Buried claims. Roadmap clarity. |
-
-7. **Save** to `.mstack/referee-cache/coauthor-<persona>-<YYYY-MM-DD>.md`.
+1. **Load** `paper/main.tex` and every `paper/sections/*.tex`, plus prior coauthor reviews in `.mstack/referee-cache/` so you can say what changed since.
+2. **Read end-to-end first**, for impressions, not corrections. Then read the referee complaints table in `${CLAUDE_PLUGIN_ROOT}/references/writing-conventions.md` and, for the skeptical methodologist, the design section of `${CLAUDE_PLUGIN_ROOT}/references/identification-threats.md`.
+3. **Three structural notes**, one paragraph each, quoting the specific section:
+   - **The biggest hole** — where the argument is weakest.
+   - **The biggest distraction** — what to cut; often the part the author is proudest of.
+   - **The biggest opportunity** — a missing argument, framing, or analysis that would land the paper better. Specific.
+4. **One structural suggestion:** a concrete reordering, restructuring, or refocusing. The one that changes the most, not ten.
+5. **Three to five line edits:** quote the line, give the alternative, five words on why.
+6. **Save** to `.mstack/referee-cache/coauthor-<persona>-<YYYY-MM-DD>.md`.
 
 ## Outputs
 
 - `.mstack/referee-cache/coauthor-<persona>-<date>.md`.
-- Summary block: hole + distraction + opportunity + the one structural suggestion.
+- Summary block: hole, distraction, opportunity, the one structural suggestion.
 
-## Anti-patterns to refuse
+## Anti-patterns
 
-- **Compliments.** A coauthor who tells you the draft is great is not coauthoring.
-- **Marginalia masquerading as a review.** Twenty line edits and zero structural notes is a copy-edit, not a review.
-- **Speaking outside the persona.** A `junior-reader` doesn't propose new identification strategies; a `theorist` doesn't fix typos.
+- **Compliments.** A coauthor who says the draft is great is not coauthoring.
+- **Marginalia as review.** Twenty line edits and no structural notes is a copy-edit.
+- **Breaking persona.** The junior reader does not propose identification strategies; the theorist does not fix typos.
 
-## When to call other skills
+## Next
 
-- Before: `/mstack:draft-section` for any obviously-broken section.
-- After: revise, then run `/mstack:referee-mock` (different persona) for a final pre-submission read.
+Revise (`/mstack:draft-section` for any broken section), then `/mstack:referee-mock` with a different persona before submission.

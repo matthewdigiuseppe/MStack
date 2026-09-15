@@ -10,8 +10,8 @@
     {
       "name": "mstack",
       "source": "./",
-      "description": "A Claude Code plugin for academic research — 39 role-based slash commands across the full paper lifecycle (ideate, map, design, build, analyze, write, submit, reflect), with hook-enforced edit safety.",
-      "version": "0.2.0",
+      "description": "A Claude Code plugin for academic research — 39 role-based slash commands across the full paper lifecycle (ideate, map, design, build, analyze, write, submit, reflect), a methods reference library (identification threats by design, estimation and robustness protocols, data pitfalls, preregistration and replication standards), and hook-enforced edit safety.",
+      "version": "0.4.0",
       "category": "productivity",
       "homepage": "https://github.com/matthewdigiuseppe/MStack"
     }

@@ -12,6 +12,8 @@ Checks:
   * no bare /<skill-name> references (plugin skills are namespaced)
   * $ARGUMENTS in a body implies an argument-hint (warning)
   * every skill appears in docs/skills.md (warning)
+  * commands a body tells Claude to run are covered by allowed-tools (warning)
+  * bin/ scripts byte-compile
   * hooks/hooks.json is valid JSON; hook scripts byte-compile
 """
 import json
@@ -26,6 +28,42 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
 
 errors, warnings = [], []
+
+
+# Commands a skill body may tell Claude to run. Each needs a Bash allowance
+# (bare "Bash", or a "Bash(prefix *)" whose prefix covers the command).
+RUN_TOKENS = ("Rscript", "python3", "sha256sum", "texcount", "latexmk",
+              "quarto render", "git log", "git rev-parse", "git diff", "date +")
+
+
+def allowed_tools(text):
+    m = re.match(r"\A---\n(.*?\n)---\n", text, re.S)
+    tools, in_list = [], False
+    for line in (m.group(1).splitlines() if m else []):
+        if line.startswith("allowed-tools:"):
+            in_list = True
+        elif in_list and line.startswith("  - "):
+            tools.append(line[4:].strip())
+        elif in_list and not line.startswith(" "):
+            in_list = False
+    return tools
+
+
+def check_tools(text, label):
+    body = text.split("\n---\n", 1)[-1]
+    used = [tok for tok in RUN_TOKENS if tok in body]
+    if not used:
+        return
+    bash = [t for t in allowed_tools(text) if t == "Bash" or t.startswith("Bash(")]
+    if not bash:
+        warnings.append(f"{label}: body runs {used} but allowed-tools has no Bash entry")
+        return
+    if "Bash" in bash:
+        return
+    prefixes = [b[5:-1].rstrip(" *") for b in bash]
+    for tok in used:
+        if not any(tok.startswith(p) or p.startswith(tok) for p in prefixes):
+            warnings.append(f"{label}: body runs '{tok}' but allowed-tools only permits {bash}")
 
 
 def parse_frontmatter(text, label):
@@ -62,6 +100,7 @@ for name in skill_names:
         errors.append(f"{label}: 'user-invocable: true' is redundant (it's the default) — remove it")
     if "$ARGUMENTS" in text and "argument-hint" not in fm:
         warnings.append(f"{label}: uses $ARGUMENTS but has no argument-hint")
+    check_tools(text, label)
 
 # Cross-references: namespaced ones must exist; bare ones are forbidden.
 ref_files = (
@@ -96,7 +135,9 @@ if hooks_json.exists():
         json.loads(hooks_json.read_text())
     except json.JSONDecodeError as e:
         errors.append(f"hooks/hooks.json: invalid JSON ({e})")
-for script in (ROOT / "hooks").glob("*.py"):
+bin_scripts = [p for p in (ROOT / "bin").iterdir()
+               if p.is_file() and p.read_bytes().startswith(b"#!/usr/bin/env python3")]
+for script in list((ROOT / "hooks").glob("*.py")) + bin_scripts:
     with tempfile.NamedTemporaryFile(suffix=".pyc", delete=False) as tmp:
         cfile = tmp.name
     try:

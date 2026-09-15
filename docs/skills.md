@@ -22,9 +22,9 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 |---|---|---|
 | `/mstack:pdf-ingest` | archivist | PDFs are on disk. Converts them to token-cheap, section-addressable Markdown with citation front matter and a corpus index. |
 | `/mstack:lit-map` | systematic-reviewer | After a candidate question. Identifies must-cite papers and the gap. |
-| `/mstack:theory-build` | theorist | After lit-map. Mechanism, DAG, scope conditions. |
-| `/mstack:hypothesis-design` | methodologist | Before any analysis. Operationalized, falsifiable hypotheses. |
-| `/mstack:identification-review` | methodologist | Before fielding/analyzing. Threats to inference, falsification tests. |
+| `/mstack:theory-build` | theorist | After lit-map. Mechanism and steps, signed DAG, scope conditions, rival mechanisms with the observable implications that separate them, the estimand. |
+| `/mstack:hypothesis-design` | methodologist | Before any analysis. Operationalized hypotheses with estimand, smallest effect of interest, and a decision rule for nulls. |
+| `/mstack:identification-review` | methodologist | Before fielding/analyzing and again before submission. Estimand, identifying assumption, design-specific threats from `references/identification-threats.md`, falsification tests, sensitivity analysis, verdict. |
 
 ## Stage 3 — Design
 
@@ -48,9 +48,9 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 | Skill | Voice | Use when |
 |---|---|---|
 | `/mstack:analyze` | analyst | After codebook is stable. Main models + tables. |
-| `/mstack:robustness` | skeptical-analyst | After main results. Robustness matrix to fight cherry-picking. |
+| `/mstack:robustness` | skeptical-analyst | After main results. Specification curve, sensitivity to unobservables or to the design's assumption, influence, placebos, the sensitivity sentence. |
 | `/mstack:viz` | figure-designer | Results stable. Pub-quality figures. |
-| `/mstack:results-audit` | staff-statistician | Before writing. Catches off-by-one, sample mismatches, p-hacking. |
+| `/mstack:results-audit` | staff-statistician | Before writing. Runs the bug catalog in code: merges, sentinel codes, lags, post-treatment controls, clustering, estimator fit, prose-vs-table numbers, reproducibility. |
 
 ## Stage 6 — Write
 
@@ -76,13 +76,13 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 | Skill | Voice | Use when |
 |---|---|---|
 | `/mstack:retro` | coach | After acceptance or rejection. What took longest, what to systematize. |
-| `/mstack:archive` | replicator | At acceptance. Replication package + OSF/Dataverse prep. |
+| `/mstack:archive` | replicator | At acceptance. Replication package to the Data and Code Availability Standard, clean-room rebuild, OSF/Dataverse prep. |
 
 ## Power tools
 
 | Skill | Use when |
 |---|---|
-| `/mstack:paper-status` | Opening a session on an existing paper, or asking "what's next?". Reads `.mstack/` and recommends the next skill. |
+| `/mstack:paper-status` | Opening a session on an existing paper, or asking "what's next?". Runs `bin/mstack-status` (one deterministic inventory: artifacts, dates, stale verdicts, derived stage) and recommends the next skill. |
 | `/mstack:careful` | Near a deadline. Destructive commands require confirmation — enforced by the plugin's PreToolUse hook, not just convention. |
 | `/mstack:freeze` | Lock edits to one directory — writes elsewhere are denied by the hook. |
 | `/mstack:guard` | `/mstack:careful` + `/mstack:freeze`. |
@@ -90,6 +90,29 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 | `/mstack:llm-checklist` | An LLM is integral to the design (annotation, simulation, chatbots, classification). Logs model/version/config/prompts as you go and compiles the GUIDE-LLM reporting checklist. Writes `.mstack/llm-usage.jsonl` + `.mstack/llm-checklist.md`. |
 | `/mstack:learn` | Per-paper conventions Claude should remember. Writes `.mstack/learnings.jsonl`. |
 | `/mstack:mstack-upgrade` | Update MStack (git pull for clone installs; `/plugin marketplace update` for marketplace installs). |
+
+## Reference library
+
+The skills carry their procedures; the substance a strong methodologist brings lives in `references/`, loaded by the skills that need it at the stage that needs it.
+
+| Reference | What it holds | Loaded by |
+|---|---|---|
+| `identification-threats.md` | Threats, falsification tests, and sensitivity tools by design: experiments, DiD / event study, RD, IV, shift-share, selection on observables, panel FE, cross-section, dyadic, text-as-data, case-based | identification-review, design-research, analyze, robustness, referee-mock (methodologist) |
+| `estimation-conventions.md` | Estimators, standard errors, interactions, nonlinear models, tables, by design | analyze, results-audit |
+| `robustness-protocols.md` | The three robustness questions, the choice inventory with its bins, specification curves, sensitivity sentences, placebos, influence | robustness, preregister |
+| `polisci-data-sources.md` | Identifier schemes, canonical datasets and their pitfalls, sentinel codes, vintages, the harmonization checklist | data-acquire, data-clean, referee-mock (area-expert) |
+| `audit-catalog.md` | The bugs that get papers corrected, with detection snippets | results-audit |
+| `figure-conventions.md` | Figure by claim, construction rules, what referees fault | viz |
+| `preregistration-guide.md` | The two-researchers standard, registries, vague-to-specific examples, secondary-data blinding | preregister, hypothesis-design |
+| `writing-conventions.md` | What each section owes the reader; reporting rules; referee complaints by section | draft-section, coauthor-review, referee-mock (editor) |
+| `journals.md` | Candidate journals by subfield and the fit signals to score | journal-fit |
+| `survey-design-conventions.md` | Wording, order, checks placement, vignettes, conjoints, sampling, data capture | survey-build |
+| `survey-bot-defenses.md` | Layered agent/bot defenses and the probe manifest (fallback for `agent-disclosure`) | survey-build |
+| `referee-report-conventions.md` | Report structure and tone (fallback for `voice.reviewer_style`) | referee-mock |
+| `r-conventions.md` | R style and script structure (fallback for `r-coding-skills`) | data-clean, analyze, robustness, viz |
+| `pdf-extraction.md` | PDF backends and the quality gate | pdf-ingest |
+
+Assets: `skills/preregister/assets/prereg-template.md` (the nine-section plan with estimand, SESOI, and decision rule per hypothesis), `skills/archive/assets/replication-README-template.md` (Data and Code Availability Standard layout), plus the R templates for power, codebook, specification curves, and figures.
 
 ## File output conventions
 
