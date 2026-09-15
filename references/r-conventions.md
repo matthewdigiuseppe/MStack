@@ -24,8 +24,12 @@ this file exists so the pipeline behaves sensibly without it.
   `05-robustness.R`, `06-robustness-table-and-curve.R`. Cleaning never models;
   modeling never cleans.
 - Every join and drop is logged: `nrow()` before/after plus
-  `stopifnot(nrow(df) == expected)`. Silent row loss is the classic
-  irreproducibility bug.
+  `stopifnot(nrow(df) == expected)`, and unit-year uniqueness is asserted
+  after every join (`stopifnot(!anyDuplicated(df[, key_cols]))`). Joins
+  state their relationship (`relationship = "many-to-one"`). Silent row
+  loss and silent duplication are the classic irreproducibility bugs.
+- Lags and leads only after `group_by(unit)` and `arrange(time)`, with a gap
+  check; sentinel codes recoded to `NA` before any arithmetic.
 - Save analytic data as `.rds` (plus a `.csv` mirror for portability); dump
   `sessionInfo()` to a text file alongside outputs.
 
@@ -34,7 +38,12 @@ this file exists so the pipeline behaves sensibly without it.
 - OLS / fixed effects: `fixest::feols()`. State the FE dimensions and the
   clustering level explicitly; the cluster level must match the dependence
   structure, not habit.
-- Marginal effects and predictions: `marginaleffects`.
+- Marginal effects and predictions: `marginaleffects`; experiments:
+  `estimatr::lm_robust()` / `lm_lin()`; design diagnosis and power:
+  `DeclareDesign`; the design-specific estimators and sensitivity tools
+  named in `identification-threats.md` and `estimation-conventions.md`.
+- Dependencies pinned with `renv`; `set.seed()` before every stochastic
+  step, including bootstraps, randomization inference, and imputation.
 - Tables: `modelsummary::modelsummary(output = "latex")` written to
   `output/tables/*.tex`; the manuscript `\input`s them. Report coefficients
   with 95% CIs; stars only when the journal demands them.

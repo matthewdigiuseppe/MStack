@@ -56,3 +56,10 @@ Every skill carries a **stage** and a **voice**. Stage tells you when to use it.
 | Desk reject for identifying info in a double-blind manuscript | `/mstack:submission-pack` (anonymization sweep + format checks) |
 | Losing track of where the project stands between sessions | `/mstack:paper-status` (reads `.mstack/`, recommends the next skill) |
 | Same lesson learned six times across six papers | `/mstack:retro` + `/mstack:learn` (writes to `.mstack/learnings.jsonl`) |
+| A hypothesis with no estimand, so nothing could falsify it | `/mstack:hypothesis-design` (estimand, smallest effect of interest, decision rule) |
+| A theory never compared with the reverse-causal story | `/mstack:theory-build` (rival mechanisms with separating implications) |
+| Two-way fixed effects under staggered adoption; logit coefficients compared across models; an interaction read off its coefficient | `/mstack:analyze` + `/mstack:results-audit` (via `references/estimation-conventions.md`) |
+| A preregistration that constrains nothing | `/mstack:preregister` (the two-researchers test) |
+| Data merged on country names; a lag across a panel gap; Polity's −66/−77/−88 treated as scores | `/mstack:data-clean` + `/mstack:results-audit` (via `references/polisci-data-sources.md` and `audit-catalog.md`) |
+| A null reported as "no effect" | `/mstack:draft-section` (nulls read against the SESOI) |
+| Robustness that never asks how strong a confounder would have to be | `/mstack:robustness` (the sensitivity sentence) |
