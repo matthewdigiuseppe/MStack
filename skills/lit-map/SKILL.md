@@ -23,6 +23,13 @@ After `/mstack:research-question` returns a green or yellow verdict and you have
 
 1. **Load context.** Read `.mstack/research-question.md` (the contribution sentence is the seed).
 
+   Then check whether the literature is already on disk. If `lit/index.md`
+   exists, read it first: it is the converted corpus, and triaging from it costs
+   a fraction of what opening the papers costs. If `lit/pdf/` holds PDFs that
+   have not been converted, run `/mstack:pdf-ingest` before going further —
+   mapping a literature you already own by searching the web for its abstracts
+   is backwards.
+
 2. **Define the search.** Produce a one-paragraph search strategy:
    - 3–5 keyword combinations.
    - 2–3 authors whose work is most directly engaged.
@@ -31,6 +38,8 @@ After `/mstack:research-question` returns a green or yellow verdict and you have
    Get user sign-off before searching.
 
 3. **Search.**
+   - Start with the local corpus when there is one: `lit/index.md` for triage,
+     then the relevant section of a converted paper rather than the whole file.
    - Use WebSearch for keyword + author scans.
    - Use WebFetch (or, if available, a Google Scholar / Semantic Scholar MCP) to pull abstracts and citation counts for top hits.
    - Build a candidate set of 20–40 papers.
@@ -51,7 +60,7 @@ After `/mstack:research-question` returns a green or yellow verdict and you have
    - What does it add that they don't have?
    - Which hostile reviewer would object, and why?
 
-7. **Stage `refs.bib` entries.** For every Foundation + Frontier paper, produce a BibTeX entry and append to `paper/refs.bib` (deduped by key). Do not invent fields — if a field (e.g., page numbers) isn't available, leave it blank with a `% TODO` comment.
+7. **Stage `refs.bib` entries.** For every Foundation + Frontier paper, produce a BibTeX entry and append to `paper/refs.bib` (deduped by key). Do not invent fields — if a field (e.g., page numbers) isn't available, leave it blank with a `% TODO` comment. If `lit/refs-ingested.bib` exists, prefer its entries for papers already ingested — but only those without a `% TODO verify` marker, which flags metadata parsed from the PDF rather than fetched from Crossref.
 
 8. **Save the map** to `.mstack/lit-map.md` with the full classification, synthesis, and gap statement. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
 
@@ -70,5 +79,6 @@ After `/mstack:research-question` returns a green or yellow verdict and you have
 
 ## When to call other skills
 
+- Before mapping, when the PDFs are already on disk: `/mstack:pdf-ingest`.
 - Before drafting `intro` or `theory`: `/mstack:lit-map` is a prerequisite.
 - After the map: `/mstack:theory-build` (sharpen mechanism), then `/mstack:hypothesis-design`.

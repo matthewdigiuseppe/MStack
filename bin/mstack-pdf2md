@@ -1,0 +1,1394 @@
+#!/usr/bin/env python3
+"""mstack-pdf2md — turn a pile of academic PDFs into token-cheap Markdown.
+
+A journal PDF handed straight to a model is expensive: every page is rendered
+as an image on top of whatever text is extracted, so a 40-page article can cost
+tens of thousands of tokens before anyone has read a word of it. The same
+article as clean Markdown — abstract hoisted, running heads stripped, the
+reference list split into its own file — is typically a fifth of that, and it is
+addressable: a skill can read one section instead of the whole paper.
+
+This converter is deliberately boring about how it gets there:
+
+  1. Extract with the best backend installed, cheapest first.
+  2. Score the result (scanned? garbled? columns interleaved?).
+  3. Escalate to a heavier backend only when the score says it is needed.
+  4. Normalize, split references out, and write YAML front matter carrying the
+     citation metadata and the token accounting.
+  5. Keep a corpus index so triage never has to open the papers at all.
+
+Only the standard library is required. Every extraction backend is optional and
+detected at runtime; `--doctor` reports what is installed and how to get more.
+
+Usage:
+  mstack-pdf2md lit/pdf                    # convert a directory into lit/md
+  mstack-pdf2md paper.pdf -o notes/        # convert one file
+  mstack-pdf2md --doctor                   # what backends do I have?
+"""
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import datetime as dt
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unicodedata
+import urllib.error
+import urllib.parse
+import urllib.request
+import zlib
+from pathlib import Path
+
+VERSION = "0.1.0"
+CACHE_NAME = ".mstack-pdf2md.json"
+
+# Rough cost of handing a page of PDF to a model that rasterizes each page on
+# top of extracting its text. Used only for the savings estimate reported to the
+# user, never for a decision -- see references/pdf-extraction.md.
+PDF_PAGE_TOKENS = 1800
+CHARS_PER_TOKEN = 4
+
+SECTION_WORDS = (
+    "abstract", "introduction", "background", "literature", "theory",
+    "hypotheses", "argument", "data", "measurement", "methods", "methodology",
+    "design", "empirical", "strategy", "estimation", "results", "findings",
+    "analysis", "robustness", "discussion", "conclusion", "acknowledgments",
+    "appendix", "references", "bibliography",
+)
+REFERENCE_HEADINGS = re.compile(
+    r"^\s*(?:\d+[.)]?\s*)?(references?|bibliography|works\s+cited|literature\s+cited)"
+    r"\s*:?\s*$",
+    re.I,
+)
+APPENDIX_HEADING = re.compile(
+    r"^\s*(?:#+\s*)?(?:appendi(?:x|ces)|online\s+appendix|supplement(?:ary|al)?"
+    r"(?:\s+(?:material|information|appendix))?)\b",
+    re.I,
+)
+DOI_RE = re.compile(r"\b10\.\d{4,9}/[-._;()/:A-Za-z0-9]+", re.I)
+ARXIV_RE = re.compile(r"\barXiv[:\s]\s*(\d{4}\.\d{4,5})(v\d+)?", re.I)
+YEAR_RE = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
+
+LIGATURES = {
+    "\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi",
+    "\ufb04": "ffl", "\ufb05": "st", "\ufb06": "st",
+    "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+    "\u2212": "-", "\u00ad": "", "\ufeff": "", "\u00a0": " ",
+}
+
+STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "but", "by", "do", "does", "for",
+    "from", "how", "in", "is", "it", "its", "of", "on", "or", "the", "to", "was",
+    "what", "when", "why", "with",
+}
+
+
+# --------------------------------------------------------------------------- #
+# Backends
+# --------------------------------------------------------------------------- #
+
+class Backend:
+    """One way of getting Markdown out of a PDF.
+
+    tier 1 = fast, text-layer only.  tier 2 = layout models.  tier 3 = heavy
+    VLM pipelines.  `auto` starts at the cheapest installed tier and only climbs
+    when the quality gate is unhappy.
+    """
+
+    name = ""
+    tier = 1
+    ocr = False
+    install = ""
+
+    def available(self) -> bool:
+        raise NotImplementedError
+
+    def run(self, pdf: Path) -> str:
+        raise NotImplementedError
+
+
+class PyMuPDF4LLM(Backend):
+    name = "pymupdf4llm"
+    tier = 1
+    install = "pip install pymupdf4llm"
+
+    def available(self):
+        try:
+            import pymupdf4llm  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+    def run(self, pdf):
+        import pymupdf4llm
+        return pymupdf4llm.to_markdown(str(pdf), show_progress=False)
+
+
+class PdfToText(Backend):
+    name = "pdftotext"
+    tier = 1
+    install = "apt install poppler-utils  |  brew install poppler"
+
+    def available(self):
+        return shutil.which("pdftotext") is not None
+
+    def run(self, pdf):
+        out = subprocess.run(
+            ["pdftotext", "-layout", "-enc", "UTF-8", str(pdf), "-"],
+            capture_output=True, timeout=300,
+        )
+        return out.stdout.decode("utf-8", "replace")
+
+
+class Builtin(Backend):
+    """Last resort: a small PDF content-stream reader using only zlib.
+
+    No font/encoding tables and no layout model, so output from anything with
+    subset CID fonts or multiple columns will score badly and say so. It exists
+    so the pipeline still returns something on a machine where nothing can be
+    installed.
+    """
+
+    name = "builtin"
+    tier = 0
+    install = "(always available)"
+
+    def available(self):
+        return True
+
+    def run(self, pdf):
+        return _builtin_extract(pdf.read_bytes())
+
+
+class Docling(Backend):
+    name = "docling"
+    tier = 2
+    ocr = True
+    install = "pip install docling"
+
+    def available(self):
+        try:
+            from docling.document_converter import DocumentConverter  # noqa: F401
+            return True
+        except ImportError:
+            return shutil.which("docling") is not None
+
+    def run(self, pdf):
+        try:
+            from docling.document_converter import DocumentConverter
+        except ImportError:
+            out = subprocess.run(
+                ["docling", "--to", "md", "--output", "-", str(pdf)],
+                capture_output=True, timeout=1800,
+            )
+            return out.stdout.decode("utf-8", "replace")
+        return DocumentConverter().convert(str(pdf)).document.export_to_markdown()
+
+
+class Marker(Backend):
+    name = "marker"
+    tier = 3
+    ocr = True
+    install = "pip install marker-pdf"
+
+    def available(self):
+        return shutil.which("marker_single") is not None
+
+    def run(self, pdf):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                ["marker_single", str(pdf), "--output_format", "markdown",
+                 "--output_dir", tmp],
+                capture_output=True, timeout=3600,
+            )
+            hits = sorted(Path(tmp).rglob("*.md"))
+            return hits[0].read_text(encoding="utf-8", errors="replace") if hits else ""
+
+
+class MinerU(Backend):
+    name = "mineru"
+    tier = 3
+    ocr = True
+    install = "pip install mineru  (best-in-class for CJK and dense layouts)"
+
+    def available(self):
+        return shutil.which("mineru") is not None
+
+    def run(self, pdf):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                ["mineru", "-p", str(pdf), "-o", tmp],
+                capture_output=True, timeout=3600,
+            )
+            hits = sorted(Path(tmp).rglob("*.md"))
+            return hits[0].read_text(encoding="utf-8", errors="replace") if hits else ""
+
+
+BACKENDS = [Builtin(), PyMuPDF4LLM(), PdfToText(), Docling(), Marker(), MinerU()]
+BY_NAME = {b.name: b for b in BACKENDS}
+
+
+def _builtin_extract(data: bytes) -> str:
+    """Pull text out of PDF content streams with nothing but zlib."""
+    chunks = []
+    for m in re.finditer(rb"stream\r?\n", data):
+        start = m.end()
+        end = data.find(b"endstream", start)
+        if end < 0:
+            continue
+        raw = data[start:end]
+        try:
+            content = zlib.decompress(raw)
+        except zlib.error:
+            content = raw
+        if b"BT" not in content:
+            continue
+        chunks.append(_read_content_stream(content))
+    return "\n".join(c for c in chunks if c.strip())
+
+
+def _read_content_stream(content: bytes) -> str:
+    """Walk a content stream, emitting show-text operands with line breaks."""
+    text, i, n = [], 0, len(content)
+    pending = []
+
+    def flush():
+        if pending:
+            text.append("".join(pending))
+            pending.clear()
+
+    while i < n:
+        ch = content[i:i + 1]
+        if ch == b"(":
+            s, i = _read_literal_string(content, i)
+            pending.append(s)
+            continue
+        if ch == b"<" and content[i + 1:i + 2] != b"<":
+            end = content.find(b">", i)
+            if end < 0:
+                break
+            hexed = re.sub(rb"[^0-9A-Fa-f]", b"", content[i + 1:end])
+            if len(hexed) % 2:
+                hexed += b"0"
+            try:
+                pending.append(bytes.fromhex(hexed.decode()).decode("latin-1"))
+            except ValueError:
+                pass
+            i = end + 1
+            continue
+        m = re.match(rb"(TJ|Tj|T\*|Td|TD|Tm|ET|BT|'|\")", content[i:])
+        if m:
+            op = m.group(1)
+            if op in (b"T*", b"Td", b"TD", b"Tm", b"ET", b"'", b'"'):
+                flush()
+                text.append("\n")
+            i += len(op)
+            continue
+        i += 1
+    flush()
+    joined = "".join(text)
+    joined = re.sub(r"\n{2,}", "\n", joined)
+    return joined
+
+
+def _read_literal_string(data: bytes, i: int):
+    """Read a (possibly nested, possibly escaped) PDF literal string."""
+    i += 1
+    depth, out = 1, []
+    while i < len(data):
+        c = data[i:i + 1]
+        if c == b"\\":
+            nxt = data[i + 1:i + 2]
+            simple = {b"n": "\n", b"r": "\r", b"t": "\t", b"b": "\b",
+                      b"f": "\f", b"(": "(", b")": ")", b"\\": "\\"}
+            if nxt in simple:
+                out.append(simple[nxt])
+                i += 2
+                continue
+            octal = re.match(rb"[0-7]{1,3}", data[i + 1:i + 4])
+            if octal:
+                out.append(chr(int(octal.group(), 8)))
+                i += 1 + len(octal.group())
+                continue
+            i += 2
+            continue
+        if c == b"(":
+            depth += 1
+        elif c == b")":
+            depth -= 1
+            if depth == 0:
+                return "".join(out), i + 1
+        out.append(c.decode("latin-1"))
+        i += 1
+    return "".join(out), i
+
+
+# --------------------------------------------------------------------------- #
+# PDF facts we can get without a backend
+# --------------------------------------------------------------------------- #
+
+def pdf_facts(pdf: Path) -> dict:
+    """Page count, embedded metadata, and first-page text, when obtainable."""
+    facts = {"pages": 0, "title": "", "author": "", "first_page": "",
+             "text_chars": 0, "big_type": ""}
+    try:
+        import pymupdf
+    except ImportError:
+        data = pdf.read_bytes()
+        facts["pages"] = len(re.findall(rb"/Type\s*/Page[^s]", data)) or 1
+        return facts
+    try:
+        with pymupdf.open(str(pdf)) as doc:
+            facts["pages"] = doc.page_count
+            meta = doc.metadata or {}
+            facts["title"] = (meta.get("title") or "").strip()
+            facts["author"] = (meta.get("author") or "").strip()
+            if doc.page_count:
+                facts["first_page"] = doc[0].get_text()
+                facts["big_type"] = _largest_type(doc[0])
+            facts["text_chars"] = sum(len(p.get_text()) for p in doc)
+    except Exception:
+        pass
+    return facts
+
+
+def _largest_type(page) -> str:
+    """The text set in the biggest font in the top half of page 1.
+
+    On an article that is the title, and reading it off the font size beats
+    guessing at line order -- a title that wraps onto a second line comes back
+    whole instead of truncated.
+    """
+    try:
+        info = page.get_text("dict")
+    except Exception:
+        return ""
+    cutoff = page.rect.height * 0.55
+    spans = []
+    for block in info.get("blocks", []):
+        for line in block.get("lines", []):
+            for span in line.get("spans", []):
+                text = span.get("text", "").strip()
+                if text and span.get("bbox", [0, 0, 0, 0])[1] < cutoff:
+                    spans.append((round(span.get("size", 0), 1), span["bbox"][1], text))
+    if not spans:
+        return ""
+    biggest = max(s[0] for s in spans)
+    picked = [s for s in spans if s[0] >= biggest - 0.2]
+    picked.sort(key=lambda s: s[1])
+    return " ".join(" ".join(p[2].split()) for p in picked).strip()
+
+
+# --------------------------------------------------------------------------- #
+# Cleanup
+# --------------------------------------------------------------------------- #
+
+def normalize(text: str) -> str:
+    """Ligatures, dashes, hyphenated line breaks, stray control characters."""
+    text = unicodedata.normalize("NFKC", text)
+    for bad, good in LIGATURES.items():
+        text = text.replace(bad, good)
+    text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\f", "\n")
+    # Re-join words broken across a line by hyphenation ("compen-\nsation").
+    text = re.sub(r"(\w)[-\u2010\u2011]\n\s*(\w)", r"\1\2", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" *\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def strip_running_heads(text: str, pages: int) -> str:
+    """Drop the journal name and page number that repeat on every page."""
+    lines = text.split("\n")
+    if pages < 3:
+        return text
+    counts = {}
+    for line in lines:
+        s = line.strip()
+        if 3 <= len(s) <= 90:
+            counts[s] = counts.get(s, 0) + 1
+    threshold = max(3, int(pages * 0.4))
+    repeated = {s for s, c in counts.items() if c >= threshold and not s.startswith("|")}
+    out = []
+    for line in lines:
+        s = line.strip()
+        if s in repeated:
+            continue
+        if re.fullmatch(r"(page\s+)?\d{1,4}", s, re.I):
+            continue
+        if re.fullmatch(r"-+\s*\d{1,4}\s*-+", s):
+            continue
+        out.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(out))
+
+
+def looks_like_heading(line: str) -> bool:
+    s = line.strip()
+    if not (3 <= len(s) <= 90) or s.endswith((".", ",", ";", ":")):
+        return False
+    if re.match(r"^\d+(\.\d+)*[.)]?\s+[A-Z]", s):
+        return True
+    if re.match(r"^[IVXLC]{1,6}[.)]\s+[A-Z]", s):
+        return True
+    words = re.findall(r"[A-Za-z]+", s)
+    if words and s.isupper() and len(words) <= 9:
+        return True
+    if len(words) <= 6 and any(w.lower() in SECTION_WORDS for w in words):
+        return s[:1].isupper()
+    return False
+
+
+CAPTION_RE = re.compile(r"^(table|figure|fig\.?|exhibit|panel)\s+[A-Z]?\d", re.I)
+
+
+def headingize(text: str) -> str:
+    """Give the body a consistent `##` heading spine the skills can address.
+
+    Backends disagree about heading levels and about emphasis markers, so
+    everything that is a section becomes `## Plain Text` and table/figure
+    captions get demoted back to body text -- they are not navigation.
+    """
+    out = []
+    for line in text.split("\n"):
+        s = line.strip()
+        if s.startswith("#"):
+            body = s.lstrip("#").strip().strip("*_").strip()
+            if not body:
+                out.append("")
+            elif CAPTION_RE.match(body):
+                out.append(f"**{body}**")
+            else:
+                out.append(f"## {body}")
+            continue
+        bare = s.strip("*_").strip()
+        if s.startswith("**") and s.endswith("**") and looks_like_heading(bare):
+            out.append(s if CAPTION_RE.match(bare) else f"## {bare}")
+            continue
+        if looks_like_heading(s) and not CAPTION_RE.match(s):
+            out.append(f"## {s}")
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
+def rejoin_paragraphs(text: str) -> str:
+    """Heal paragraphs that a column or page break tore in half.
+
+    A block ending mid-sentence followed by one starting lowercase is one
+    paragraph that the PDF happened to break across columns.
+    """
+    blocks = re.split(r"\n\s*\n", text)
+    out = []
+    for block in blocks:
+        b = block.strip()
+        if not b:
+            continue
+        prev = out[-1].strip() if out else ""
+        joinable = (
+            prev
+            and not prev.startswith(("#", "|", ">", "-", "*", "1.", "```"))
+            and not b.startswith(("#", "|", ">", "-", "*", "```"))
+            and not re.search(r"[.!?:;\"')\]]$", prev)
+            and re.match(r"^[a-z(]", b)
+        )
+        if joinable:
+            out[-1] = f"{out[-1].rstrip()} {b}"
+        else:
+            out.append(b)
+    return "\n\n".join(out)
+
+
+def tidy_references(refs: str) -> str:
+    """Put one bibliographic entry on one line.
+
+    Extractors reflow a reference list into prose paragraphs, which makes the
+    entries impossible to count, grep, or cite. Split them back apart on the
+    surname-comma-initial pattern that starts an entry in every style a social
+    scientist is likely to meet.
+    """
+    if not refs.strip():
+        return ""
+    flat = re.sub(r"\s*\n\s*", " ", refs.strip())
+    flat = re.sub(r"\s{2,}", " ", flat)
+    # Numbered styles first: [12] Foo, or a leading "12. Foo,".
+    flat = re.sub(r"\s+(?=\[\d{1,3}\]\s+[A-Z])", "\n", flat)
+    # Author-date styles: a sentence end followed by "Surname, Initial/Given".
+    flat = re.sub(
+        r"(?<=[.\"'”\)])\s+(?=[A-Z][A-Za-z'’\-]+,\s+(?:[A-Z]\.|[A-Z][a-z]))",
+        "\n", flat,
+    )
+    entries = [e.strip() for e in flat.split("\n") if e.strip()]
+    return "\n\n".join(entries)
+
+
+def split_references(text: str):
+    """Return (body, references). References are the tail after the last
+    reference heading, stopping at an appendix if one follows."""
+    lines = text.split("\n")
+    idx = None
+    for i, line in enumerate(lines):
+        probe = line.lstrip("#* ").rstrip("* ")
+        if REFERENCE_HEADINGS.match(probe):
+            idx = i
+    if idx is None or idx < len(lines) * 0.3:
+        return text, ""
+    tail = lines[idx + 1:]
+    stop = len(tail)
+    for j, line in enumerate(tail):
+        if APPENDIX_HEADING.match(line.strip()):
+            stop = j
+            break
+    refs = "\n".join(tail[:stop]).strip()
+    body = "\n".join(lines[:idx] + tail[stop:]).strip()
+    return body, refs
+
+
+def count_references(refs: str) -> int:
+    """Count entries in a tidied reference list (one entry per block)."""
+    if not refs.strip():
+        return 0
+    return len([b for b in re.split(r"\n\s*\n", refs) if b.strip()])
+
+
+def sections_of(text: str):
+    return [m.group(1).strip() for m in re.finditer(r"^##\s+(.+)$", text, re.M)]
+
+
+def _squash(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", s.lower())
+
+
+def drop_title_heading(body: str, title: str) -> str:
+    """Remove a leading `## Title` that repeats the H1 we are about to write."""
+    if not title:
+        return body
+    want = _squash(title)
+    lines = body.split("\n")
+    for i, line in enumerate(lines[:6]):
+        m = re.match(r"^##\s+(.+)$", line.strip())
+        if m and _squash(m.group(1)) == want:
+            del lines[i]
+            break
+    return "\n".join(lines).strip()
+
+
+def find_abstract(text: str) -> str:
+    m = re.search(r"^##\s*abstract\s*$\n(.*?)(?=^##\s|\Z)", text, re.M | re.I | re.S)
+    if not (m and m.group(1).strip()):
+        m = re.search(r"\babstract\b[:.\s]*\n?(.{200,1600}?)(?:\n\s*\n|\bkeywords?\b)",
+                      text, re.I | re.S)
+    if not m:
+        return ""
+    text = " ".join(m.group(1).split()).strip("*_ ")
+    # Keywords/JEL codes sit inside the abstract block but are not the abstract.
+    text = re.split(r"\b(?:Key\s?words?|JEL\s+(?:codes?|classification))\b",
+                    text, maxsplit=1, flags=re.I)[0]
+    return text.strip(" _*:.,")[:1200]
+
+
+# --------------------------------------------------------------------------- #
+# Quality gate
+# --------------------------------------------------------------------------- #
+
+def score_extraction(text: str, facts: dict):
+    """Score 0..1 plus the defects behind it. Drives backend escalation."""
+    defects = []
+    pages = max(facts.get("pages") or 1, 1)
+    stripped = text.strip()
+
+    # Distinguish "this is a scan" from "the backend fell over": a PDF whose own
+    # text layer is empty needs OCR, and no amount of retrying will help.
+    if facts.get("pages") and facts.get("text_chars", 0) / pages < 100:
+        return 0.05, ["no-text-layer: the PDF is a scan and needs OCR"]
+    if len(stripped) < 200:
+        return 0.0, ["empty: backend returned almost no text"]
+
+    score = 1.0
+    per_page = len(stripped) / pages
+
+    # When we know how much text the PDF actually holds, a backend returning far
+    # less has silently dropped content -- the most dangerous failure here,
+    # because the output still reads fine. Allow generous slack for the running
+    # heads and reference list this pipeline removes on purpose.
+    known = facts.get("text_chars", 0)
+    if known > 2000:
+        coverage = len(stripped) / known
+        if coverage < 0.45:
+            score -= 0.45
+            defects.append(f"truncated: kept only {coverage:.0%} of the PDF's text layer")
+        elif coverage < 0.70:
+            score -= 0.20
+            defects.append(f"lossy: kept {coverage:.0%} of the PDF's text layer")
+    if per_page < 400:
+        score -= 0.35
+        defects.append(f"sparse: {per_page:.0f} chars/page suggests a scan or a failed parse")
+    elif per_page < 900:
+        score -= 0.12
+        defects.append(f"thin: {per_page:.0f} chars/page")
+
+    letters = sum(c.isalpha() for c in stripped)
+    alpha_ratio = letters / len(stripped)
+    if alpha_ratio < 0.55:
+        score -= 0.30
+        defects.append(f"garbled: only {alpha_ratio:.0%} of characters are letters")
+    elif alpha_ratio < 0.65:
+        score -= 0.10
+        defects.append(f"noisy: {alpha_ratio:.0%} letters")
+
+    if "(cid:" in text:
+        score -= 0.45
+        defects.append("cid-fonts: unmapped glyphs (install a layout backend or OCR)")
+
+    replacement = text.count("\ufffd")
+    if replacement > len(stripped) / 500:
+        score -= 0.20
+        defects.append(f"encoding: {replacement} replacement characters")
+
+    words = re.findall(r"[A-Za-z]{2,}", stripped)
+    if words:
+        runon = sum(1 for w in words if len(w) > 22)
+        if runon / len(words) > 0.01:
+            score -= 0.20
+            defects.append("run-on words: lost inter-word spacing")
+
+    # Interleaved columns are the signature failure on a journal PDF, and they
+    # do not look like a crash -- they look like prose with words diced up
+    # ("the fis c al capacity"). Stray single letters are the tell: English
+    # leaves only "a", "I" and initials standing alone.
+    tokens = re.findall(r"(?<![\w.])([A-Za-z])(?![\w.'’])", stripped)
+    if words and len(tokens) / len(words) > 0.015:
+        stray = [t for t in tokens if t not in ("a", "A", "I")]
+        if len(stray) / len(words) > 0.01:
+            score -= 0.35
+            defects.append(
+                f"interleaved text: {len(stray)} orphaned letters suggest the "
+                "reading order is scrambled (try a layout backend)"
+            )
+
+    # Note: long lines are NOT a defect. A Markdown backend puts each paragraph
+    # on one line, which is correct; penalizing it would flag good output. The
+    # detectable signature of merged columns is the gutter surviving as a run of
+    # spaces inside a line, which is what a layout-preserving text dump leaves.
+    lines = [l for l in stripped.split("\n") if l.strip()]
+    if lines:
+        gutter = sum(1 for l in lines if re.search(r"\S {4,}\S", l))
+        if gutter / len(lines) > 0.30 and pages > 1:
+            score -= 0.10
+            defects.append("column gutter left in the text (try -layout off or a layout backend)")
+
+    if not re.search(r"^##\s", text, re.M) and not any(
+        looks_like_heading(l) for l in lines[:400]
+    ):
+        score -= 0.10
+        defects.append("no detectable section headings")
+
+    return max(0.0, min(1.0, score)), defects
+
+
+# --------------------------------------------------------------------------- #
+# Metadata
+# --------------------------------------------------------------------------- #
+
+def ascii_fold(s: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
+    )
+
+
+def guess_metadata(text: str, facts: dict) -> dict:
+    """Best-effort bibliographic metadata from the PDF's own front page."""
+    head = facts.get("first_page") or text[:4000]
+    meta = {"title": "", "authors": [], "year": None, "container": "",
+            "doi": "", "arxiv": ""}
+
+    m = DOI_RE.search(head) or DOI_RE.search(text[:8000])
+    if m:
+        meta["doi"] = m.group(0).rstrip(".,;)]>")
+    m = ARXIV_RE.search(head) or ARXIV_RE.search(text[:8000])
+    if m:
+        meta["arxiv"] = m.group(1)
+
+    # Prefer the PDF's own metadata, then the biggest type on page 1, then the
+    # first substantial line. The font-size route survives a wrapped title.
+    for candidate in (facts.get("title", ""), facts.get("big_type", ""),
+                      _title_from_text(head)):
+        if _plausible_title(candidate):
+            meta["title"] = " ".join(candidate.split())
+            break
+
+    author = facts.get("author", "")
+    if author:
+        meta["authors"] = _split_authors(author)
+    if not meta["authors"]:
+        meta["authors"] = _authors_from_text(head, meta["title"])
+
+    years = [int(y) for y in YEAR_RE.findall(head)]
+    if years:
+        meta["year"] = max(years)
+
+    # Title-case words only in the prefix, so a keyword line ending in an
+    # acronym ("... OECD") does not get glued onto the journal name.
+    m = re.search(
+        r"\b((?:[A-Z][a-z][\w&.'-]*\s+){0,4}(?:Journal|Review|Quarterly|Studies|"
+        r"Politics|Science|Economics|Research|Annals|Perspectives)\b"
+        r"(?:\s+(?:of|on|for|in)\s+(?:[A-Z][\w&.'-]*\s*){1,5})?)", head)
+    if m:
+        meta["container"] = " ".join(m.group(1).split())[:90]
+    return meta
+
+
+def _plausible_title(t: str) -> bool:
+    if not t or len(t) < 12 or len(t) > 300:
+        return False
+    low = t.lower()
+    junk = ("untitled", "microsoft word", ".dvi", ".pdf", ".tex", ".indd", "layout")
+    return not any(j in low for j in junk)
+
+
+def _title_from_text(head: str) -> str:
+    """The first substantial non-boilerplate line of the first page.
+
+    This is the last resort, after the PDF's own metadata and the biggest type
+    on page 1, so it is deliberately strict: a wrong title propagates into the
+    citekey and the staged BibTeX. Body prose is rejected on capitalization --
+    better to return nothing and let the filename stand in.
+    """
+    for raw in head.split("\n")[:12]:
+        s = " ".join(raw.split())
+        if not (12 <= len(s) <= 250):
+            continue
+        low = s.lower()
+        if any(low.startswith(p) for p in (
+            "doi", "http", "www.", "downloaded", "abstract", "keywords",
+            "received", "accepted", "arxiv", "working paper", "draft",
+            "forthcoming", "electronic copy",
+        )):
+            continue
+        if s.count("@") or re.fullmatch(r"[\d\s.,;:()-]+", s):
+            continue
+        words = [w for w in s.split() if re.search(r"[A-Za-z]", w)]
+        if len(words) < 3:
+            continue
+        capped = sum(1 for w in words if w[:1].isupper())
+        if capped / len(words) < 0.4:
+            continue
+        return s
+    return ""
+
+
+NAME_PARTICLES = {
+    "van", "von", "de", "der", "den", "del", "della", "di", "da", "dos", "du",
+    "la", "le", "bin", "ibn", "al", "ter", "ten", "af", "y", "st.",
+}
+
+
+def _looks_like_person_name(part: str) -> bool:
+    """Keep real names out of the author list and prose out of it.
+
+    Without this, a PDF with no title page donates half a sentence to the
+    author field -- every token has to be a capitalized name, an initial, or a
+    nobiliary particle.
+    """
+    tokens = part.split()
+    if not (2 <= len(tokens) <= 5):
+        return False
+    capitalized = 0
+    for tok in tokens:
+        if tok.lower().strip(".") in NAME_PARTICLES:
+            continue
+        if re.fullmatch(r"[A-Z]\.?", tok):  # initial
+            capitalized += 1
+            continue
+        if re.fullmatch(r"[A-Z][A-Za-z'’\-]*\.?", tok):
+            capitalized += 1
+            continue
+        return False
+    return capitalized >= 2
+
+
+def _split_authors(blob: str):
+    blob = re.sub(r"\s*\b(and|&)\b\s*", ", ", blob)
+    parts = [p.strip(" ,;*_") for p in re.split(r"[;,]\s*|\n", blob)]
+    out = []
+    for p in parts:
+        p = " ".join(p.split())
+        if not (3 <= len(p) <= 60):
+            continue
+        if re.search(r"(univ|institut|depart|school|college|@|http|\d)", p, re.I):
+            continue
+        if _looks_like_person_name(p):
+            out.append(p)
+    return out[:12]
+
+
+def _authors_from_text(head: str, title: str):
+    """Collect the author block that sits between the title and the abstract.
+
+    Names are often one per line with an affiliation interleaved, so gather
+    across the block rather than stopping at the first line that parses.
+    """
+    lines = [" ".join(l.split()) for l in head.split("\n")]
+    start = 0
+    if title:
+        needle = title[:40].lower()
+        for i, l in enumerate(lines):
+            if needle and needle in l.lower():
+                start = i + 1
+    found, seen = [], set()
+    for line in lines[start:start + 14]:
+        if not line:
+            continue
+        if line.lower().startswith(("abstract", "keywords", "doi", "jel ")):
+            break
+        for name in _split_authors(line):
+            if name.lower() not in seen:
+                seen.add(name.lower())
+                found.append(name)
+    return found[:12]
+
+
+def crossref(doi: str, mailto: str = "") -> dict:
+    """Authoritative metadata for a DOI. Sends only the DOI (a public id)."""
+    url = f"https://api.crossref.org/works/{urllib.parse.quote(doi)}"
+    if mailto:
+        url += f"?mailto={urllib.parse.quote(mailto)}"
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": f"mstack-pdf2md/{VERSION}"}
+        )
+        with urllib.request.urlopen(req, timeout=20) as r:
+            msg = json.load(r)["message"]
+    except (urllib.error.URLError, OSError, ValueError, KeyError):
+        return {}
+    authors = []
+    for a in msg.get("author", []) or []:
+        name = " ".join(x for x in (a.get("given"), a.get("family")) if x)
+        if name:
+            authors.append(name)
+    issued = (msg.get("issued", {}).get("date-parts") or [[None]])[0]
+    return {
+        "title": (msg.get("title") or [""])[0],
+        "authors": authors,
+        "year": issued[0] if issued else None,
+        "container": (msg.get("container-title") or [""])[0],
+        "doi": msg.get("DOI", doi),
+        "volume": msg.get("volume", ""),
+        "issue": msg.get("issue", ""),
+        "pages": msg.get("page", ""),
+        "publisher": msg.get("publisher", ""),
+        "type": msg.get("type", ""),
+        "_source": "crossref",
+    }
+
+
+def arxiv_lookup(arxiv_id: str) -> dict:
+    url = f"https://export.arxiv.org/api/query?id_list={urllib.parse.quote(arxiv_id)}"
+    try:
+        with urllib.request.urlopen(url, timeout=20) as r:
+            xml = r.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, OSError):
+        return {}
+    def tag(name, src=xml):
+        m = re.search(rf"<{name}>(.*?)</{name}>", src, re.S)
+        return " ".join(m.group(1).split()) if m else ""
+    entry = re.search(r"<entry>(.*?)</entry>", xml, re.S)
+    if not entry:
+        return {}
+    body = entry.group(1)
+    authors = [" ".join(m.split()) for m in
+               re.findall(r"<author>\s*<name>(.*?)</name>", body, re.S)]
+    published = tag("published", body)
+    return {
+        "title": tag("title", body),
+        "authors": authors,
+        "year": int(published[:4]) if published[:4].isdigit() else None,
+        "container": "arXiv preprint",
+        "arxiv": arxiv_id,
+        "_source": "arxiv",
+    }
+
+
+def make_citekey(meta: dict, fallback: str) -> str:
+    """biblatex-style surname+year+keyword, or the filename when we know nothing."""
+    authors = meta.get("authors") or []
+    title = meta.get("title") or ""
+    slug = re.sub(r"[^a-z0-9]+", "-", fallback.lower()).strip("-")[:48]
+    if not authors and not title:
+        return slug or "untitled"
+    surname = ascii_fold(authors[0]).split()[-1] if authors and authors[0].split() else ""
+    surname = re.sub(r"[^a-z]", "", surname.lower()) or "anon"
+    year = str(meta.get("year") or "nd")
+    words = re.findall(r"[A-Za-z]{3,}", ascii_fold(title))
+    word = next((w.lower() for w in words if w.lower() not in STOPWORDS), "")
+    key = f"{surname}{year}{word}"[:48]
+    return key if len(key) > 4 else (slug or key)
+
+
+def to_bibtex(meta: dict, key: str) -> str:
+    kind = "article" if meta.get("container") else "misc"
+    if (meta.get("type") or "").startswith("book"):
+        kind = "book"
+    fields = [
+        ("title", meta.get("title")),
+        ("author", " and ".join(meta.get("authors") or [])),
+        ("year", meta.get("year")),
+        ("journal" if kind == "article" else "howpublished", meta.get("container")),
+        ("volume", meta.get("volume")),
+        ("number", meta.get("issue")),
+        ("pages", meta.get("pages")),
+        ("publisher", meta.get("publisher")),
+        ("doi", meta.get("doi")),
+        ("eprint", meta.get("arxiv")),
+    ]
+    lines = [f"@{kind}{{{key},"]
+    for name, value in fields:
+        if value:
+            lines.append(f"  {name} = {{{value}}},")
+    if meta.get("_source") != "crossref":
+        lines.append("  % TODO verify: parsed from the PDF, not from Crossref")
+    lines.append("}")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+# Conversion
+# --------------------------------------------------------------------------- #
+
+def pick_backends(requested: str, escalate: bool):
+    installed = [b for b in BACKENDS if b.available()]
+    if requested and requested != "auto":
+        if requested not in BY_NAME:
+            raise SystemExit(f"unknown backend {requested!r}; try --doctor")
+        chosen = BY_NAME[requested]
+        if not chosen.available():
+            raise SystemExit(
+                f"backend {requested!r} is not installed.  {chosen.install}"
+            )
+        return [chosen]
+    # Cheapest usable backend first; the builtin fallback only if nothing else.
+    ladder = sorted((b for b in installed if b.tier >= 1), key=lambda b: b.tier)
+    ladder = ladder or [BY_NAME["builtin"]]
+    return ladder if escalate else ladder[:1]
+
+
+def yaml_scalar(v) -> str:
+    if v is None or v == "":
+        return '""'
+    if isinstance(v, (int, float)):
+        return str(v)
+    s = str(v).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{s}"'
+
+
+def yaml_list(items) -> str:
+    return "[" + ", ".join(yaml_scalar(i) for i in items) + "]" if items else "[]"
+
+
+def convert_one(pdf: Path, opts, ladder):
+    """Run the ladder, keep the best result, and assemble the document."""
+    facts = pdf_facts(pdf)
+    best = {"score": -1.0, "text": "", "backend": "none", "defects": []}
+    tried = []
+
+    for backend in ladder:
+        try:
+            raw = backend.run(pdf) or ""
+        except Exception as exc:  # a backend failing is data, not a crash
+            tried.append(f"{backend.name}: error ({type(exc).__name__})")
+            continue
+        text = normalize(raw)
+        text = strip_running_heads(text, facts.get("pages") or 1)
+        text = headingize(text)
+        text = rejoin_paragraphs(text)
+        score, defects = score_extraction(text, facts)
+        tried.append(f"{backend.name}: {score:.2f}")
+        if score > best["score"]:
+            best = {"score": score, "text": text, "backend": backend.name,
+                    "defects": defects}
+        if score >= opts.quality_min:
+            break
+
+    body, refs = split_references(best["text"])
+    refs = tidy_references(refs)
+    if opts.keep_refs and refs:
+        body, refs = best["text"], ""
+
+    meta = guess_metadata(best["text"], facts)
+    if not opts.no_network:
+        found = {}
+        if meta.get("doi"):
+            found = crossref(meta["doi"], opts.mailto)
+        if not found and meta.get("arxiv"):
+            found = arxiv_lookup(meta["arxiv"])
+        if found:
+            arxiv_id = meta.get("arxiv")
+            meta.update({k: v for k, v in found.items() if v})
+            meta.setdefault("arxiv", arxiv_id)
+
+    key = make_citekey(meta, pdf.stem)
+    # Do this before measuring, so sections and token counts describe the file
+    # that actually gets written.
+    body = drop_title_heading(body, meta.get("title") or "")
+    status = "ok"
+    if best["score"] < 0.15:
+        status = "needs-ocr" if any("no-text-layer" in d or "scan" in d
+                                    for d in best["defects"]) else "failed"
+    elif best["score"] < opts.quality_min:
+        status = "low-quality"
+
+    est_tokens = len(body) // CHARS_PER_TOKEN
+    pages = facts.get("pages") or 1
+    est_pdf_tokens = pages * PDF_PAGE_TOKENS + facts.get("text_chars", 0) // CHARS_PER_TOKEN
+
+    return {
+        "pdf": pdf, "facts": facts, "meta": meta, "key": key, "body": body,
+        "refs": refs, "score": best["score"], "backend": best["backend"],
+        "defects": best["defects"], "tried": tried, "status": status,
+        "est_tokens": est_tokens, "est_pdf_tokens": est_pdf_tokens,
+        "abstract": find_abstract(best["text"]),
+        "sections": sections_of(body),
+        "n_refs": count_references(refs),
+    }
+
+
+def render(doc, refs_name: str, source_rel: str, sha: str) -> str:
+    m, meta = doc, doc["meta"]
+    fm = [
+        "---",
+        f"citekey: {yaml_scalar(m['key'])}",
+        f"title: {yaml_scalar(meta.get('title'))}",
+        f"authors: {yaml_list(meta.get('authors') or [])}",
+        f"year: {meta.get('year') or 'null'}",
+        f"container: {yaml_scalar(meta.get('container'))}",
+        f"doi: {yaml_scalar(meta.get('doi'))}",
+        f"arxiv: {yaml_scalar(meta.get('arxiv'))}",
+        f"metadata_source: {yaml_scalar(meta.get('_source') or 'parsed')}",
+        f"source_pdf: {yaml_scalar(source_rel)}",
+        f"source_sha256: {yaml_scalar(sha[:16])}",
+        f"pages: {m['facts'].get('pages') or 0}",
+        f"converted: {yaml_scalar(dt.date.today().isoformat())}",
+        f"backend: {yaml_scalar(m['backend'])}",
+        f"quality: {m['score']:.2f}",
+        f"status: {yaml_scalar(m['status'])}",
+        f"est_tokens: {m['est_tokens']}",
+        f"est_tokens_as_pdf: {m['est_pdf_tokens']}",
+        f"sections: {yaml_list(m['sections'])}",
+        f"references_file: {yaml_scalar(refs_name)}",
+        f"references_count: {m['n_refs']}",
+    ]
+    if m["defects"]:
+        fm.append(f"defects: {yaml_list(m['defects'])}")
+    fm.append("---")
+
+    title = meta.get("title") or m["pdf"].stem
+    body = drop_title_heading(m["body"], title)
+    parts = ["\n".join(fm), "", f"# {title}", ""]
+    if meta.get("authors"):
+        parts += [f"*{', '.join(meta['authors'])}*", ""]
+    if m["abstract"] and not re.search(r"^##\s*abstract\s*$", body, re.M | re.I):
+        parts += ["## Abstract", "", m["abstract"], ""]
+    parts.append(body)
+    if refs_name:
+        parts += ["", f"## References", "",
+                  f"Split out to [`{refs_name}`](./{refs_name}) "
+                  f"({m['n_refs']} entries) to keep this file cheap to read."]
+    return "\n".join(parts).rstrip() + "\n"
+
+
+def render_refs(doc) -> str:
+    meta = doc["meta"]
+    return (
+        f"---\ncitekey: {yaml_scalar(doc['key'])}\n"
+        f"kind: \"references\"\nof: {yaml_scalar(doc['key'] + '.md')}\n"
+        f"count: {doc['n_refs']}\n---\n\n"
+        f"# References — {meta.get('title') or doc['pdf'].stem}\n\n{doc['refs']}\n"
+    )
+
+
+def write_index(out_dir: Path, index_path: Path, rows):
+    rows = sorted(rows, key=lambda r: (str(r["meta"].get("year") or ""), r["key"]))
+    total_md = sum(r["est_tokens"] for r in rows)
+    total_pdf = sum(r["est_pdf_tokens"] for r in rows)
+    saved = (1 - total_md / total_pdf) if total_pdf else 0
+    lines = [
+        "# Literature corpus index",
+        "",
+        f"{len(rows)} document(s), converted by `mstack-pdf2md`. "
+        f"Reading every converted file costs roughly **{total_md:,} tokens**; "
+        f"the same papers as raw PDFs would cost roughly **{total_pdf:,}** "
+        f"(~{saved:.0%} saved).",
+        "",
+        "Read this index to triage. Open a paper's Markdown only when you need it, "
+        "and a single section of it when that will do.",
+        "",
+        "| Key | Year | Authors | Title | Venue | Tokens | Status | File |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for r in rows:
+        meta = r["meta"]
+        authors = meta.get("authors") or []
+        who = authors[0].split()[-1] if authors else "?"
+        if len(authors) == 2:
+            who += f" & {authors[1].split()[-1]}"
+        elif len(authors) > 2:
+            who += " et al."
+        title = (meta.get("title") or r["pdf"].stem)[:70]
+        venue = (meta.get("container") or "")[:32]
+        rel = f"{out_dir.name}/{r['key']}.md"
+        lines.append(
+            f"| `{r['key']}` | {meta.get('year') or '?'} | {who} | {_cell(title)} | "
+            f"{_cell(venue)} | {r['est_tokens']:,} | {r['status']} | [md]({rel}) |"
+        )
+    flagged = [r for r in rows if r["status"] != "ok"]
+    if flagged:
+        lines += ["", "## Needs attention", ""]
+        for r in flagged:
+            lines.append(
+                f"- `{r['key']}` (**{r['status']}**, quality {r['score']:.2f}): "
+                + "; ".join(r["defects"][:3])
+            )
+    lines += ["", "## Abstracts", ""]
+    for r in rows:
+        if r["abstract"]:
+            lines += [f"### `{r['key']}`", "", r["abstract"], ""]
+    index_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
+def _cell(s: str) -> str:
+    return s.replace("|", "\\|").replace("\n", " ")
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+
+def doctor():
+    print(f"mstack-pdf2md {VERSION}\n")
+    print("Extraction backends (auto starts cheap and escalates on low quality):\n")
+    for b in sorted(BACKENDS, key=lambda x: x.tier):
+        mark = "OK " if b.available() else "-- "
+        tier = {0: "fallback", 1: "fast", 2: "layout", 3: "heavy"}[b.tier]
+        ocr = " +ocr" if b.ocr else ""
+        print(f"  {mark} {b.name:<14} tier={tier:<8}{ocr:<5} {b.install}")
+    ready = [b.name for b in BACKENDS if b.available() and b.tier >= 1]
+    print()
+    if not ready:
+        print("No real backend installed. Start with:  pip install pymupdf4llm")
+    else:
+        print(f"Usable now: {', '.join(ready)}")
+        if not any(b.available() and b.ocr for b in BACKENDS):
+            print("No OCR-capable backend: scanned PDFs will be flagged needs-ocr.")
+            print("Add one with:  pip install docling")
+    return 0
+
+
+def collect_pdfs(paths):
+    out = []
+    for p in paths:
+        path = Path(p)
+        if path.is_dir():
+            out += sorted(x for x in path.rglob("*.pdf") if x.is_file())
+        elif path.is_file():
+            out.append(path)
+        else:
+            print(f"skip: {p} not found", file=sys.stderr)
+    return out
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        prog="mstack-pdf2md",
+        description="Convert academic PDFs into token-cheap, section-addressable Markdown.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Metadata lookups hit Crossref and arXiv with the DOI/arXiv id only.\n"
+               "Use --no-network to stay offline.",
+    )
+    ap.add_argument("paths", nargs="*", default=["lit/pdf"],
+                    help="PDF files or directories (default: lit/pdf)")
+    ap.add_argument("-o", "--out", default="lit/md", help="output directory")
+    ap.add_argument("--index", default="", help="corpus index (default: <out>/../index.md)")
+    ap.add_argument("--bib", default="", help="BibTeX out (default: <out>/../refs-ingested.bib)")
+    ap.add_argument("--backend", default="auto",
+                    help="auto|" + "|".join(b.name for b in BACKENDS))
+    ap.add_argument("--no-escalate", action="store_true",
+                    help="never climb to a heavier backend")
+    ap.add_argument("--quality-min", type=float, default=0.70,
+                    help="escalate below this score (default 0.70)")
+    ap.add_argument("--keep-refs", action="store_true",
+                    help="keep the reference list inline instead of splitting it out")
+    ap.add_argument("--no-network", action="store_true", help="skip Crossref/arXiv")
+    ap.add_argument("--mailto", default="", help="contact email for Crossref's polite pool")
+    ap.add_argument("--force", action="store_true", help="reconvert unchanged files")
+    ap.add_argument("--jobs", type=int, default=4, help="parallel conversions")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--json", action="store_true", help="machine-readable summary")
+    ap.add_argument("--doctor", action="store_true", help="report installed backends")
+    ap.add_argument("--version", action="version", version=VERSION)
+    opts = ap.parse_args(argv)
+
+    if opts.doctor:
+        return doctor()
+
+    pdfs = collect_pdfs(opts.paths)
+    if not pdfs:
+        print("No PDFs found. Put them in lit/pdf/ or pass a path.", file=sys.stderr)
+        return 1
+
+    out_dir = Path(opts.out)
+    index_path = Path(opts.index) if opts.index else out_dir.parent / "index.md"
+    bib_path = Path(opts.bib) if opts.bib else out_dir.parent / "refs-ingested.bib"
+    cache_path = out_dir.parent / CACHE_NAME
+
+    ladder = pick_backends(opts.backend, not opts.no_escalate)
+    if opts.dry_run:
+        print(f"would convert {len(pdfs)} PDF(s) into {out_dir}/")
+        print(f"backend ladder: {' -> '.join(b.name for b in ladder)}")
+        for p in pdfs:
+            print(f"  {p}")
+        return 0
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        cache = json.loads(cache_path.read_text())
+    except (OSError, ValueError):
+        cache = {}
+
+    if not opts.json:
+        print(f"backends: {' -> '.join(b.name for b in ladder)}")
+        if ladder == [BY_NAME["builtin"]]:
+            print("  (only the zero-dependency fallback is installed; "
+                  "`pip install pymupdf4llm` for real output)")
+
+    todo, skipped = [], []
+    for pdf in pdfs:
+        digest = sha256(pdf)
+        prior = cache.get(str(pdf))
+        if prior and prior.get("sha") == digest and not opts.force:
+            target = out_dir / f"{prior['key']}.md"
+            if target.exists():
+                skipped.append(prior)
+                continue
+        todo.append((pdf, digest))
+
+    results = []
+    if todo:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, opts.jobs)) as pool:
+            futures = {pool.submit(convert_one, pdf, opts, ladder): (pdf, d)
+                       for pdf, d in todo}
+            for fut in concurrent.futures.as_completed(futures):
+                pdf, digest = futures[fut]
+                try:
+                    doc = fut.result()
+                except Exception as exc:
+                    print(f"FAIL {pdf.name}: {type(exc).__name__}: {exc}", file=sys.stderr)
+                    continue
+                doc["sha"] = digest
+                results.append(doc)
+
+    # Resolve citekey collisions deterministically.
+    seen = {}
+    for doc in sorted(results, key=lambda d: str(d["pdf"])):
+        key = doc["key"]
+        if key in seen:
+            suffix = "b"
+            while f"{key}{suffix}" in seen:
+                suffix = chr(ord(suffix) + 1)
+            key = f"{key}{suffix}"
+            doc["key"] = key
+        seen[key] = doc
+
+    bib_entries, summary = [], []
+    for doc in results:
+        refs_name = f"{doc['key']}.refs.md" if doc["refs"] else ""
+        source_rel = str(doc["pdf"])
+        (out_dir / f"{doc['key']}.md").write_text(
+            render(doc, refs_name, source_rel, doc["sha"]), encoding="utf-8")
+        if refs_name:
+            (out_dir / refs_name).write_text(render_refs(doc), encoding="utf-8")
+        # A document we could not read yields no citation worth staging.
+        if doc["meta"].get("title") or doc["meta"].get("authors"):
+            bib_entries.append(to_bibtex(doc["meta"], doc["key"]))
+        cache[str(doc["pdf"])] = {
+            "sha": doc["sha"], "key": doc["key"], "status": doc["status"],
+            "backend": doc["backend"], "quality": round(doc["score"], 3),
+            "est_tokens": doc["est_tokens"], "est_pdf_tokens": doc["est_pdf_tokens"],
+            "title": doc["meta"].get("title", ""),
+            "year": doc["meta"].get("year"),
+            "authors": doc["meta"].get("authors", []),
+            "container": doc["meta"].get("container", ""),
+            "abstract": doc["abstract"],
+            "defects": doc["defects"],
+        }
+        summary.append(cache[str(doc["pdf"])])
+
+    # Rebuild the index from the cache so untouched papers stay listed.
+    rows = []
+    for src, entry in cache.items():
+        rows.append({
+            "key": entry["key"], "pdf": Path(src), "status": entry.get("status", "ok"),
+            "score": entry.get("quality", 0.0), "defects": entry.get("defects", []),
+            "est_tokens": entry.get("est_tokens", 0),
+            "est_pdf_tokens": entry.get("est_pdf_tokens", 0),
+            "abstract": entry.get("abstract", ""),
+            "meta": {"title": entry.get("title", ""), "year": entry.get("year"),
+                     "authors": entry.get("authors", []),
+                     "container": entry.get("container", "")},
+        })
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    write_index(out_dir, index_path, rows)
+
+    if bib_entries:
+        header = ("% Staged by mstack-pdf2md. Entries marked TODO were parsed from the\n"
+                  "% PDF rather than Crossref -- verify before merging into paper/refs.bib.\n")
+        existing = bib_path.read_text() if bib_path.exists() else ""
+        keys = set(re.findall(r"@\w+\{([^,]+),", existing))
+        fresh = [e for e in bib_entries
+                 if re.match(r"@\w+\{([^,]+),", e).group(1) not in keys]
+        if fresh:
+            bib_path.write_text(
+                (existing or header) + "\n" + "\n\n".join(fresh) + "\n", encoding="utf-8")
+
+    cache_path.write_text(json.dumps(cache, indent=2, sort_keys=True), encoding="utf-8")
+
+    if opts.json:
+        print(json.dumps({"converted": summary, "skipped": len(skipped),
+                          "index": str(index_path), "bib": str(bib_path)}, indent=2))
+        return 0
+
+    saved_md = sum(r["est_tokens"] for r in rows)
+    saved_pdf = sum(r["est_pdf_tokens"] for r in rows)
+    print(f"\nconverted {len(results)}, unchanged {len(skipped)} -> {out_dir}/")
+    for doc in sorted(results, key=lambda d: d["key"]):
+        flag = "" if doc["status"] == "ok" else f"  [{doc['status']}]"
+        print(f"  {doc['key']:<34} q={doc['score']:.2f} {doc['backend']:<12} "
+              f"{doc['est_tokens']:>7,} tok{flag}")
+    print(f"\nindex: {index_path}")
+    if saved_pdf:
+        print(f"corpus: ~{saved_md:,} tokens as Markdown vs ~{saved_pdf:,} as PDF "
+              f"({1 - saved_md / saved_pdf:.0%} saved)")
+    bad = [d for d in results if d["status"] != "ok"]
+    if bad:
+        print(f"\n{len(bad)} document(s) need attention:")
+        for d in bad:
+            print(f"  {d['key']}: {d['status']} — {'; '.join(d['defects'][:2])}")
+        if any(d["status"] == "needs-ocr" for d in bad):
+            print("  install an OCR backend (pip install docling) or have Claude "
+                  "read those PDFs directly")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

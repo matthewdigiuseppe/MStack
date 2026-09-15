@@ -20,6 +20,7 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 
 | Skill | Voice | Use when |
 |---|---|---|
+| `/mstack:pdf-ingest` | archivist | PDFs are on disk. Converts them to token-cheap, section-addressable Markdown with citation front matter and a corpus index. |
 | `/mstack:lit-map` | systematic-reviewer | After a candidate question. Identifies must-cite papers and the gap. |
 | `/mstack:theory-build` | theorist | After lit-map. Mechanism, DAG, scope conditions. |
 | `/mstack:hypothesis-design` | methodologist | Before any analysis. Operationalized, falsifiable hypotheses. |

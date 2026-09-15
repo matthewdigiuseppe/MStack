@@ -3,9 +3,10 @@
 
 Enforces, inside any MStack paper folder (a directory tree containing .mstack/):
 
-  1. data/raw/ is read-only after acquisition: existing raw files are never
-     edited, overwritten, or removed. New files may still be added (that is
-     how /mstack:data-acquire works). Always on; no toggle.
+  1. Source inputs are read-only once they exist: data/raw/ after acquisition
+     and lit/pdf/ after ingestion are never edited, overwritten, or removed.
+     New files may still be added (that is how /mstack:data-acquire and
+     /mstack:pdf-ingest work). Always on; no toggle.
   2. /mstack:freeze — while .mstack/safety.yaml sets freeze.path, writes are
      denied outside that directory (.mstack/ itself stays writable so
      /mstack:unfreeze can clear the lock).
@@ -25,6 +26,13 @@ from pathlib import Path
 
 FILE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 CAREFUL_DIRS = ("paper", "output", "submission", "prereg")
+
+# Source inputs: additions are fine, mutation of an existing file is not.
+# Each entry is (path prefix, where the fix actually belongs).
+READ_ONLY_DIRS = (
+    ("data/raw/", "Fix it as a recode in code/01-clean.R instead of editing the raw file."),
+    ("lit/pdf/", "Edit the converted Markdown in lit/md/ instead of the source PDF."),
+)
 
 DESTRUCTIVE_BASH = [
     (re.compile(r"(^|[;&|]\s*|\s)rm\s"), "rm"),
@@ -121,7 +129,7 @@ def bash_paths(command, cwd, project):
     """Best-effort: tokens of a Bash command that resolve inside the project."""
     hits = []
     for token in re.findall(r"[\w~$./-]+", command):
-        if "/" not in token and token not in ("data", "paper", "output"):
+        if "/" not in token and token not in ("data", "paper", "output", "lit"):
             continue
         if token.startswith("-") or token.startswith("$"):
             continue
@@ -161,12 +169,12 @@ def main():
         if rel is None:
             allow()
 
-        # Rule 1: raw data is immutable once it exists.
-        if str(rel).startswith("data/raw/") and target.exists():
-            deny(
-                f"{rel} is under data/raw/, which is read-only after acquisition. "
-                "Fix it as a recode in code/01-clean.R instead of editing the raw file."
-            )
+        # Rule 1: source inputs are immutable once they exist.
+        if target.exists():
+            for prefix, remedy in READ_ONLY_DIRS:
+                if str(rel).startswith(prefix):
+                    deny(f"{rel} is under {prefix}, which is read-only once the file "
+                         f"exists. {remedy}")
 
         safety = read_safety(project)
 
@@ -201,14 +209,14 @@ def main():
             allow()
         safety = read_safety(project)
 
-        # Rule 1: destructive commands touching data/raw.
-        if "data/raw" in command:
+        # Rule 1: destructive commands touching a read-only source directory.
+        for prefix, remedy in READ_ONLY_DIRS:
+            if prefix.rstrip("/") not in command:
+                continue
             for pattern, label in DESTRUCTIVE_BASH:
                 if pattern.search(command):
-                    deny(
-                        f"'{label}' targets data/raw/, which is read-only after acquisition. "
-                        "Raw fixes belong in code/01-clean.R."
-                    )
+                    deny(f"'{label}' targets {prefix}, which is read-only once the "
+                         f"files exist. {remedy}")
 
         # Rule 2: freeze lock for mutating commands.
         fp = safety["freeze_path"]

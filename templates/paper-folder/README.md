@@ -7,6 +7,9 @@ Scaffolded by [MStack](https://github.com/matthewdigiuseppe/MStack).
 ```
 .mstack/         # MStack config + learnings + caches (do not delete)
 paper/           # manuscript: main.tex + sections/
+lit/pdf/         # source PDFs of the literature (read-only after ingest)
+lit/md/          # those PDFs as Markdown, via /mstack:pdf-ingest
+lit/index.md     # corpus triage table — read this before opening any paper
 data/raw/        # untouched source data
 data/clean/      # analytic dataset(s) produced by code/01-clean.R
 data/codebook.md # variable-level docs

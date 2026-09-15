@@ -2,7 +2,7 @@
 
 **A Claude Code plugin for academic research.** Inspired by [gstack](https://github.com/garrytan/gstack).
 
-gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships 38 skills that walk a paper across all of them.
+gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships 39 skills that walk a paper across all of them.
 
 Originally built for political science / international political economy work, but the spine generalizes to most quantitative social science.
 
@@ -19,7 +19,7 @@ Open Claude Code and type these two lines, one at a time, into the chat box:
 /plugin install mstack@mstack
 ```
 
-The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 38 MStack commands — `/mstack:research-question`, `/mstack:draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
+The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 39 MStack commands — `/mstack:research-question`, `/mstack:draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
 
 ### Step 2 — Start a new paper
 
@@ -53,7 +53,8 @@ cd ~/.claude/plugins/mstack
 | **Ideate** | `/mstack:research-question` | Forcing questions about contribution, identification, feasibility, scoop risk |
 | | `/mstack:scope-challenge` | Adversarial advisor: "is this a paper or a footnote?" |
 | | `/mstack:idea-shotgun` | 4–6 alternative angles on the same data/question |
-| **Map** | `/mstack:lit-map` | Systematic lit scan; identifies the 3–5 papers you must engage |
+| **Map** | `/mstack:pdf-ingest` | Turns a folder of PDFs into machine-readable Markdown (~70% fewer tokens) plus a corpus index |
+| | `/mstack:lit-map` | Systematic lit scan; identifies the 3–5 papers you must engage |
 | | `/mstack:theory-build` | Mechanism, DAG, scope conditions |
 | | `/mstack:hypothesis-design` | Operationalized, falsifiable hypotheses |
 | | `/mstack:identification-review` | Methodologist voice: threats to inference |
@@ -93,6 +94,7 @@ cd ~/.claude/plugins/mstack
 my-paper/
   .mstack/{config.yaml, learnings.jsonl, llm-usage.jsonl, referee-cache/}
   paper/{main.tex, refs.bib, sections/}
+  lit/{pdf/, md/, index.md, refs-ingested.bib}
   data/{raw/, clean/, codebook.md}
   code/{01-clean.R, 02-analyze.R, 03-figures.R, 04-tables.R}
   output/{figures/, tables/}
