@@ -1,6 +1,6 @@
 ---
 name: draft-section
-description: Drafts one manuscript section (intro, theory, data, methods, results, discussion, abstract) to paper/sections/ in the configured writing voice, numbers checked against output/, no invented citations. Use when the user asks to write or revise any part of the paper.
+description: Drafts one manuscript section (intro, theory, data, methods, results, discussion, abstract) to paper/sections/ in the user's configured writing voice, to the substantive bar each section owes the reader — contribution with a number, estimand and identifying assumption stated, results tied to tables with intervals and magnitudes, causal language matched to the design, nulls read against the smallest effect of interest — with numbers checked against output/ and no invented citations. Use when the user asks to write or revise any part of the paper.
 argument-hint: "intro|theory|data|methods|results|discussion|abstract"
 allowed-tools:
   - Read
@@ -21,34 +21,36 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 
 ## Procedure
 
-1. **Load** `.mstack/config.yaml` (title, target journals, status) and `.mstack/learnings.jsonl` (conventions, variable names, framing). List the citable keys instead of reading the whole bibliography: `grep -o '^@[A-Za-z]*{[^,]*' paper/refs.bib`. Read in full only the files the section depends on, and skim the other sections by heading (`grep -n '^\\section' paper/sections/*.tex`) so cross-references stay consistent without loading the manuscript every time:
+1. **Load** `.mstack/config.yaml` (title, target journals, status), `.mstack/learnings.jsonl` (conventions, variable names, framing), every existing section in `paper/sections/` (the manuscript is the context; consistency across sections is a referee's first check), the citable keys of `paper/refs.bib` (`grep -o '^@[A-Za-z]*{[^,]*' paper/refs.bib`), and the upstream memos the section depends on:
 
-   | Section | Reads in full |
+   | Section | Upstream memos and artifacts |
    |---|---|
-   | `intro` | `theory`, `results` (the contribution and headline it must promise); `.mstack/lit-map.md` |
-   | `theory` | `intro`; `.mstack/theory.md`, `.mstack/hypotheses.md` |
-   | `data` | `methods`; `data/codebook.md`, `data/raw/PROVENANCE.md` |
-   | `methods` | `data`, `theory`; `.mstack/identification-review-*.md`, `code/02-analyze.R` |
-   | `results` | `methods`; `code/02-analyze.R`, `output/tables/*`, `output/figures/*` |
-   | `discussion` | `results`, `intro`; `.mstack/identification-review-*.md`, `.mstack/robustness-*.md` |
+   | `intro` | `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/hypotheses.md` (estimand), the primary table and figure |
+   | `theory` | `.mstack/theory.md` (mechanism, DAG, rivals, scope), `.mstack/hypotheses.md` |
+   | `data` | `data/codebook.md`, `data/raw/PROVENANCE.md`, `data/clean/clean-log.md`, the variation figure |
+   | `methods` | `.mstack/identification-review-*.md`, `prereg/osf-prereg.md`, `code/02-analyze.R` |
+   | `results` | `code/02-analyze.R`, `output/tables/*`, `output/figures/*`, `output/analyze-log.md`, `.mstack/robustness-*.md` |
+   | `discussion` | `.mstack/theory.md` (scope, rivals), `.mstack/identification-review-*.md`, `.mstack/robustness-*.md` |
    | `abstract` | `intro`, `results`, `discussion` |
 
    Every number in `methods` / `results` prose must match the tables on disk.
-2. **Voice.** If `voice.writing_style` names a skill, invoke it for tone, rhythm, and vocabulary. If unset, write clean generic academic prose (short sentences, active verbs, no hedge-stuffing, no thesaurus reaches) and tell the user once that they can set a style skill in `.mstack/config.yaml`.
-3. **Draft to the section's bar:**
+2. **Read** `${CLAUDE_PLUGIN_ROOT}/references/writing-conventions.md` for what the section owes the reader and the referee complaints it must pre-empt.
+3. **Voice.** If `voice.writing_style` names a skill, invoke it for tone, rhythm, and vocabulary. If unset, write clean generic academic prose (short sentences, active verbs, no hedge-stuffing, no thesaurus reaches) and tell the user once that they can set a style skill in `.mstack/config.yaml`.
+4. **Draft to the section's bar:**
 
    | Section | Bar |
    |---|---|
-   | `intro` | Hook, puzzle, contribution, roadmap. The puzzle survives a "so what?" attack in two sentences. |
-   | `theory` | Mechanism in one sentence; DAG or prose analog; scope conditions; hypotheses numbered (H1, H2…). |
-   | `data` | Sources, vintage, unit of analysis, sample restrictions, missingness; every claim cites the codebook. |
-   | `methods` | Specification in equation form; identifying assumption stated; standard errors justified. |
-   | `results` | One claim per table / figure; numbers match `output/`; coefficient and CI, never "highly significant". |
-   | `discussion` | What the result is and is not; scope, threats, alternative explanations addressed; implications proportional to evidence. |
-   | `abstract` | One paragraph: question, design, finding, contribution; ≤ 250 words unless the journal demands less. |
+   | `intro` | Opens with the question and its stake; a contribution paragraph with what we do, what we find (a number in substantive units), and what changes if believed; the design and estimand in one sentence; positioned against the two or three closest papers; roadmap in one sentence or none. The puzzle survives a "so what?" attack in two sentences. |
+   | `theory` | Mechanism in one sentence and its steps; assumptions; observable implications that separate it from the named rivals; scope conditions as where it fails; hypotheses numbered with direction and estimand. |
+   | `data` | Unit and coverage; sources with vintages; each key variable's operationalization with a validity argument; the variation the design uses, shown; missingness and restrictions with counts; every claim cites the codebook. |
+   | `methods` | Estimand, then the identifying assumption in one sentence, then the equation with every symbol defined, fixed effects, and clustering; why this comparison isolates the effect; the falsification tests and sensitivity analysis; preregistration status and deviations; the estimator cited. |
+   | `results` | Primary estimate first, then falsification tests, mechanism, heterogeneity, and a one-paragraph robustness summary with the sensitivity sentence; one claim per table or figure; point estimate, interval, and magnitude against a benchmark; causal verbs only under a design that licenses them; nulls read against the SESOI, never as "no effect"; no "highly significant". |
+   | `discussion` | The contribution restated with its evidence; what the result is not (the estimand's limits); the most plausible rival explanation and why the evidence weighs against it; specific limitations; implications proportional to evidence; one concrete next study. |
+   | `abstract` | Question, design with estimand, data, the finding with a number, contribution; within the journal's cap; no citations, no hedging stack. |
 
-4. **Citations.** Only keys already in `paper/refs.bib`. For a missing one, insert `\cite{TODO-author-year-keyword}` and append `% TODO: add ref — <one-line description>`. Never fabricate author-year-title combinations.
-5. **Write** to `paper/sections/<name>.tex` (`.qmd` if `.mstack/config.yaml` says `format: quarto`). Overwrite only if the file is empty or a placeholder comment; otherwise show the candidate and ask whether to overwrite, append, or save as `paper/sections/<name>.candidate.tex`. On the first substantive section, set `paper.status: "writing"`.
+5. **Citations.** Only keys already in `paper/refs.bib`. For a missing one, insert `\cite{TODO-author-year-keyword}` and append `% TODO: add ref — <one-line description>`. Never fabricate author-year-title combinations. Cite the methods used (estimators, sensitivity tools) where the reference file names them.
+6. **Write** to `paper/sections/<name>.tex` (`.qmd` if `.mstack/config.yaml` says `format: quarto`). Overwrite only if the file is empty or a placeholder comment; otherwise show the candidate and ask whether to overwrite, append, or save as `paper/sections/<name>.candidate.tex`. On the first substantive section, set `paper.status: "writing"`.
+7. **Self-check before saving:** every number in the section appears in a table, figure, or the analyze log; every table and figure referenced exists; causal language matches `design.type`; the estimand named here is the one in `hypotheses.md`; no citation key is invented.
 
 ## Outputs
 
@@ -60,6 +62,8 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 - **Fabricated citations.** TODO markers, never inventions.
 - **Drafting `results` before analysis is stable.** Missing tables or figures → stop and run `/mstack:analyze`.
 - **Generic voice over a configured style.** Defer to the style skill; do not paper over it with hedge phrases.
+- **A literature review where the theory should be.**
+- **Nulls as zeros and associations as effects.**
 - **Filling space.** Short and sharp beats long and hedged.
 
 ## Next

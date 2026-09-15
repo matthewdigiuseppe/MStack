@@ -17,7 +17,7 @@ Three claims:
 ## What MStack is not
 
 - **Not a writing assistant.** Drafting is one stage. Most of MStack is upstream of it.
-- **Not a stats package.** It defers to R conventions (the user's `r-coding-skills` skill, or MStack's bundled `references/r-conventions.md` fallback); it doesn't replace them.
+- **Not a stats package.** It defers to R conventions (the user's `r-coding-skills` skill, or MStack's bundled `references/r-conventions.md` fallback); it doesn't replace them. It does carry the methodological standards a reviewer will hold the paper to (`references/identification-threats.md`, `estimation-conventions.md`, `robustness-protocols.md`, and the rest of the reference library) so that the skills argue from the discipline's canon rather than from a generic checklist.
 - **Not a coauthor.** It simulates one (`/mstack:coauthor-review`) but is not credited.
 - **Not domain-locked.** Built for political science / IPE, but the spine — ideate → map → design → build → analyze → write → submit → reflect — generalizes to most quantitative social science.
 

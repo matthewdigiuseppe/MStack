@@ -20,7 +20,7 @@ target_journals:
   #   why: ""
 
 design:
-  type: ""                 # survey | experiment | quasi-experiment | observational
+  type: ""                 # survey-experiment | field-experiment | did | rd | iv | shift-share | panel-fe | cross-section | qualitative
   prereg: false            # set true once /mstack:preregister is filed
   prereg_url: ""
 

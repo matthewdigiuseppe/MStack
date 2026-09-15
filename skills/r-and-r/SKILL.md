@@ -23,14 +23,14 @@ Decision letter in hand, revision done: write the response that gets the paper a
 
 1. **Decision letter.** Read `submission/response-to-reviewers/r<N>-decision.md`; if absent or empty, ask the user to paste the editor's letter and the reviewer reports there and stop until they do.
 2. **Manuscript and diff.** Read `paper/main.tex` + `paper/sections/`, and `output/tables/` and `output/figures/` (they may have changed). If git is in use, `git log --since="<submission date>" --stat -- paper/` shows what actually changed.
-3. **Parse the comments** into a structured list: editor comments (top-level, then specific); each reviewer's comments numbered as the reviewer numbered them; tag each `Major`, `Minor`, or `Editor`.
+3. **Parse the comments** into a structured list: editor comments (top-level, then specific); each reviewer's comments numbered as the reviewer numbered them; tag each `Major`, `Minor`, or `Editor`, and note where reviewers contradict each other (resolve those by naming the conflict and following the editor's steer, or asking the editor). Triage: comments that change the headline get new analysis; comments about clarity get rewritten text; comments that misread the paper get the misreading corrected in the manuscript, not only in the response, since the next reader will misread it the same way.
 4. **Respond to each comment** in three parts, in this order:
    1. **Quote the comment verbatim** (blockquote), so response and comment stay aligned.
    2. **Respond.** Concede where conceding is right, defend where defending is right, never concede the contribution to placate. Keep "we appreciate / we agree" sparse; the structure is enough.
    3. **Point to the change** — section, page or paragraph, and the new text quoted. If nothing changed, say so and why.
 5. **Editor opener:** thank editor and reviewers once, briefly; the three most consequential changes; the structure of the document.
 6. **Change log** table at the end: `Comment ID | Change made | Location`.
-7. **Cross-checks:** every comment has a response; every claimed change cites a location; the contribution sentence in abstract / intro has not weakened relative to the prior version; no new claims beyond the letter (don't pick fights).
+7. **Cross-checks:** every comment has a response; every claimed change cites a location; new analyses run through `/mstack:results-audit` and appear in the appendix with a pointer, not as loose numbers in the response; the contribution sentence in abstract / intro has not weakened relative to the prior version; no new claims beyond the letter (don't pick fights); the tone is the same for the reviewer you agree with and the one you do not.
 8. **Save** `submission/response-to-reviewers/r<N>-response.md`; append `- "<date>: r<N> <decision> — response drafted"` to `decisions:` in `.mstack/config.yaml` and set `paper.status: "r-and-r"`.
 
 ## Outputs

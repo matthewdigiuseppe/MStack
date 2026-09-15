@@ -26,7 +26,7 @@ On a complete draft, one round before `/mstack:referee-mock`. The coauthor catch
 ## Procedure
 
 1. **Load** `paper/main.tex` and every `paper/sections/*.tex`, plus prior coauthor reviews in `.mstack/referee-cache/` so you can say what changed since.
-2. **Read end-to-end first**, for impressions, not corrections.
+2. **Read end-to-end first**, for impressions, not corrections. Then read the referee complaints table in `${CLAUDE_PLUGIN_ROOT}/references/writing-conventions.md` and, for the skeptical methodologist, the design section of `${CLAUDE_PLUGIN_ROOT}/references/identification-threats.md`.
 3. **Three structural notes**, one paragraph each, quoting the specific section:
    - **The biggest hole** — where the argument is weakest.
    - **The biggest distraction** — what to cut; often the part the author is proudest of.

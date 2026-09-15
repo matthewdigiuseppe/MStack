@@ -20,7 +20,7 @@ After `/mstack:research-question` returns green or yellow. One question: **what 
 
 1. **Load** `.mstack/research-question.md`; the contribution sentence is the seed. If `lit/index.md` exists, read it first: triaging the converted corpus costs a fraction of opening papers. If `lit/pdf/` holds unconverted PDFs, run `/mstack:pdf-ingest` before going further; searching the web for abstracts of papers you already own is backwards.
 2. **Define the search** in one paragraph and get sign-off: 3–5 keyword combinations; the 2–3 most directly engaged authors; time window (typically 10 years plus the foundational older work); venues (top-3 field journals plus SSRN, NBER, OSF).
-3. **Search.** Local corpus first (`lit/index.md`, then the relevant section of a converted paper rather than the whole file). WebSearch for keyword + author scans; WebFetch (or a Google Scholar / Semantic Scholar MCP if available) for abstracts and citation counts. Build 20–40 candidates.
+3. **Search.** Local corpus first (`lit/index.md`, then the relevant section of a converted paper rather than the whole file). WebSearch for keyword + author scans; WebFetch (or a Google Scholar / Semantic Scholar MCP if available) for abstracts and citation counts; snowball backward (the reference lists of the Foundation papers) and forward ("cited by" on the two or three papers closest to the claim). Check for replications, meta-analyses, and many-analysts studies of the headline effect, and for working papers on SSRN, NBER, OSF, and conference programs (APSA, MPSA, EPSA, IPES) that a published-only search misses. Record the search strings and dates in the map so the search is reproducible. Build 20–40 candidates.
 4. **Triage** each paper: **Foundation** (3–5; the canonical works the conversation rests on; must-cite), **Frontier** (5–10; recent work in active conversation with the claim; engage explicitly), **Adjacent** (5–10; related but a different question; cite once), **Discard** (noted in the file, not engaged).
 5. **Map the consensus** (Foundation + Frontier, one paragraph answering three questions):
    - What does the consensus believe?
@@ -29,7 +29,7 @@ After `/mstack:research-question` returns green or yellow. One question: **what 
 6. **Locate the gap** (one paragraph answering three questions):
    - Which paper(s) does the project most directly engage?
    - What does it add that they lack?
-   - Which hostile reviewer would object, and why?
+   - Which hostile reviewer would object, and why? Name the two or three scholars most likely to referee the paper and what each would insist on; `/mstack:referee-mock` uses this.
 7. **Stage `refs.bib`.** A BibTeX entry per Foundation + Frontier paper, appended to `paper/refs.bib` (dedupe by key, never overwrite). Do not invent fields; leave unknowns blank with a `% TODO`. Prefer entries from `lit/refs-ingested.bib` for ingested papers, but only those without a `% TODO verify` marker (metadata parsed from the PDF rather than fetched from Crossref).
 8. **Save** to `.mstack/lit-map.md`: classification, synthesis, gap. Set `paper.status: "mapping"` in `.mstack/config.yaml` if it still says `ideating`.
 

@@ -112,10 +112,11 @@ my-paper/
 5. **Catch errors before reviewers do.** Internal `/mstack:results-audit`, `/mstack:coauthor-review`, `/mstack:referee-mock` front-run journal review.
 6. **Reproducibility is non-negotiable.** Replication-package and preregistration skills are first-class.
 7. **Enforcement over convention.** The safety modes (`/mstack:careful`, `/mstack:freeze`) and the read-only `data/raw/` rule are backed by a `PreToolUse` hook that blocks the tool call itself — not by prompt text hoping to be remembered.
+8. **Expert content over generic checklists.** A reference library (`references/`) carries what a strong methodologist brings to each stage — identification threats and tests by design, estimators and inference conventions, the data pitfalls that get papers corrected, preregistration and replication standards, what each section owes the reader — and the skills load it when the stage calls for it. See [docs/skills.md](docs/skills.md#reference-library).
 
 ## Defaults
 
-- **Stats stack.** R (ggplot, fixest, modelsummary). Stata/Python users: fork.
+- **Stats stack.** R (fixest, marginaleffects, modelsummary, ggplot2, DeclareDesign; design-specific packages such as did, rdrobust, sensemakr, HonestDiD where the design calls for them). Stata/Python users: fork.
 - **Manuscript format.** LaTeX. Quarto users: `mstack-init --quarto`. Word: out of scope.
 - **Voice.** `/mstack:draft-section` and `/mstack:abstract-shotgun` anchor tone to whatever skill name you put in `voice.writing_style` in `.mstack/config.yaml`. MStack does not ship a personal style — install or author your own writing-style skill and point the config at it. If left empty, a generic academic voice is used.
 

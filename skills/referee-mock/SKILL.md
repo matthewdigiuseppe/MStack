@@ -31,6 +31,7 @@ When every section exists and the draft is "submission-ready": the last line of 
 1. **Load** `paper/main.tex` (or `main.qmd`) and every file under `paper/sections/`; `output/tables/` and `output/figures/` to verify claims in the prose; `.mstack/config.yaml` for the target journal, which sets the bar.
 2. **Prior reports** in `.mstack/referee-cache/`: if the same persona reviewed an earlier draft, say explicitly what improved and what did not.
 3. **Reviewer style.** If `voice.reviewer_style` names an installed skill, use it for voice, tone, and structure; otherwise `${CLAUDE_PLUGIN_ROOT}/references/referee-report-conventions.md`.
+   **Persona ammunition.** `methodologist`: read the design section of `${CLAUDE_PLUGIN_ROOT}/references/identification-threats.md` and raise every threat the paper does not address, plus the sensitivity analysis it does not report. `theorist`: the rival-mechanisms table in `.mstack/theory.md`, and whether the paper tests any of them. `editor`: the referee complaints table in `${CLAUDE_PLUGIN_ROOT}/references/writing-conventions.md`. `area-expert`: the data-source pitfalls in `${CLAUDE_PLUGIN_ROOT}/references/polisci-data-sources.md` for the sources the paper uses.
 4. **Write the report** in the standard structure:
    - **Summary** (one paragraph) — what the paper does and what it claims.
    - **Major comments** (3–6) — substantive issues that change the headline if unaddressed.
