@@ -28,7 +28,8 @@ After `/mstack:lit-map`, before `/mstack:hypothesis-design`, so hypotheses deriv
    - which Foundation papers the mechanism builds on;
    - which Frontier papers it disputes;
    - where it stands on the contested edge of the conversation.
-7. **Save** to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence and scope conditions; full drafting is `/mstack:draft-section theory`.
+7. **Check before saving:** the graph is acyclic (a feedback loop means two nodes, one per period, not a cycle); every edge has a sign; the time scope matches the sample window in the research question; each off-the-line prediction lies outside the sample's population, period, or geography, and any that does not is labeled an in-sample mechanism test instead.
+8. **Save** to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence and scope conditions; full drafting is `/mstack:draft-section theory`.
 
 ## Outputs
 
