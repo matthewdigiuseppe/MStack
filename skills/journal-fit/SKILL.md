@@ -50,4 +50,4 @@ When the manuscript has passed `/mstack:results-audit`, `/mstack:coauthor-review
 
 ## Next
 
-`/mstack:submission-pack`, then `/mstack:cover-letter` for the chosen journal. `/mstack:referee-mock editor` beforehand stress-tests fit.
+`/mstack:submission-pack`, then `/mstack:cover-letter` for the chosen journal. `/mstack:referee-mock` on the recommended journal beforehand stress-tests it against that journal's reviewer pool.

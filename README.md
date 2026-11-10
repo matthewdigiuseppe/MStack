@@ -75,7 +75,7 @@ To update a clone later, run `bin/mstack-upgrade` (or `/mstack:mstack-upgrade` i
 | | `/mstack:abstract-shotgun` | 4–6 abstract variants |
 | | `/mstack:title-shotgun` | Title options ranked on hook/precision |
 | | `/mstack:coauthor-review` | Simulated coauthor critique (configurable persona) |
-| | `/mstack:referee-mock` | Mock R1 referee report |
+| | `/mstack:referee-mock` | Asks for the target journal, then mock reports from five reviewer types in its pool + the editor's likely decision |
 | **Submit** | `/mstack:journal-fit` | 3 target journals + comparison table |
 | | `/mstack:submission-pack` | Anonymization sweep + format checks + staged upload bundle |
 | | `/mstack:cover-letter` | Cover letter to journal |

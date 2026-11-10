@@ -47,4 +47,4 @@ Decision letter in hand, revision done: write the response that gets the paper a
 
 ## Next
 
-`/mstack:results-audit` if any results changed; `/mstack:referee-mock editor` to stress-test the response; `/mstack:coauthor-review` on the revised manuscript.
+`/mstack:results-audit` if any results changed; `/mstack:referee-mock` on the same journal to stress-test the response (the real reviewers seed its panel); `/mstack:coauthor-review` on the revised manuscript.

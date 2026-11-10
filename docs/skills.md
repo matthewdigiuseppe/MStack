@@ -60,7 +60,7 @@ Each skill is invokable as `/mstack:<name>` once the plugin is installed (plugin
 | `/mstack:abstract-shotgun` | writer | After complete draft. 4–6 abstract variants with positioning differences. |
 | `/mstack:title-shotgun` | writer | Late-stage. Title options ranked on hook × precision. |
 | `/mstack:coauthor-review` | coauthor | On a complete draft. Configurable persona. |
-| `/mstack:referee-mock` | referee | Before submission. Reviewer voice from `voice.reviewer_style` if set, else the built-in fallback. |
+| `/mstack:referee-mock` | referee panel | Before submission. Asks for the target journal, profiles five reviewer types from its pool, writes their reports and an editor's synthesis. Reviewer voice from `voice.reviewer_style` if set, else the built-in fallback. |
 
 ## Stage 7 — Submit
 
@@ -97,18 +97,19 @@ The skills carry their procedures; the substance a strong methodologist brings l
 
 | Reference | What it holds | Loaded by |
 |---|---|---|
-| `identification-threats.md` | Threats, falsification tests, and sensitivity tools by design: experiments, DiD / event study, RD, IV, shift-share, selection on observables, panel FE, cross-section, dyadic, text-as-data, case-based | identification-review, design-research, analyze, robustness, referee-mock (methodologist) |
+| `identification-threats.md` | Threats, falsification tests, and sensitivity tools by design: experiments, DiD / event study, RD, IV, shift-share, selection on observables, panel FE, cross-section, dyadic, text-as-data, case-based | identification-review, design-research, analyze, robustness, referee-mock (design referees) |
 | `estimation-conventions.md` | Estimators, standard errors, interactions, nonlinear models, tables, by design | analyze, results-audit |
 | `robustness-protocols.md` | The three robustness questions, the choice inventory with its bins, specification curves, sensitivity sentences, placebos, influence | robustness, preregister |
-| `polisci-data-sources.md` | Identifier schemes, canonical datasets and their pitfalls, sentinel codes, vintages, the harmonization checklist | data-acquire, data-clean, referee-mock (area-expert) |
+| `polisci-data-sources.md` | Identifier schemes, canonical datasets and their pitfalls, sentinel codes, vintages, the harmonization checklist | data-acquire, data-clean, referee-mock (area and data specialists) |
 | `audit-catalog.md` | The bugs that get papers corrected, with detection snippets | results-audit |
 | `figure-conventions.md` | Figure by claim, construction rules, what referees fault | viz |
 | `preregistration-guide.md` | The two-researchers standard, registries, vague-to-specific examples, secondary-data blinding | preregister, hypothesis-design |
-| `writing-conventions.md` | What each section owes the reader; reporting rules; referee complaints by section | draft-section, coauthor-review, referee-mock (editor) |
+| `writing-conventions.md` | What each section owes the reader; reporting rules; referee complaints by section | draft-section, coauthor-review, referee-mock (outside readers) |
 | `journals.md` | Candidate journals by subfield and the fit signals to score | journal-fit |
 | `survey-design-conventions.md` | Wording, order, checks placement, vignettes, conjoints, sampling, data capture | survey-build |
 | `survey-bot-defenses.md` | Layered agent/bot defenses and the probe manifest (fallback for `agent-disclosure`) | survey-build |
 | `referee-report-conventions.md` | Report structure and tone (fallback for `voice.reviewer_style`) | referee-mock |
+| `reviewer-pools.md` | How editors draw referees; five reviewer types per journal family (general, IR/IPE, heterodox IPE, conflict, comparative, behavior, methods, economics, interdisciplinary); reading an unlisted journal | referee-mock |
 | `r-conventions.md` | R style and script structure (fallback for `r-coding-skills`) | data-clean, analyze, robustness, viz |
 | `pdf-extraction.md` | PDF backends and the quality gate | pdf-ingest |
 
@@ -130,7 +131,7 @@ Every skill writes to predictable paths inside the paper folder:
 | `/mstack:results-audit` | `.mstack/results-audit-<date>.md` |
 | `/mstack:llm-checklist` | `.mstack/llm-usage.jsonl` (ledger) + `.mstack/llm-checklist.md` (+ optional `paper/sections/llm-checklist.tex`) |
 | `/mstack:coauthor-review` | `.mstack/referee-cache/coauthor-<persona>-<date>.md` |
-| `/mstack:referee-mock` | `.mstack/referee-cache/referee-mock-<date>.md` |
+| `/mstack:referee-mock` | `.mstack/referee-cache/referee-mock-<journal>-<date>.md` |
 | `/mstack:cover-letter` | `submission/cover-letter.md` |
 | `/mstack:r-and-r` | `submission/response-to-reviewers/r1-response.md` (etc.) |
 | `/mstack:retro` | `.mstack/retro.md` |
