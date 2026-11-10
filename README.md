@@ -2,7 +2,7 @@
 
 **A Claude Code plugin for academic research.** Inspired by [gstack](https://github.com/garrytan/gstack).
 
-gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships 39 skills that walk a paper across all of them.
+gstack's wager is that role-based slash commands beat free-form prompting because they force the right questions at the right stage. MStack applies the same wager to research: a paper has clear stages — idea, lit, theory, design, data, analysis, writing, submission, R&R — each with its own forcing questions, failure modes, and quality bar. MStack ships 41 skills that walk a paper across all of them, and one file, `.mstack/spine.md`, that keeps every one of them pointed at the paper's main idea.
 
 Originally built for political science / international political economy work, but the spine generalizes to most quantitative social science.
 
@@ -19,7 +19,7 @@ Open Claude Code and type these two lines, one at a time, into the chat box:
 /plugin install mstack@mstack
 ```
 
-The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 39 MStack commands — `/mstack:research-question`, `/mstack:draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
+The first line tells Claude Code where to find MStack. The second line installs it. When both are done, all 41 MStack commands — `/mstack:research-question`, `/mstack:draft-section`, and so on — are ready to use. You can see what's installed anytime by typing `/plugin`.
 
 ### Step 2 — Start a new paper
 
@@ -52,12 +52,13 @@ To update a clone later, run `bin/mstack-upgrade` (or `/mstack:mstack-upgrade` i
 | Stage | What you type | What happens |
 |---|---|---|
 | **Setup** | `/mstack:mstack-init <name>` | Scaffolds the paper folder every other skill assumes |
-| **Ideate** | `/mstack:research-question` | Forcing questions about contribution, identification, feasibility, scoop risk |
+| **Ideate** | `/mstack:research-question` | Forcing questions about contribution, identification, feasibility, scoop risk; writes the first spine |
 | | `/mstack:scope-challenge` | Adversarial advisor: "is this a paper or a footnote?" |
 | | `/mstack:idea-shotgun` | 4–6 alternative angles on the same data/question |
 | **Map** | `/mstack:pdf-ingest` | Turns a folder of PDFs into machine-readable Markdown (~70% fewer tokens) plus a corpus index |
 | | `/mstack:lit-map` | Systematic lit scan; identifies the 3–5 papers you must engage |
 | | `/mstack:theory-build` | Mechanism, DAG, scope conditions |
+| | `/mstack:claim-sharpen` | Coauthor on the idea: proposes the strongest defensible claim, what it is a case of, alternative framings. Run again after results |
 | | `/mstack:hypothesis-design` | Operationalized, falsifiable hypotheses |
 | | `/mstack:identification-review` | Methodologist voice: threats to inference |
 | **Design** | `/mstack:design-research` | Picks design type (survey/experiment/quasi/obs) |
@@ -71,18 +72,19 @@ To update a clone later, run `bin/mstack-upgrade` (or `/mstack:mstack-upgrade` i
 | | `/mstack:robustness` | Robustness matrix (alt specs, samples, operationalizations) |
 | | `/mstack:viz` | Publication-quality figures |
 | | `/mstack:results-audit` | Staff-statistician review of analysis |
-| **Write** | `/mstack:draft-section <name>` | Drafts intro/theory/methods/results/discussion in voice |
+| **Write** | `/mstack:argument-outline` | Governing claim, supporting claims, the evidence behind each; everything else to appendix or cut |
+| | `/mstack:draft-section <name>` | Drafts intro/theory/methods/results/discussion from the outline, in voice |
 | | `/mstack:abstract-shotgun` | 4–6 abstract variants |
 | | `/mstack:title-shotgun` | Title options ranked on hook/precision |
-| | `/mstack:coauthor-review` | Simulated coauthor critique (configurable persona) |
-| | `/mstack:referee-mock` | Asks for the target journal, then mock reports from five reviewer types in its pool + the editor's likely decision |
+| | `/mstack:coauthor-review` | Does a cold reader get the claim? Then the biggest hole, distraction, and opportunity (configurable persona) |
+| | `/mstack:referee-mock` | Asks for the target journal, then mock reports from five reviewer types in its pool, comments ranked by what they do to the claim + the editor's likely decision |
 | **Submit** | `/mstack:journal-fit` | 3 target journals + comparison table |
 | | `/mstack:submission-pack` | Anonymization sweep + format checks + staged upload bundle |
 | | `/mstack:cover-letter` | Cover letter to journal |
 | | `/mstack:r-and-r` | Response-to-reviewers with change log |
 | **Reflect** | `/mstack:retro` | Paper retrospective |
 | | `/mstack:archive` | Replication package + OSF/Dataverse prep |
-| **Power** | `/mstack:paper-status` | Where the project stands + the one recommended next skill |
+| **Power** | `/mstack:paper-status` | Where the project stands + the weakest link in the argument and the skill that repairs it |
 | | `/mstack:careful`, `/mstack:freeze`, `/mstack:guard`, `/mstack:unfreeze` | Edit-safety controls, enforced by a PreToolUse hook |
 | | `/mstack:llm-checklist` | Log LLM-as-instrument use; compile the GUIDE-LLM reporting checklist |
 | | `/mstack:learn` | Per-paper conventions Claude should remember |
@@ -94,7 +96,7 @@ To update a clone later, run `bin/mstack-upgrade` (or `/mstack:mstack-upgrade` i
 
 ```
 my-paper/
-  .mstack/{config.yaml, learnings.jsonl, llm-usage.jsonl, referee-cache/}
+  .mstack/{config.yaml, spine.md, learnings.jsonl, llm-usage.jsonl, referee-cache/}
   paper/{main.tex, refs.bib, sections/}
   lit/{pdf/, md/, index.md, refs-ingested.bib}
   data/{raw/, clean/, codebook.md}
@@ -108,13 +110,14 @@ my-paper/
 ## Design principles
 
 1. **Role > prompt.** Every skill speaks in a defined voice (advisor, methodologist, referee, replicator).
-2. **Forcing questions over generation.** Early-stage skills interrogate before they produce.
+2. **Forcing questions over generation.** Early-stage skills interrogate before they produce. One skill, `/mstack:claim-sharpen`, does the opposite on purpose: it proposes, and the author decides.
 3. **Shotgun for divergence, review for convergence.** Generate 4–6 variants, then critique a single candidate.
 4. **Per-project memory.** A `.mstack/` folder stores conventions, decisions, learnings.
 5. **Catch errors before reviewers do.** Internal `/mstack:results-audit`, `/mstack:coauthor-review`, `/mstack:referee-mock` front-run journal review.
 6. **Reproducibility is non-negotiable.** Replication-package and preregistration skills are first-class.
 7. **Enforcement over convention.** The safety modes (`/mstack:careful`, `/mstack:freeze`) and the read-only `data/raw/` rule are backed by a `PreToolUse` hook that blocks the tool call itself — not by prompt text hoping to be remembered.
 8. **Expert content over generic checklists.** A reference library (`references/`) carries what a strong methodologist brings to each stage — identification threats and tests by design, estimators and inference conventions, the data pitfalls that get papers corrected, preregistration and replication standards, what each section owes the reader — and the skills load it when the stage calls for it. See [docs/skills.md](docs/skills.md#reference-library).
+9. **The claim is the unit of relevance.** `.mstack/spine.md` states the paper's main idea in five lines. Skills load it first; reviews cap their comments and rank them by whether they break the claim, narrow it, or leave it untouched; a cold reader checks that the draft says it; a `SessionStart` hook puts it in front of every session; and "what's next?" is the weakest link in the argument, not the earliest missing file. See [docs/skills.md](docs/skills.md#the-spine).
 
 ## Defaults
 

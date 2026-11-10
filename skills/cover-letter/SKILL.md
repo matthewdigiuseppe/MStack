@@ -15,11 +15,11 @@ After `/mstack:journal-fit`. Read in 30 seconds; precision beats warmth.
 
 ## Procedure
 
-1. **Load** `.mstack/config.yaml` (top-tier target journal), `paper/sections/abstract.tex`, the contribution sentence in `.mstack/research-question.md`.
+1. **Load** `.mstack/config.yaml` (top-tier target journal), `paper/sections/abstract.tex`, and `.mstack/spine.md` (the claim as it now stands, and who must change their mind).
 2. **Editor.** Ask the user for the current editor's name and salutation if not in config; editors change, so never guess from memory.
 3. **Three paragraphs, ≤ 400 words:**
    - **Fit** — what the paper does in one sentence and why it belongs in *this* journal, naming one or two recent papers there it is in conversation with; not "builds on the journal's strong tradition in X".
-   - **Contribution** — the contribution sentence from `/mstack:research-question`, the headline finding, and the design that delivers it. No hedging.
+   - **Contribution** — the spine's claim (never the pre-data sentence in `research-question.md`), the headline finding, the design that delivers it, and whose view it changes. No hedging.
    - **Declarations** — preregistration status + URL (from config); data and code availability; not under review elsewhere; conflicts of interest; IRB approval if applicable; word count; prior presentations or earlier versions.
 4. **Sign-off:** author name(s) and affiliation(s), one line.
 5. **Save** to `submission/cover-letter.md` (Markdown; convert to whatever the portal accepts at submission).

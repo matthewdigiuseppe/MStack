@@ -5,7 +5,7 @@ Scaffolded by [MStack](https://github.com/matthewdigiuseppe/MStack).
 ## Layout
 
 ```
-.mstack/         # MStack config + learnings + caches (do not delete)
+.mstack/         # MStack config, spine.md (the paper's main idea), learnings, caches (do not delete)
 paper/           # manuscript: main.tex + sections/
 lit/pdf/         # source PDFs of the literature (read-only after ingest)
 lit/md/          # those PDFs as Markdown, via /mstack:pdf-ingest

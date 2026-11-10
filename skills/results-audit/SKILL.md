@@ -1,6 +1,6 @@
 ---
 name: results-audit
-description: Staff-statistician audit of the full analysis against a catalog of the bugs that get papers corrected — duplicated merges, sentinel codes as numbers, lags across gaps, post-treatment controls, wrong clustering, two-way FE under staggered adoption, logit coefficients compared across models, prose numbers that do not match the tables — plus sample-size consistency, spec-vs-prereg match, multiple comparisons, forking-paths exposure, and an end-to-end reproducibility run. Use after /mstack:analyze and before drafting results, or whenever the user asks to check the analysis or the numbers look off.
+description: Staff-statistician audit of the full analysis against a catalog of the bugs that get papers corrected — duplicated merges, sentinel codes as numbers, lags across gaps, post-treatment controls, wrong clustering, two-way FE under staggered adoption, logit coefficients compared across models, prose numbers that do not match the tables — plus sample-size consistency, spec-vs-prereg match, multiple comparisons, forking-paths exposure, and an end-to-end reproducibility run, with every failure ranked by what it does to the primary estimate. Use after /mstack:analyze and before drafting results, or whenever the user asks to check the analysis or the numbers look off.
 allowed-tools:
   - Read
   - Bash
@@ -17,7 +17,7 @@ After `/mstack:analyze` writes the primary table, before `/mstack:draft-section 
 
 ## Procedure
 
-1. **Load** `code/01-clean.R`, `code/02-analyze.R`, `code/04-tables.R`, `data/codebook.md`, `data/raw/PROVENANCE.md` (sentinel codes and identifier schemes per source), `output/tables/`, `output/models/`, `output/analyze-log.md`, `prereg/osf-prereg.md` if preregistered, `.mstack/identification-review-*.md` (clustering level, tests promised), `.mstack/hypotheses.md` (estimands), `.mstack/config.yaml` (`design.type`).
+1. **Load** `.mstack/spine.md` (the claim, and the table that carries it), `code/01-clean.R`, `code/02-analyze.R`, `code/04-tables.R`, `data/codebook.md`, `data/raw/PROVENANCE.md` (sentinel codes and identifier schemes per source), `output/tables/`, `output/models/`, `output/analyze-log.md`, `prereg/osf-prereg.md` if preregistered, `.mstack/identification-review-*.md` (clustering level, tests promised), `.mstack/hypotheses.md` (estimands), `.mstack/config.yaml` (`design.type`).
 2. **Read** `${CLAUDE_PLUGIN_ROOT}/references/audit-catalog.md` (the bug catalog with detection snippets) and the design section of `${CLAUDE_PLUGIN_ROOT}/references/estimation-conventions.md`.
 3. **Checklist.** Confirm each item in code or write the failure to the report. Run the catalog's detection snippets against the actual data and scripts rather than reasoning about them.
 
@@ -52,6 +52,7 @@ After `/mstack:analyze` writes the primary table, before `/mstack:draft-section 
    - [ ] The falsification tests promised in the identification review were run and reported, whatever they showed.
 
    **Reporting**
+   - [ ] The table named in the spine's `Carried by` is the one `m_primary` produces, and any number in the spine's `Claim` matches it.
    - [ ] Every number quoted in `paper/sections/results.tex` appears in a table or the log (run the catalog's grep comparison); percent vs. percentage points and SD vs. raw units are consistent.
    - [ ] Figures and tables come from the same model run (timestamps of `output/models/*.rds`, `output/tables/*`, `output/figures/*` in order).
    - [ ] Causal language matches the design.
@@ -60,21 +61,22 @@ After `/mstack:analyze` writes the primary table, before `/mstack:draft-section 
    - [ ] The numbered pipeline runs end-to-end in a fresh R session, every `code/[0-9]*.R` in ascending order, skipping `00-fetch-*` (test when feasible: `Rscript -e 'for (f in sort(list.files("code", pattern = "^[0-9].*[.]R$", full.names = TRUE))) if (!grepl("00-fetch", f)) source(f)'`), and the regenerated `output/` matches the committed outputs.
    - [ ] `output/analyze-log.md` matches the tables on disk; no hard-coded paths; `sessionInfo()` captured; package versions pinned or noted.
 
-4. **Diagnose each failure** in one paragraph: what is wrong, where (file + line), what it does to the estimate, the fix.
+4. **Diagnose each failure** in one paragraph: what is wrong, where (file + line), what it does to the primary estimate (re-run with the fix where that is cheap, and report the estimate before and after), the fix. Order the diagnoses by that consequence: failures that move the primary estimate's sign, size, or interval first; failures that touch only secondary results next; failures that change no number last, one line each.
 5. **Verdict:** **Pass** (all clean), **Conditional pass** (minor failures fixable in code without re-specification; list them), **Fail** (at least one data-assembly, specification, sample, or inference issue; halt drafting until resolved).
 6. **Save** to `.mstack/results-audit-<YYYY-MM-DD>.md`.
 
 ## Outputs
 
 - `.mstack/results-audit-<date>.md` — checklist with pass / fail, the detection output, and diagnoses.
-- Summary block: top 3 issues, verdict, next action.
+- Summary block: the failures that move the primary estimate, with the estimate before and after; a count of the rest; the verdict; the next action.
 
 ## Anti-patterns
 
 - **Auditing only what is already right.** If everything passes, re-run the duplicate, sentinel, and lag checks on the data itself; those are where the surprises are.
 - **Audit by eyeball.** Verify specs in code with Grep / Bash and the catalog's snippets, not by reading prose.
 - **Soft verdicts.** A conditional pass with five items is a fail.
+- **A flat list.** Twenty-seven checks reported at equal weight bury the one that changes Table 2.
 
 ## Next
 
-Fail → fix, re-run `/mstack:analyze`. Pass → `/mstack:robustness`, then `/mstack:viz`, then `/mstack:draft-section results`.
+Fail → fix, re-run `/mstack:analyze`. Pass → `/mstack:robustness`, then `/mstack:claim-sharpen` to restate the spine against what was found, `/mstack:viz`, `/mstack:argument-outline`, and `/mstack:draft-section results`.

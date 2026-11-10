@@ -1,7 +1,9 @@
 # Writing conventions: what each section must do
 
-Read by `/mstack:draft-section`, `/mstack:abstract-shotgun`, and
-`/mstack:coauthor-review`. Voice, rhythm, and vocabulary come from the
+Read by `/mstack:draft-section`, `/mstack:abstract-shotgun`,
+`/mstack:coauthor-review`, and `/mstack:referee-mock`. What the paper claims
+and why it matters is `contribution.md`; which paragraphs the argument needs
+is `.mstack/outline.md`. Voice, rhythm, and vocabulary come from the
 user's writing-style skill (`voice.writing_style`); this file is about the
 substance each section owes the reader and the reporting rules referees
 enforce in quantitative political science.
@@ -11,6 +13,7 @@ enforce in quantitative political science.
 - Open with the question and why it matters now: a puzzle, a stake, or a
   live disagreement. Not with the literature, and not with "scholars have
   long debated".
+- The claim, as `.mstack/spine.md` has it, on the first page.
 - The contribution paragraph makes three moves: what the paper does, what it
   finds (with a number in substantive units), and what changes if the reader
   believes it.

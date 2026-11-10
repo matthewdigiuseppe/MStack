@@ -4,6 +4,7 @@ description: Chooses the research design (survey or field experiment, DiD, RD, I
 allowed-tools:
   - Read
   - Write
+  - Edit
 ---
 
 # /mstack:design-research
@@ -14,7 +15,7 @@ After `/mstack:identification-review` returns at least a conditional pass. The q
 
 ## Procedure
 
-1. **Load** `.mstack/hypotheses.md` (estimand, SESOI), `.mstack/identification-review-*.md` (threats to beat), `.mstack/theory.md` (rivals, scope conditions), and the design sections of `${CLAUDE_PLUGIN_ROOT}/references/identification-threats.md` for each candidate.
+1. **Load** `.mstack/spine.md` (the claim the design has to carry), `.mstack/hypotheses.md` (estimand, SESOI), `.mstack/identification-review-*.md` (threats to beat), `.mstack/theory.md` (rivals, scope conditions), and the design sections of `${CLAUDE_PLUGIN_ROOT}/references/identification-threats.md` for each candidate.
 2. **Enumerate 2–4 designs** that could in principle answer the inquiry: survey experiment (vignette, conjoint, list); field experiment; natural or quasi-experiment (DiD / event study, RD, IV, shift-share); observational panel with fixed effects; cross-section with selection on observables; comparative case / process tracing. For each, its data strategy and answer strategy in two lines.
 3. **Score each, one line per dimension:**
    - **Identification of the estimand** — the assumption the design needs, how plausible it is here, and whether the quantity it identifies (ATE, ATT, LATE at a cutoff, complier LATE) is the one the theory speaks to.
@@ -25,12 +26,13 @@ After `/mstack:identification-review` returns at least a conditional pass. The q
    - **Cost** — money, fieldwork, coding labor.
 4. **Recommend one.** Say why it dominates on the dimensions that matter most for this inquiry and what it gives up; no design is a free win. Say which rival mechanisms in `theory.md` it can and cannot rule out.
 5. **Plan B.** If the choice fails (no IRB, no funding, scooped, a weak instrument), the closest substitute and what the headline would become. Save it so the project does not restart from zero.
-6. **Save** to `.mstack/design-research.md`. In `.mstack/config.yaml` set `design.type` (`survey-experiment`, `field-experiment`, `did`, `rd`, `iv`, `shift-share`, `panel-fe`, `cross-section`, or `qualitative`) and `paper.status: "designing"`.
+6. **Save** to `.mstack/design-research.md`. In `.mstack/config.yaml` set `design.type` (`survey-experiment`, `field-experiment`, `did`, `rd`, `iv`, `shift-share`, `panel-fe`, `cross-section`, or `qualitative`) and `paper.status: "designing"`. Update the spine's `Carried by` line to the chosen design and its comparison, and append `- <YYYY-MM-DD> · design-research · Carried by · <design chosen>` to its log; if the design identifies a narrower quantity than the claim states, say so and send the claim to `/mstack:claim-sharpen`.
 
 ## Outputs
 
 - `.mstack/design-research.md` — candidates with their data and answer strategies, scores, choice, plan B.
 - `.mstack/config.yaml` — `design.type` set.
+- `.mstack/spine.md` — `Carried by` updated, with a log entry.
 - Summary block: chosen design, the estimand it identifies, the one dimension it underperforms on.
 
 ## Anti-patterns

@@ -1,9 +1,10 @@
 ---
 name: research-question
-description: Interrogates a paper idea with six forcing questions — contribution, audience, identification, falsifiability, feasibility, scoop risk — and issues a green/yellow/red verdict. Use when the user pitches a new paper, asks whether a project is worth pursuing, or wants a research question pressure-tested before committing.
+description: Interrogates a paper idea with six forcing questions — contribution, audience, identification, falsifiability, feasibility, scoop risk — issues a green/yellow/red verdict, and writes the first version of the paper's spine (.mstack/spine.md) from the answers. Use when the user pitches a new paper, asks whether a project is worth pursuing, or wants a research question pressure-tested before committing.
 allowed-tools:
   - Read
   - Write
+  - Edit
   - Bash(date *)
 ---
 
@@ -17,8 +18,8 @@ An interrogation, not a brainstorm: these are the questions that, asked at month
 
 Ask the six questions and wait for answers. In a live session ask one at a time, offering the option to answer all six in one message; in an asynchronous context (web/mobile, or a user who is clearly batching) present all six together rather than forcing six round-trips.
 
-1. **Contribution in one sentence.** "If this paper succeeds, what one sentence does it add to the literature?" Reject "contributes to our understanding of X"; push for a specific, falsifiable claim.
-2. **Audience and venue.** "Who reads this, and which journal or community is it pitched to?" "It could go anywhere" is a red flag: papers that fit everywhere fit nowhere.
+1. **Contribution in one sentence.** "If this paper succeeds, what one sentence does it add to the literature?" Reject "contributes to our understanding of X"; push for a specific, falsifiable claim, and hold the answer to the claim-sentence tests in `${CLAUDE_PLUGIN_ROOT}/references/contribution.md`.
+2. **Audience and venue.** "Who reads this, which journal or community is it pitched to, and what do they believe now that this paper would change?" "It could go anywhere" is a red flag: papers that fit everywhere fit nowhere. No belief to change means no contribution, however good the fit.
 3. **Identification.** "What quantity are you estimating, for whom, and how do you separate it from the obvious confounders?" If observational and the answer is "controls," press for a placebo, instrument, discontinuity, or quasi-experiment; if the answer names a design, ask which assumption it needs and whether the data can test it. "I'll figure it out" means defer the project until the design is concrete.
 4. **Falsifiability.** "What pattern in the data would make you abandon the hypothesis?" No answer means the hypothesis will be unfalsifiable on the page too.
 5. **Feasibility.** "What is the longest pole (data access, computation, fieldwork, IRB), how long, and what is plan B?" Ask for a concrete timeline.
@@ -32,9 +33,12 @@ Ask the six questions and wait for answers. In a live session ask one at a time,
 
 Do not soften the verdict; if the answers do not justify the project, say so.
 
+**Spine.** On green or yellow, write the first version of `.mstack/spine.md` from the user's answers, in their words (five one-line fields, `**Claim:**`, `**Who must change their mind:**`, `**Carried by:**`, `**Strongest rival:**`, `**Does not cover:**`, then a `## Log` heading with one dated entry per change; create the file in that layout if the folder predates it): `Claim` from question 1; `Who must change their mind` from question 2; `Carried by` from question 3 (the design and comparison, until a table exists); `Strongest rival` the confounder or alternative that questions 3 and 4 turned up; `Does not cover` left for `/mstack:theory-build` unless the answers already set a boundary. Append `- <YYYY-MM-DD> · research-question · first version` to its log. If the file already holds a claim, show the difference and ask before changing a line. On red, leave it alone. Every later skill reads this file first and ranks what it produces by its bearing on the claim.
+
 ## Outputs
 
 - `.mstack/research-question.md` — questions, answers, verdict, date.
+- `.mstack/spine.md` — the first five lines and a log entry (green or yellow only).
 - Summary block: verdict + next step.
 
 ## Anti-patterns
@@ -45,4 +49,4 @@ Do not soften the verdict; if the answers do not justify the project, say so.
 
 ## Next
 
-Green → `/mstack:lit-map`. Yellow → fix the weak link, re-run. Red → `/mstack:idea-shotgun`, or `/mstack:scope-challenge` if the project may simply be too big.
+Green → `/mstack:lit-map`. Yellow → fix the weak link, re-run. A claim that passes but is timid → `/mstack:claim-sharpen` once the theory is built: that skill proposes; this one only asks. Red → `/mstack:idea-shotgun`, or `/mstack:scope-challenge` if the project may simply be too big.

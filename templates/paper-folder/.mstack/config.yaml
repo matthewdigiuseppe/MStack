@@ -1,5 +1,6 @@
 ## MStack per-paper config.
 ## Edit at the start of a project; revisit after major decisions.
+## The paper's main idea does not live here: it is in .mstack/spine.md.
 
 paper:
   title: ""
@@ -49,3 +50,7 @@ voice:
   # Name of a reviewer-style skill for /mstack:referee-mock. Leave empty to use
   # MStack's built-in fallback (references/referee-report-conventions.md).
   reviewer_style: ""
+  # Name of a skill that sets how /mstack:argument-outline groups and orders
+  # claims (a pyramid-principle skill, for instance). Leave empty to use the
+  # built-in rules.
+  outline_style: ""

@@ -13,8 +13,12 @@ Checks:
   * $ARGUMENTS in a body implies an argument-hint (warning)
   * every skill appears in docs/skills.md (warning)
   * commands a body tells Claude to run are covered by allowed-tools (warning)
+  * every skill that reviews, analyzes, or writes the paper loads
+    .mstack/spine.md, and the two review skills record a Comprehension: line
+    (bin/mstack-status reads it)
   * bin/ scripts byte-compile
-  * hooks/hooks.json is valid JSON; hook scripts byte-compile
+  * hooks/hooks.json is valid JSON, every script it runs exists; hook scripts
+    byte-compile
 """
 import json
 import os
@@ -102,6 +106,29 @@ for name in skill_names:
         warnings.append(f"{label}: uses $ARGUMENTS but has no argument-hint")
     check_tools(text, label)
 
+# The spine. A skill that reviews, analyzes, or writes the paper must load
+# .mstack/spine.md, so that what it produces can be ranked by its bearing on
+# the paper's claim. Skills that only move files, guard edits, or document
+# data are exempt.
+SPINE_SKILLS = {
+    "research-question", "scope-challenge", "lit-map", "theory-build", "claim-sharpen",
+    "hypothesis-design", "identification-review", "design-research", "analyze",
+    "results-audit", "robustness", "viz", "argument-outline", "draft-section",
+    "abstract-shotgun", "title-shotgun", "coauthor-review", "referee-mock",
+    "journal-fit", "cover-letter", "r-and-r", "retro",
+}
+for name in sorted(SPINE_SKILLS):
+    path = SKILLS / name / "SKILL.md"
+    if not path.exists():
+        errors.append(f"skills/{name}/SKILL.md: listed in SPINE_SKILLS but missing")
+    elif ".mstack/spine.md" not in path.read_text():
+        errors.append(f"skills/{name}/SKILL.md: does not load .mstack/spine.md")
+for name in ("coauthor-review", "referee-mock"):
+    path = SKILLS / name / "SKILL.md"
+    if path.exists() and "Comprehension: match | partial | mismatch" not in path.read_text():
+        errors.append(f"skills/{name}/SKILL.md: no 'Comprehension: match | partial | mismatch' "
+                      "header line (bin/mstack-status parses it)")
+
 # Cross-references: namespaced ones must exist; bare ones are forbidden.
 ref_files = (
     list(SKILLS.glob("*/SKILL.md"))
@@ -135,6 +162,9 @@ if hooks_json.exists():
         json.loads(hooks_json.read_text())
     except json.JSONDecodeError as e:
         errors.append(f"hooks/hooks.json: invalid JSON ({e})")
+    for rel in re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([\w./-]+)", hooks_json.read_text()):
+        if not (ROOT / rel).is_file():
+            errors.append(f"hooks/hooks.json: runs {rel}, which does not exist")
 bin_scripts = [p for p in (ROOT / "bin").iterdir()
                if p.is_file() and p.read_bytes().startswith(b"#!/usr/bin/env python3")]
 for script in list((ROOT / "hooks").glob("*.py")) + bin_scripts:
