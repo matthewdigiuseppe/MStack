@@ -48,4 +48,4 @@ On a complete draft, one round before `/mstack:referee-mock`. The coauthor catch
 
 ## Next
 
-Revise (`/mstack:draft-section` for any broken section), then `/mstack:referee-mock` with a different persona before submission.
+Revise (`/mstack:draft-section` for any broken section), then `/mstack:referee-mock` for the target journal before submission.

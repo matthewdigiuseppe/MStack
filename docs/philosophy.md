@@ -28,7 +28,7 @@ Every skill carries a **stage** and a **voice**. Stage tells you when to use it.
 - **Advisor / adversarial-advisor** voices are for early stages (ideate, scope-challenge). Their job is to talk you out of bad ideas.
 - **Methodologist** voice runs through map, design, and analysis. Its job is to make the inference defensible.
 - **Writer** voice owns the writing stage and defers to the user-configured writing-style skill (`.mstack/config.yaml` → `voice.writing_style`) for tone.
-- **Referee** voice (`/mstack:referee-mock`) defers to the reviewer-style skill named in `.mstack/config.yaml` (`voice.reviewer_style`), falling back to MStack's bundled referee conventions, and front-runs the actual reviewers.
+- **Referee** voice (`/mstack:referee-mock`) asks for the target journal first and writes as a panel of five reviewer types drawn from that journal's pool. Tone defers to the reviewer-style skill named in `.mstack/config.yaml` (`voice.reviewer_style`), falling back to MStack's bundled referee conventions. It front-runs the actual reviewers.
 - **Replicator** voice closes the project (`/mstack:archive`) and asks: would a stranger rebuild every table from raw data?
 
 ## Defaults you should know

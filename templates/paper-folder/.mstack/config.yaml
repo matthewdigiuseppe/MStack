@@ -14,7 +14,8 @@ authors:
   #   role: "coauthor"
 
 target_journals:
-  # Tier in priority order. /mstack:journal-fit will populate this.
+  # Tier in priority order. /mstack:journal-fit will populate this;
+  # /mstack:referee-mock offers these when it asks which journal to review for.
   # - name: "International Organization"
   #   tier: 1
   #   why: ""

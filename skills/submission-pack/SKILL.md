@@ -42,4 +42,4 @@ After `/mstack:journal-fit` and a final manuscript. Everything else in MStack fr
 
 ## Next
 
-`/mstack:cover-letter` for the same journal, then submit; `/mstack:referee-mock editor` beforehand stress-tests fit. Set `paper.status: "submitted"` in `.mstack/config.yaml` once the portal confirms.
+`/mstack:cover-letter` for the same journal, then submit; `/mstack:referee-mock` on the same journal beforehand stress-tests fit. Set `paper.status: "submitted"` in `.mstack/config.yaml` once the portal confirms.
