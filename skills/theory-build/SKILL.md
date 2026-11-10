@@ -17,8 +17,8 @@ After `/mstack:lit-map`, before `/mstack:hypothesis-design`, so hypotheses deriv
 
 ## Procedure
 
-1. **Load** `.mstack/research-question.md` and `.mstack/lit-map.md`. When a Foundation or Frontier paper's actual argument matters, read its converted section in `lit/md/` (the `sections` list in each file's front matter is the map) rather than working from the abstract.
-2. **Mechanism in one sentence:** "X causes Y because Z." Then unpack Z into steps: who does what, in response to what, at which point in time, and what each step assumes (information, incentives, capacity, institutions). Ask until the user can say the sentence; it is the spine of the paper, and a mechanism that cannot be stated in one sentence is usually two mechanisms or none.
+1. **Load** `.mstack/spine.md`, `.mstack/research-question.md`, and `.mstack/lit-map.md`. When a Foundation or Frontier paper's actual argument matters, read its converted section in `lit/md/` (the `sections` list in each file's front matter is the map) rather than working from the abstract.
+2. **Mechanism in one sentence:** "X causes Y because Z." Then unpack Z into steps: who does what, in response to what, at which point in time, and what each step assumes (information, incentives, capacity, institutions). Ask until the user can say the sentence; it is what the spine's claim rests on, and a mechanism that cannot be stated in one sentence is usually two mechanisms or none. If the mechanism implies a different claim from the one in `.mstack/spine.md`, say so now rather than letting the two drift.
 3. **DAG (ASCII).** Nodes: treatment / IV, outcome, mediators (M1, M2, …), pre-treatment confounders (W1, W2, …), post-treatment colliders and consequences (C1, …) flagged explicitly with a do-not-condition note, since controlling on one is a common error (Elwert & Winship 2014; Montgomery, Nyhan & Torres 2018). Every edge signed, with a one-line justification in an edge table. Feedback over time is drawn as two nodes (X_t, X_t+1), never as a cycle.
 4. **Scope conditions**, one or two sentences each, as their own labeled list in the file:
    - **Population** — for whom should this hold?
@@ -33,11 +33,12 @@ After `/mstack:lit-map`, before `/mstack:hypothesis-design`, so hypotheses deriv
    - which Frontier papers it disputes, and on what observable point;
    - where it stands on the contested edge of the conversation.
 9. **Check before saving:** the graph is acyclic; every edge has a sign and a justification; the time scope matches the sample window in the research question; each off-the-line prediction lies outside the sample's population, period, or geography, and any that does not is relabeled an in-sample test; each rival mechanism has an observable implication that is not also implied by your mechanism.
-10. **Save** to `.mstack/theory.md`. Optionally stub `paper/sections/theory.tex` with the mechanism sentence and scope conditions; full drafting is `/mstack:draft-section theory`.
+10. **Save** to `.mstack/theory.md`. Then bring `.mstack/spine.md` up to date: `Strongest rival` becomes the rival a reviewer is most likely to raise, with the implication that separates it; `Does not cover` becomes the boundary scope condition; append `- <YYYY-MM-DD> · theory-build · Strongest rival, Does not cover · from the rivals table and scope conditions` to its log. Optionally stub `paper/sections/theory.tex` with the mechanism sentence and scope conditions; full drafting is `/mstack:draft-section theory`.
 
 ## Outputs
 
 - `.mstack/theory.md` — mechanism and steps, DAG with edge table, scope conditions, rival mechanisms table, predictions, estimand, positioning.
+- `.mstack/spine.md` — `Strongest rival` and `Does not cover` filled, with a log entry.
 - Optional stub `paper/sections/theory.tex`.
 - Summary block: mechanism sentence, the rival most likely to be raised by a reviewer and the test that separates it, and the off-the-line prediction most likely to falsify.
 
@@ -51,4 +52,4 @@ After `/mstack:lit-map`, before `/mstack:hypothesis-design`, so hypotheses deriv
 
 ## Next
 
-`/mstack:hypothesis-design`, then `/mstack:identification-review`.
+`/mstack:claim-sharpen` to push the claim while it is still cheap to change, then `/mstack:hypothesis-design` and `/mstack:identification-review`.

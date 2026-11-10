@@ -39,7 +39,7 @@ echo "   To install from this clone instead of GitHub, point the first command"
 echo "   at this directory:"
 echo "     /plugin marketplace add $HERE"
 echo "     /plugin install mstack@mstack"
-echo "   Then all 39 commands are available as /mstack:<name>; /plugin lists them."
+echo "   Then all 41 commands are available as /mstack:<name>; /plugin lists them."
 echo ""
 
 # Suggest PATH addition for the command-line tools.

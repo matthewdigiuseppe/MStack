@@ -1,6 +1,6 @@
 ---
 name: draft-section
-description: Drafts one manuscript section (intro, theory, data, methods, results, discussion, abstract) to paper/sections/ in the user's configured writing voice, to the substantive bar each section owes the reader — contribution with a number, estimand and identifying assumption stated, results tied to tables with intervals and magnitudes, causal language matched to the design, nulls read against the smallest effect of interest — with numbers checked against output/ and no invented citations. Use when the user asks to write or revise any part of the paper.
+description: Drafts one manuscript section (intro, theory, data, methods, results, discussion, abstract) to paper/sections/ in the user's configured writing voice, from the argument outline, to the substantive bar each section owes the reader — contribution with a number, estimand and identifying assumption stated, results tied to tables with intervals and magnitudes, causal language matched to the design, nulls read against the smallest effect of interest — with numbers checked against output/ and no invented citations. Use when the user asks to write or revise any part of the paper.
 argument-hint: "intro|theory|data|methods|results|discussion|abstract"
 allowed-tools:
   - Read
@@ -21,26 +21,26 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 
 ## Procedure
 
-1. **Load** `.mstack/config.yaml` (title, target journals, status), `.mstack/learnings.jsonl` (conventions, variable names, framing), every existing section in `paper/sections/` (the manuscript is the context; consistency across sections is a referee's first check), the citable keys of `paper/refs.bib` (`grep -o '^@[A-Za-z]*{[^,]*' paper/refs.bib`), and the upstream memos the section depends on:
+1. **Load** `.mstack/spine.md` and `.mstack/outline.md` first: the governing claim, this section's job in the argument, its paragraphs as topic sentences, its word budget. With no outline, say so once and recommend `/mstack:argument-outline`; draft without one only if the user chooses to. Then `.mstack/config.yaml` (title, target journals, status), `.mstack/learnings.jsonl` (conventions, variable names, framing), every existing section in `paper/sections/` (the manuscript is the context; consistency across sections is a referee's first check), the citable keys of `paper/refs.bib` (`grep -o '^@[A-Za-z]*{[^,]*' paper/refs.bib`), and the upstream memos the section depends on:
 
    | Section | Upstream memos and artifacts |
    |---|---|
-   | `intro` | `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/hypotheses.md` (estimand), the primary table and figure |
+   | `intro` | `.mstack/spine.md` (the claim as it now stands; `research-question.md` holds the pre-data version and is not quoted), `.mstack/lit-map.md`, `.mstack/hypotheses.md` (estimand), the primary table and figure |
    | `theory` | `.mstack/theory.md` (mechanism, DAG, rivals, scope), `.mstack/hypotheses.md` |
    | `data` | `data/codebook.md`, `data/raw/PROVENANCE.md`, `data/clean/clean-log.md`, the variation figure |
    | `methods` | `.mstack/identification-review-*.md`, `prereg/osf-prereg.md`, `code/02-analyze.R` |
    | `results` | `code/02-analyze.R`, `output/tables/*`, `output/figures/*`, `output/analyze-log.md`, `.mstack/robustness-*.md` |
    | `discussion` | `.mstack/theory.md` (scope, rivals), `.mstack/identification-review-*.md`, `.mstack/robustness-*.md` |
-   | `abstract` | `intro`, `results`, `discussion` |
+   | `abstract` | `.mstack/spine.md`, `intro`, `results`, `discussion` |
 
    Every number in `methods` / `results` prose must match the tables on disk.
 2. **Read** `${CLAUDE_PLUGIN_ROOT}/references/writing-conventions.md` for what the section owes the reader and the referee complaints it must pre-empt.
 3. **Voice.** If `voice.writing_style` names a skill, invoke it for tone, rhythm, and vocabulary. If unset, write clean generic academic prose (short sentences, active verbs, no hedge-stuffing, no thesaurus reaches) and tell the user once that they can set a style skill in `.mstack/config.yaml`.
-4. **Draft to the section's bar:**
+4. **Draft from the outline, to the section's bar.** Each paragraph makes its claim in its first sentence and stops when the claim is supported. What the outline sends to `appendix` or `cut` stays out; a paragraph that serves no supporting claim is flagged to the user, not written in.
 
    | Section | Bar |
    |---|---|
-   | `intro` | Opens with the question and its stake; a contribution paragraph with what we do, what we find (a number in substantive units), and what changes if believed; the design and estimand in one sentence; positioned against the two or three closest papers; roadmap in one sentence or none. The puzzle survives a "so what?" attack in two sentences. |
+   | `intro` | Opens with the question and its stake; the spine's claim on the first page; a contribution paragraph with what we do, what we find (a number in substantive units), and what changes if believed; the design and estimand in one sentence; positioned against the two or three closest papers; roadmap in one sentence or none. The puzzle survives a "so what?" attack in two sentences. |
    | `theory` | Mechanism in one sentence and its steps; assumptions; observable implications that separate it from the named rivals; scope conditions as where it fails; hypotheses numbered with direction and estimand. |
    | `data` | Unit and coverage; sources with vintages; each key variable's operationalization with a validity argument; the variation the design uses, shown; missingness and restrictions with counts; every claim cites the codebook. |
    | `methods` | Estimand, then the identifying assumption in one sentence, then the equation with every symbol defined, fixed effects, and clustering; why this comparison isolates the effect; the falsification tests and sensitivity analysis; preregistration status and deviations; the estimator cited. |
@@ -50,7 +50,7 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 
 5. **Citations.** Only keys already in `paper/refs.bib`. For a missing one, insert `\cite{TODO-author-year-keyword}` and append `% TODO: add ref — <one-line description>`. Never fabricate author-year-title combinations. Cite the methods used (estimators, sensitivity tools) where the reference file names them.
 6. **Write** to `paper/sections/<name>.tex` (`.qmd` if `.mstack/config.yaml` says `format: quarto`). Overwrite only if the file is empty or a placeholder comment; otherwise show the candidate and ask whether to overwrite, append, or save as `paper/sections/<name>.candidate.tex`. On the first substantive section, set `paper.status: "writing"`.
-7. **Self-check before saving:** every number in the section appears in a table, figure, or the analyze log; every table and figure referenced exists; causal language matches `design.type`; the estimand named here is the one in `hypotheses.md`; no citation key is invented.
+7. **Self-check before saving:** the spine's claim appears, in substance, where this section carries it (the abstract, the contribution paragraph of `intro`, the first paragraph of `results`, the opening of `discussion`); every paragraph maps to a line of the outline; every number in the section appears in a table, figure, or the analyze log; every table and figure referenced exists; causal language matches `design.type`; the estimand named here is the one in `hypotheses.md`; no citation key is invented.
 
 ## Outputs
 
@@ -65,7 +65,8 @@ Draft once results are stable (`output/tables/` and `output/figures/` no longer 
 - **A literature review where the theory should be.**
 - **Nulls as zeros and associations as effects.**
 - **Filling space.** Short and sharp beats long and hedged.
+- **Section furniture.** Paragraphs that are there because the section usually has them, not because the argument needs them.
 
 ## Next
 
-Before `intro`, `/mstack:lit-map` output should exist; before `methods`, `/mstack:identification-review`. After `abstract`, `/mstack:abstract-shotgun`. After all sections, `/mstack:coauthor-review` then `/mstack:referee-mock`.
+Before any section, `/mstack:argument-outline`. Before `intro`, `/mstack:lit-map` output should exist; before `methods`, `/mstack:identification-review`. After `abstract`, `/mstack:abstract-shotgun`. After all sections, `/mstack:coauthor-review` then `/mstack:referee-mock`.

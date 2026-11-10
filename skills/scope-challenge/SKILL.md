@@ -5,6 +5,7 @@ allowed-tools:
   - Bash(date *)
   - Read
   - Write
+  - Edit
   - Grep
   - Glob
 ---
@@ -17,7 +18,7 @@ For the project that keeps growing: three interesting figures and no headline, a
 
 ## Procedure
 
-Read `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/theory.md` if it exists, and every draft section in `paper/sections/`. Run the four challenges in order, one at a time in a live session and all four at once when the user is not in a live back-and-forth; write the results to `.mstack/scope-challenge-<YYYY-MM-DD>.md`.
+Read `.mstack/spine.md` (the claim and the table that carries it, as they now stand), `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/theory.md` if it exists, and every draft section in `paper/sections/`. Run the four challenges in order, one at a time in a live session and all four at once when the user is not in a live back-and-forth; write the results to `.mstack/scope-challenge-<YYYY-MM-DD>.md`.
 
 1. **One sentence.** "State the contribution in one sentence with no clauses." If the user cannot, the scope is wrong; push until they can.
 2. **One table.** "Which single table is the paper? Which figure is the cover?" Political science papers are built around 1–2 tables and 1–2 figures; four "essential" tables means two belong in another paper or an appendix.
@@ -32,9 +33,12 @@ Read `.mstack/research-question.md`, `.mstack/lit-map.md`, `.mstack/theory.md` i
 
 Soft verdicts produce sprawling papers; be opinionated.
 
+**Spine.** If challenge 1 produced a different sentence from the spine's `Claim`, or challenge 2 a different table from its `Carried by`, show both and, with the user's agreement, edit those lines and append `- <YYYY-MM-DD> · scope-challenge · <lines changed> · <the cut>` to its log.
+
 ## Outputs
 
 - `.mstack/scope-challenge-<date>.md` — challenges, answers, verdict.
+- `.mstack/spine.md` — `Claim` and `Carried by` revised when the challenges changed them, with a log entry.
 - Summary block: verdict + the single most important cut.
 
 ## Anti-patterns
@@ -44,4 +48,4 @@ Soft verdicts produce sprawling papers; be opinionated.
 
 ## Next
 
-Sprawl → re-run `/mstack:research-question` on the trimmed project. Multi-paper → `/mstack:mstack-init` a sibling folder for paper two.
+Sprawl → re-run `/mstack:research-question` on the trimmed project, or `/mstack:argument-outline` when a draft exists, to sort what stays, what moves to the appendix, and what is cut. Multi-paper → `/mstack:mstack-init` a sibling folder for paper two.

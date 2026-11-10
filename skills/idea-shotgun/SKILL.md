@@ -1,6 +1,6 @@
 ---
 name: idea-shotgun
-description: Generates 4-6 genuinely different angles on the same data or topic, carded by claim, contribution, identification, cost, and risk, then ranked. Use when the user has data or a topic but no committed question, wants alternatives before investing, or a red-light verdict sent them back to ideation.
+description: Generates 4-6 genuinely different angles on the same data or topic, carded by claim, contribution, stake, identification, cost, and risk, then ranked. Use when the user has data or a topic but no committed question, wants alternatives before investing, or a red-light verdict sent them back to ideation.
 allowed-tools:
   - Bash(date *)
   - Read
@@ -27,6 +27,7 @@ Produces variants so the user picks from a set instead of a hunch.
    ```
    ANGLE N: <one-sentence claim>
    Contribution:    <the new sentence this adds to the literature>
+   Stake:           <who believes otherwise now, and what they would have to give up>
    Identification:  <the design, the quantity it identifies, and how it separates the effect from the obvious confound>
    Cost:            <data-acquire weeks | analysis weeks | total months>
    Risk:            <highest single risk: data, identification, scoop, fit>

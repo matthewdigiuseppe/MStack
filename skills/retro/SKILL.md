@@ -16,12 +16,12 @@ After acceptance, rejection, or a major R&R, while memory is fresh.
 
 ## Procedure
 
-1. **Load** the dated artifact table from `python3 "${CLAUDE_PLUGIN_ROOT}/bin/mstack-status"` (every verdict with its date), `git log --reverse --date=short --format='%ad %s'` if the project is a git repo, and the decision letters in `submission/response-to-reviewers/`. Then read the `.mstack/*.md` memos and referee reports in date order; the retro is only as good as the record it reads.
+1. **Load** the dated artifact table from `python3 "${CLAUDE_PLUGIN_ROOT}/bin/mstack-status"` (every verdict with its date), `git log --reverse --date=short --format='%ad %s'` if the project is a git repo, and the decision letters in `submission/response-to-reviewers/`. Then read the log in `.mstack/spine.md` (how the claim moved, and when), the `.mstack/*.md` memos, and the referee reports in date order; the retro is only as good as the record it reads.
 2. **Timeline:** first commit / `mstack-init` date; milestones (lit-map, prereg, first analysis, first draft, submission, R1, R2, accept); approximate days between them.
 3. **Five questions**, one paragraph each; push for specifics, vague retros are worth nothing:
    1. **Where did time actually go?** Estimated vs. actual on the longest stage.
    2. **The biggest unforced error?** Something that cost time or quality and that you knew at the time you should not be doing.
-   3. **What surprised you?** A finding, referee comment, methods issue, or writing block that was not on the map at the start.
+   3. **What surprised you?** A finding, referee comment, methods issue, or writing block that was not on the map at the start; include how far the final claim sits from the first entry in the spine's log.
    4. **What worked?** A practice, habit, or decision worth keeping; wins count.
    5. **The one systematizable lesson?** A rule for next time, concrete enough to become a skill, a checklist, or a memory entry.
 4. **Save** to `.mstack/retro.md`.

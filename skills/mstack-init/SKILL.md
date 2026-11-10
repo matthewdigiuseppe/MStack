@@ -21,8 +21,8 @@ Once per paper, in the directory where the paper folder should live; every other
 1. **Refuse to nest.** If the current directory or an ancestor already contains `.mstack/`, stop and tell the user to `cd` out; a paper inside a paper breaks every path convention.
 2. **Run** `bash "${CLAUDE_PLUGIN_ROOT}/bin/mstack-init" <short-name> [--quarto]`.
 3. **Fallback** if the script is missing or there is no bash: copy `${CLAUDE_PLUGIN_ROOT}/templates/paper-folder` to `./<short-name>` (hidden files included); stamp `short_name: "<short-name>"` into `.mstack/config.yaml`; for `--quarto`, replace `paper/main.tex` with a `main.qmd` that `{{< include >}}`s the section files as `.qmd` and set `format: "quarto"` in config.
-4. **Verify** `.mstack/config.yaml`, `paper/`, `data/raw/`, `code/`, `output/` exist.
-5. **Hand off:** fill in `.mstack/config.yaml` (title, authors, target journals, `voice.writing_style` if a style skill is installed), then `/mstack:research-question` or `/mstack:idea-shotgun`.
+4. **Verify** `.mstack/config.yaml`, `.mstack/spine.md`, `paper/`, `data/raw/`, `code/`, `output/` exist.
+5. **Hand off:** fill in `.mstack/config.yaml` (title, authors, target journals, `voice.writing_style` if a style skill is installed), then `/mstack:research-question` (which writes the first version of `.mstack/spine.md`, the paper's main idea that every later skill reads first) or `/mstack:idea-shotgun`.
 
 ## Outputs
 

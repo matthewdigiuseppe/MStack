@@ -16,7 +16,7 @@ After `/mstack:abstract-shotgun` settles a framing; editors and search engines r
 
 ## Procedure
 
-1. **Load** `paper/sections/abstract.tex` and `.mstack/config.yaml` (journals favor different title styles).
+1. **Load** `.mstack/spine.md`, `paper/sections/abstract.tex`, and `.mstack/config.yaml` (journals favor different title styles).
 2. **Generate 8–12 candidates** across forms:
 
    | Form | Example |
@@ -30,7 +30,7 @@ After `/mstack:abstract-shotgun` settles a framing; editors and search engines r
    | Number-led | "Three Decades of Trade Shocks and the New Politics of Protection" |
    | Single noun phrase | "The Protectionist Turn" |
 
-3. **Score 1–5** on hook (would a reader stop scrolling?), precision (does it convey the claim?), searchability (would the right reader find it by keyword?).
+3. **Score 1–5** on hook (would a reader stop scrolling?), precision (does it convey the spine's claim, or only the topic?), searchability (would the right reader find it by keyword?).
 4. **Filter:** drop any title with a 1 in any dimension; rank by `hook × precision × searchability`; surface the top 3.
 5. **Recommend one**, paired with the abstract framing: finding-first pairs with declarative, puzzle-first with a question or anomaly title.
 6. **Save** to `.mstack/title-shotgun-<YYYY-MM-DD>.md`.
